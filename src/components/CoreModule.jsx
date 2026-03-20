@@ -92,15 +92,22 @@ const CoreModule = () => {
         <LandingPage appData={logic.appData} onRoleSelect={logic.handleRoleRequest} />
       ) : (
         <>
-          {/* ВЕРХНЯЯ ПАНЕЛЬ (HEADER) */}
+          {/* ВЕРХНЯЯ ПАНЕЛЬ С ВОЗВРАЩЕННЫМ ЛОГОТИПОМ */}
           <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', justifyContent: 'space-between', alignItems: isMobile ? 'flex-start' : 'center', gap: '16px', marginBottom: '24px', backgroundColor: 'var(--bg-card)', padding: '16px 24px', borderRadius: '16px', boxShadow: '0 4px 6px -1px var(--shadow-color)' }}>
             
-            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexShrink: 0, width: isMobile ? '100%' : 'auto', justifyContent: isMobile ? 'space-between' : 'flex-start' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                <div style={{ fontSize: '24px' }}>☕</div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '16px', flexShrink: 0, width: isMobile ? '100%' : 'auto', justifyContent: isMobile ? 'space-between' : 'flex-start' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                <svg width="40" height="40" viewBox="0 0 80 80" fill="none">
+                  <path d="M40 5 C60 5, 75 20, 75 40 C75 60, 60 75, 40 75 C20 75, 5 60, 5 40 C5 20, 20 5, 40 5 Z" stroke="#3b82f6" strokeWidth="3" strokeDasharray="4 4"/>
+                  <path d="M25 30 h30 a4 4 0 0 1 4 4 v20 a10 10 0 0 1 -10 10 h-18 a10 10 0 0 1 -10 -10 v-20 a4 4 0 0 1 4 -4 Z" fill="var(--bg-card)" stroke="#3b82f6" strokeWidth="2"/>
+                  <path d="M59 36 a6 6 0 0 1 0 12 h-3" stroke="#3b82f6" strokeWidth="2"/>
+                </svg>
                 <div>
-                  <h1 style={{ fontSize: '18px', fontWeight: '800', margin: '0', color: 'var(--text-main)', letterSpacing: '-0.5px', whiteSpace: 'nowrap' }}>GOURMET COFFEE</h1>
-                  <span style={{ fontSize: '11px', fontWeight: 'bold', color: '#10b981' }}>● {logic.currentRole}</span>
+                  <h1 style={{ fontSize: '18px', fontWeight: '800', margin: '0 0 4px 0', color: 'var(--text-main)', letterSpacing: '-0.5px', whiteSpace: 'nowrap' }}>GOURMET COFFEE</h1>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <div style={{ backgroundColor: '#10b981', width: '8px', height: '8px', borderRadius: '50%' }}></div>
+                    <span style={{ fontSize: '12px', fontWeight: 'bold', color: 'var(--text-muted)' }}>{logic.currentRole} ONLINE</span>
+                  </div>
                 </div>
               </div>
             </div>
@@ -133,7 +140,7 @@ const CoreModule = () => {
           {/* ОСНОВНОЙ КОНТЕНТ */}
           <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', gap: isMobile ? '16px' : '24px', alignItems: 'flex-start', flex: 1, width: '100%', maxWidth: '100vw' }}>
             
-            {/* САЙДБАР */}
+            {/* САЙДБАР С УВЕЛИЧЕННЫМИ ИКОНКАМИ */}
             {logic.currentRole !== 'Бариста' && (
               <div className="hide-scroll" style={{ 
                 flex: isMobile ? 'none' : '0 0 240px', 
@@ -153,10 +160,10 @@ const CoreModule = () => {
                   return (
                     <button key={tab.id} onClick={() => logic.currentRole === 'Владелец' ? setActiveOwnerTab(tab.id) : setActiveManagerTab(tab.id)} style={{ 
                       padding: '12px 16px', backgroundColor: isActive ? '#3b82f6' : 'var(--bg-card)', color: isActive ? 'white' : 'var(--text-main)', 
-                      border: '1px solid var(--border-color)', borderRadius: '12px', cursor: 'pointer', fontWeight: '600', fontSize: '13px', 
-                      display: 'flex', alignItems: 'center', gap: '8px', transition: '0.2s', flexShrink: 0, whiteSpace: 'nowrap'
+                      border: '1px solid var(--border-color)', borderRadius: '12px', cursor: 'pointer', fontWeight: '600', fontSize: '14px', 
+                      display: 'flex', alignItems: 'center', gap: '10px', transition: '0.2s', flexShrink: 0, whiteSpace: 'nowrap'
                     }}>
-                      <span style={{ fontSize: '16px' }}>{tab.icon}</span> {tab.label}
+                      <span style={{ fontSize: '18px' }}>{tab.icon}</span> {tab.label}
                     </button>
                   );
                 })}
