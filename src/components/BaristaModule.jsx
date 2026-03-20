@@ -4,7 +4,6 @@ import TelegramWidget from './TelegramWidget';
 import AdvancedInventory from './AdvancedInventory';
 import { CustomerDisplayModal, ZReportModal } from './BaristaModals';
 
-// 🚀 ИМПОРТИРУЕМ НАШИ НОВЫЕ КОМПОНЕНТЫ
 import BaristaMenu from './BaristaMenu';
 import BaristaCart from './BaristaCart';
 import BaristaQueue from './BaristaQueue';
@@ -174,19 +173,24 @@ const BaristaModule = ({
         `}
       </style>
 
-      {/* ВЕРХНЯЯ ПАНЕЛЬ */}
+      {/* ВЕРХНЯЯ ПАНЕЛЬ С ИСПРАВЛЕННЫМ ОТСТУПОМ */}
       <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', justifyContent: 'space-between', alignItems: isMobile ? 'stretch' : 'center', gap: '12px', backgroundColor: 'var(--bg-card)', padding: '16px', borderRadius: '16px', boxShadow: '0 4px 6px -1px var(--shadow-color)' }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+        
+        {/* Добавил gap: '20px' чтобы кнопка не наезжала на текст */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '20px' }}>
+          
+          {/* flexShrink: 0 запрещает сплющивать этот блок */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexShrink: 0 }}>
             <div style={{ width: '40px', height: '40px', borderRadius: '50%', backgroundColor: '#3b82f6', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '20px', fontWeight: 'bold' }}>
               {loggedInBarista.charAt(0)}
             </div>
             <div>
-              <div style={{ fontWeight: 'bold', color: 'var(--text-main)', fontSize: '16px' }}>{loggedInBarista}</div>
-              <div style={{ fontSize: '12px', color: '#10b981', fontWeight: 'bold' }}>Смена открыта</div>
+              <div style={{ fontWeight: 'bold', color: 'var(--text-main)', fontSize: '16px', whiteSpace: 'nowrap' }}>{loggedInBarista}</div>
+              <div style={{ fontSize: '12px', color: '#10b981', fontWeight: 'bold', whiteSpace: 'nowrap' }}>Смена открыта</div>
             </div>
           </div>
-          <button onClick={() => baristas.length > 1 ? onRequestBaristaSwitch(baristas.find(b => b !== loggedInBarista)) : alert('Нет других бариста')} style={{ padding: '8px 12px', backgroundColor: 'var(--bg-main)', border: '1px solid var(--border-color)', borderRadius: '8px', cursor: 'pointer', fontSize: '12px', color: 'var(--text-main)', fontWeight: 'bold' }}>
+          
+          <button onClick={() => baristas.length > 1 ? onRequestBaristaSwitch(baristas.find(b => b !== loggedInBarista)) : alert('Нет других бариста')} style={{ padding: '8px 12px', backgroundColor: 'var(--bg-main)', border: '1px solid var(--border-color)', borderRadius: '8px', cursor: 'pointer', fontSize: '12px', color: 'var(--text-main)', fontWeight: 'bold', flexShrink: 0 }}>
             🔄 Сменить
           </button>
         </div>
@@ -199,7 +203,6 @@ const BaristaModule = ({
 
       <div style={{ display: 'flex', gap: '24px', alignItems: 'flex-start', flexGrow: 1, flexDirection: isMobile ? 'column' : 'row' }}>
         
-        {/* ЛЕВАЯ ЧАСТЬ (Используем новый компонент BaristaMenu) */}
         <BaristaMenu 
           isMobile={isMobile}
           mobileView={mobileView}
@@ -215,7 +218,6 @@ const BaristaModule = ({
           challengeProgress={challengeProgress}
         />
 
-        {/* ПРАВАЯ ЧАСТЬ */}
         <div style={{ flex: 1, display: (!isMobile || mobileView === 'cart') ? 'flex' : 'none', flexDirection: 'column', gap: '16px', height: isMobile ? 'auto' : '100%', minHeight: isMobile ? 'auto' : '600px', width: '100%' }}>
           
           <div style={{ display: 'flex', gap: '6px', backgroundColor: 'var(--bg-card)', padding: '8px', borderRadius: '16px', boxShadow: '0 2px 4px -1px var(--shadow-color)', border: '1px solid var(--border-color)', overflowX: 'auto' }} className="hide-scroll">
@@ -237,7 +239,6 @@ const BaristaModule = ({
             </button>
           </div>
 
-          {/* Используем новые компоненты в зависимости от выбранной вкладки */}
           {activeRightTab === 'cart' && (
             <BaristaCart 
               cart={cart}
@@ -289,7 +290,6 @@ const BaristaModule = ({
         </div>
       </div>
 
-      {/* 📱 НИЖНЕЕ ПЛАВАЮЩЕЕ МЕНЮ (ТОЛЬКО ДЛЯ ТЕЛЕФОНА) */}
       {isMobile && (
         <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, backgroundColor: 'var(--bg-card)', padding: '12px 16px', display: 'flex', gap: '12px', boxShadow: '0 -4px 15px rgba(0,0,0,0.1)', zIndex: 100, borderTop: '1px solid var(--border-color)' }}>
           <button 
