@@ -1,8 +1,13 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect } from 'react';
 import DeliveryWidget from './DeliveryWidget';
 import TelegramWidget from './TelegramWidget';
 import AdvancedInventory from './AdvancedInventory';
 import { CustomerDisplayModal, ZReportModal } from './BaristaModals';
+
+// 🚀 ИМПОРТИРУЕМ НАШИ НОВЫЕ КОМПОНЕНТЫ
+import BaristaMenu from './BaristaMenu';
+import BaristaCart from './BaristaCart';
+import BaristaQueue from './BaristaQueue';
 
 const BaristaModule = ({
   onCloseShift, onNewOrder, onOpenDrawer, menuItems = [], stopList = [],
@@ -16,7 +21,6 @@ const BaristaModule = ({
   const [activeCategory, setActiveCategory] = useState('Все');
   const [activeRightTab, setActiveRightTab] = useState('cart'); 
 
-  // 🚀 МОБИЛЬНАЯ АДАПТАЦИЯ
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
   const [mobileView, setMobileView] = useState('menu'); 
 
@@ -39,7 +43,6 @@ const BaristaModule = ({
   const [isSuccessFlash, setIsSuccessFlash] = useState(false);
   const [floatingRevenue, setFloatingRevenue] = useState(null);
 
-  // CRM И ЛОЯЛЬНОСТЬ
   const [clientPhone, setClientPhone] = useState('');
   const [foundClient, setFoundClient] = useState(null);
   const [pointsToSpend, setPointsToSpend] = useState(0);
@@ -196,55 +199,23 @@ const BaristaModule = ({
 
       <div style={{ display: 'flex', gap: '24px', alignItems: 'flex-start', flexGrow: 1, flexDirection: isMobile ? 'column' : 'row' }}>
         
-        {/* ЛЕВАЯ ЧАСТЬ (МЕНЮ) */}
-        <div style={{ flex: 1.8, display: (!isMobile || mobileView === 'menu') ? 'flex' : 'none', flexDirection: 'column', gap: '16px', width: '100%' }}>
-          
-          <div style={{ backgroundColor: 'rgba(59, 130, 246, 0.05)', border: '1px solid rgba(59, 130, 246, 0.2)', borderRadius: '16px', padding: '12px 16px', display: 'flex', alignItems: 'center', gap: '16px' }}>
-            <div style={{ fontSize: '28px' }}>🏆</div>
-            <div style={{ flexGrow: 1 }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
-                <span style={{ fontWeight: 'bold', color: 'var(--text-main)', fontSize: '13px' }}>Продай {challengeGoal} десертов!</span>
-                <span style={{ fontWeight: 'bold', color: '#3b82f6', fontSize: '13px' }}>{currentDessertsSold}/{challengeGoal}</span>
-              </div>
-              <div style={{ width: '100%', height: '8px', backgroundColor: 'var(--bg-card)', borderRadius: '4px', overflow: 'hidden' }}>
-                <div style={{ width: `${challengeProgress}%`, height: '100%', backgroundColor: '#3b82f6', transition: 'width 0.5s ease' }}></div>
-              </div>
-            </div>
-          </div>
+        {/* ЛЕВАЯ ЧАСТЬ (Используем новый компонент BaristaMenu) */}
+        <BaristaMenu 
+          isMobile={isMobile}
+          mobileView={mobileView}
+          categories={categories}
+          activeCategory={activeCategory}
+          setActiveCategory={setActiveCategory}
+          filteredMenu={filteredMenu}
+          stopList={stopList}
+          handleAddToCart={handleAddToCart}
+          getProductIcon={getProductIcon}
+          challengeGoal={challengeGoal}
+          currentDessertsSold={currentDessertsSold}
+          challengeProgress={challengeProgress}
+        />
 
-          <div className="hide-scroll" style={{ display: 'flex', gap: '8px', overflowX: 'auto', paddingBottom: '8px' }}>
-            {categories.map(cat => (
-              <button key={cat} onClick={() => setActiveCategory(cat)} style={{ padding: '14px 20px', backgroundColor: activeCategory === cat ? '#3b82f6' : 'var(--bg-card)', color: activeCategory === cat ? 'white' : 'var(--text-main)', border: activeCategory === cat ? 'none' : '1px solid var(--border-color)', borderRadius: '12px', cursor: 'pointer', fontWeight: 'bold', whiteSpace: 'nowrap', transition: 'all 0.2s', flexShrink: 0, fontSize: '15px' }}>
-                {cat}
-              </button>
-            ))}
-          </div>
-
-          <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(auto-fill, minmax(130px, 1fr))' : 'repeat(auto-fill, minmax(140px, 1fr))', gap: '12px' }}>
-            {filteredMenu.map(item => {
-              const isStopped = stopList.includes(item.id);
-              return (
-                <div 
-                  key={item.id} 
-                  onClick={() => handleAddToCart(item)}
-                  style={{ backgroundColor: isStopped ? 'var(--bg-main)' : 'var(--bg-card)', border: `2px solid ${isStopped ? 'var(--border-color)' : 'transparent'}`, opacity: isStopped ? 0.5 : 1, padding: isMobile ? '12px' : '16px', borderRadius: '16px', cursor: isStopped ? 'not-allowed' : 'pointer', display: 'flex', flexDirection: 'column', gap: '8px', boxShadow: isStopped ? 'none' : '0 4px 6px -1px var(--shadow-color)', transition: 'transform 0.1s', position: 'relative', minHeight: '120px', justifyContent: 'center' }}
-                  onMouseDown={(e) => { if(!isStopped) e.currentTarget.style.transform = 'scale(0.95)'; }}
-                  onMouseUp={(e) => { if(!isStopped) e.currentTarget.style.transform = 'scale(1)'; }}
-                  onMouseLeave={(e) => { if(!isStopped) e.currentTarget.style.transform = 'scale(1)'; }}
-                >
-                  {isStopped && <div style={{ position: 'absolute', top: '-10px', right: '-10px', backgroundColor: '#ef4444', color: 'white', fontSize: '10px', fontWeight: 'bold', padding: '4px 8px', borderRadius: '8px', zIndex: 10 }}>СТОП</div>}
-                  <div style={{ fontSize: isMobile ? '40px' : '36px', textAlign: 'center', margin: '4px 0' }}>{getProductIcon(item.name)}</div>
-                  <div style={{ textAlign: 'center' }}>
-                    <div style={{ fontWeight: 'bold', color: 'var(--text-main)', fontSize: '14px', lineHeight: '1.2', marginBottom: '6px' }}>{item.name}</div>
-                    <div style={{ color: '#10b981', fontWeight: '900', fontSize: '16px' }}>{item.price} ₽</div>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* ПРАВАЯ ЧАСТЬ (КОРЗИНА И ОЧЕРЕДЬ) */}
+        {/* ПРАВАЯ ЧАСТЬ */}
         <div style={{ flex: 1, display: (!isMobile || mobileView === 'cart') ? 'flex' : 'none', flexDirection: 'column', gap: '16px', height: isMobile ? 'auto' : '100%', minHeight: isMobile ? 'auto' : '600px', width: '100%' }}>
           
           <div style={{ display: 'flex', gap: '6px', backgroundColor: 'var(--bg-card)', padding: '8px', borderRadius: '16px', boxShadow: '0 2px 4px -1px var(--shadow-color)', border: '1px solid var(--border-color)', overflowX: 'auto' }} className="hide-scroll">
@@ -258,7 +229,6 @@ const BaristaModule = ({
             <button onClick={() => setActiveRightTab('delivery')} style={{ flex: 1, minWidth: '80px', padding: '12px 4px', borderRadius: '10px', border: 'none', backgroundColor: activeRightTab === 'delivery' ? '#10b981' : 'transparent', color: activeRightTab === 'delivery' ? 'white' : 'var(--text-main)', fontWeight: 'bold', cursor: 'pointer', transition: 'all 0.2s', fontSize: '13px' }}>
               🛵 Дост.
             </button>
-            {/* 🚀 ВЕРНУЛИ КНОПКУ TELEGRAM СЮДА */}
             <button onClick={() => setActiveRightTab('telegram')} style={{ flex: 1, minWidth: '80px', padding: '12px 4px', borderRadius: '10px', border: 'none', backgroundColor: activeRightTab === 'telegram' ? '#0088cc' : 'transparent', color: activeRightTab === 'telegram' ? 'white' : 'var(--text-main)', fontWeight: 'bold', cursor: 'pointer', transition: 'all 0.2s', fontSize: '13px' }}>
               ✈️ TG
             </button>
@@ -267,141 +237,35 @@ const BaristaModule = ({
             </button>
           </div>
 
+          {/* Используем новые компоненты в зависимости от выбранной вкладки */}
           {activeRightTab === 'cart' && (
-            <div style={{ backgroundColor: 'var(--bg-card)', borderRadius: '24px', boxShadow: '0 10px 25px -5px var(--shadow-color)', display: 'flex', flexDirection: 'column', flexGrow: 1, border: '1px solid var(--border-color)', position: 'relative', overflow: 'hidden' }}>
-              
-              <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--border-color)' }}>
-                <h2 style={{ margin: 0, fontSize: '18px', color: 'var(--text-main)', fontWeight: '900' }}>Текущий чек</h2>
-              </div>
-              
-              <div style={{ flexGrow: 1, overflowY: 'auto', padding: '20px', overflowX: 'hidden' }}>
-                {cart.length === 0 ? (
-                  <div style={{ margin: 'auto', textAlign: 'center', color: 'var(--text-muted)', height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-                    <div style={{ fontSize: '40px', marginBottom: '8px' }}>🛒</div>
-                    <div>Выберите товары из меню</div>
-                  </div>
-                ) : (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', transition: 'all 0.5s ease', transform: isSuccessFlash ? 'translateY(-50px)' : 'translateY(0)', opacity: isSuccessFlash ? 0 : 1 }}>
-                    {cart.map((item, idx) => (
-                      <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingBottom: '12px', borderBottom: '1px dashed var(--border-color)' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                          <button onClick={() => removeFromCart(idx)} style={{ background: 'rgba(239, 68, 68, 0.1)', border: 'none', color: '#ef4444', fontSize: '16px', cursor: 'pointer', padding: '8px 12px', borderRadius: '8px', fontWeight: 'bold' }}>✖</button>
-                          <span style={{ fontWeight: '600', color: 'var(--text-main)', fontSize: '15px' }}>{item.name}</span>
-                        </div>
-                        <span style={{ fontWeight: 'bold', color: 'var(--text-main)', fontSize: '15px' }}>{item.price} ₽</span>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              {/* БЛОК CRM И ЛОЯЛЬНОСТИ */}
-              <div style={{ padding: '16px 20px', backgroundColor: 'var(--bg-main)', borderTop: '1px solid var(--border-color)' }}>
-                {!foundClient ? (
-                  <div style={{ display: 'flex', gap: '8px', flexDirection: isMobile ? 'column' : 'row' }}>
-                    <input 
-                      type="text" 
-                      placeholder="Номер телефона гостя" 
-                      value={clientPhone}
-                      onChange={(e) => setClientPhone(e.target.value)}
-                      style={{ flex: 1, padding: '14px', borderRadius: '12px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-card)', color: 'var(--text-main)', outline: 'none', fontSize: '16px' }}
-                    />
-                    <div style={{ display: 'flex', gap: '8px' }}>
-                      <button onClick={handleFindClient} style={{ flex: 1, padding: '14px', backgroundColor: '#3b82f6', color: 'white', border: 'none', borderRadius: '12px', cursor: 'pointer', fontWeight: 'bold', fontSize: '15px' }}>
-                        🔍 Найти
-                      </button>
-                      <button onClick={handleSimulateQRScan} style={{ padding: '14px', backgroundColor: '#8b5cf6', color: 'white', border: 'none', borderRadius: '12px', cursor: 'pointer', fontWeight: 'bold', fontSize: '15px' }} title="Сканировать QR-код карты">
-                        📷 QR
-                      </button>
-                    </div>
-                  </div>
-                ) : (
-                  <div style={{ backgroundColor: 'rgba(16, 185, 129, 0.1)', border: '1px solid rgba(16, 185, 129, 0.3)', borderRadius: '12px', padding: '16px' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-                      <span style={{ fontWeight: 'bold', color: 'var(--text-main)', fontSize: '15px' }}>Гость: +7 {foundClient.phone}</span>
-                      <button onClick={() => { setFoundClient(null); setPointsToSpend(0); }} style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', fontSize: '13px', fontWeight: 'bold' }}>✖ Отмена</button>
-                    </div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <span style={{ color: '#10b981', fontWeight: '900', fontSize: '15px' }}>Баланс: {foundClient.points} баллов</span>
-                      {foundClient.points > 0 && cartTotal > 0 && (
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                          <span style={{ fontSize: '13px', color: 'var(--text-muted)' }}>Списать:</span>
-                          <input 
-                            type="number" 
-                            max={Math.min(foundClient.points, cartTotal)} 
-                            min="0"
-                            value={pointsToSpend}
-                            onChange={(e) => setPointsToSpend(Math.min(Number(e.target.value), foundClient.points, cartTotal))}
-                            style={{ width: '70px', padding: '8px', borderRadius: '8px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-card)', color: 'var(--text-main)', textAlign: 'center', fontSize: '15px', fontWeight: 'bold' }}
-                          />
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              {/* БЛОК ОПЛАТЫ */}
-              <div style={{ padding: '20px', backgroundColor: 'var(--bg-main)', borderTop: '1px solid var(--border-color)' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                  <span style={{ color: 'var(--text-muted)', fontSize: '15px' }}>Сумма:</span>
-                  <span style={{ color: 'var(--text-main)', fontSize: '18px', fontWeight: 'bold' }}>{cartTotal} ₽</span>
-                </div>
-                {pointsToSpend > 0 && (
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px', color: '#ef4444' }}>
-                    <span style={{ fontSize: '15px' }}>Списано баллов:</span>
-                    <span style={{ fontSize: '18px', fontWeight: 'bold' }}>-{pointsToSpend} ₽</span>
-                  </div>
-                )}
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', position: 'relative' }}>
-                  <span style={{ color: 'var(--text-muted)', fontSize: '20px' }}>К оплате:</span>
-                  <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
-                    {floatingRevenue !== null && (
-                      <span className="classic-money-fly" style={{ position: 'absolute', right: '0', bottom: '0', color: '#10b981', fontSize: '36px', fontWeight: '900', whiteSpace: 'nowrap', pointerEvents: 'none', zIndex: 50 }}>
-                        +{floatingRevenue} ₽
-                      </span>
-                    )}
-                    <span style={{ color: '#10b981', fontSize: '36px', fontWeight: '900' }}>{finalCharge} ₽</span>
-                  </div>
-                </div>
-                <button onClick={handleCheckoutClick} style={{ width: '100%', padding: '20px', backgroundColor: cart.length > 0 ? '#3b82f6' : 'var(--border-color)', color: cart.length > 0 ? 'white' : 'var(--text-muted)', border: 'none', borderRadius: '16px', fontSize: '22px', fontWeight: '900', cursor: cart.length > 0 ? 'pointer' : 'not-allowed', transition: 'background-color 0.2s', boxShadow: cart.length > 0 ? '0 10px 20px rgba(59, 130, 246, 0.3)' : 'none' }}>
-                  ОПЛАТИТЬ
-                </button>
-              </div>
-            </div>
+            <BaristaCart 
+              cart={cart}
+              removeFromCart={removeFromCart}
+              isSuccessFlash={isSuccessFlash}
+              foundClient={foundClient}
+              clientPhone={clientPhone}
+              setClientPhone={setClientPhone}
+              handleFindClient={handleFindClient}
+              handleSimulateQRScan={handleSimulateQRScan}
+              setFoundClient={setFoundClient}
+              setPointsToSpend={setPointsToSpend}
+              pointsToSpend={pointsToSpend}
+              cartTotal={cartTotal}
+              floatingRevenue={floatingRevenue}
+              finalCharge={finalCharge}
+              handleCheckoutClick={handleCheckoutClick}
+              isMobile={isMobile}
+            />
           )}
 
           {activeRightTab === 'queue' && (
-            <div style={{ backgroundColor: 'var(--bg-card)', borderRadius: '24px', boxShadow: '0 10px 25px -5px var(--shadow-color)', display: 'flex', flexDirection: 'column', flexGrow: 1, border: '1px solid var(--border-color)', animation: 'fadeIn 0.2s ease' }}>
-              <div style={{ padding: '20px', borderBottom: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <h2 style={{ margin: 0, fontSize: '20px', color: 'var(--text-main)', fontWeight: '900' }}>В работе</h2>
-                <span style={{ backgroundColor: '#f59e0b', color: 'white', padding: '4px 10px', borderRadius: '12px', fontSize: '14px', fontWeight: 'bold' }}>{activeOrders.length}</span>
-              </div>
-              <div style={{ flexGrow: 1, overflowY: 'auto', padding: '20px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                {activeOrders.length === 0 ? (
-                  <div style={{ margin: 'auto', textAlign: 'center', color: 'var(--text-muted)' }}>
-                    <div style={{ fontSize: '40px', marginBottom: '8px' }}>✨</div>
-                    <div>Все заказы отданы!</div>
-                  </div>
-                ) : (
-                  activeOrders.map(order => (
-                    <div key={order.id} style={{ border: '1px solid var(--border-color)', borderRadius: '16px', padding: '16px', backgroundColor: 'var(--bg-main)' }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px' }}>
-                        <span style={{ fontWeight: '900', color: 'var(--text-main)', fontSize: '18px' }}>{order.id}</span>
-                        <span style={{ color: 'var(--text-muted)', fontSize: '14px' }}>{order.time}</span>
-                      </div>
-                      <div style={{ color: 'var(--text-main)', fontSize: '16px', marginBottom: '16px', lineHeight: '1.4' }}>
-                        {order.item.split(' + ').map((it, i) => <div key={i}>• {it}</div>)}
-                      </div>
-                      <div style={{ display: 'flex', gap: '8px', flexDirection: isMobile ? 'column' : 'row' }}>
-                        <button onClick={() => onCompleteOrder(order.id)} style={{ flex: 1, padding: '14px', backgroundColor: '#10b981', color: 'white', border: 'none', borderRadius: '12px', fontWeight: 'bold', cursor: 'pointer', fontSize: '16px' }}>✅ ВЫДАТЬ</button>
-                        <button onClick={() => onCancelOrder(order.id)} style={{ flex: isMobile ? 1 : 0, padding: '14px 20px', backgroundColor: 'transparent', color: '#ef4444', border: '1px solid #ef4444', borderRadius: '12px', fontWeight: 'bold', cursor: 'pointer' }}>Отмена</button>
-                      </div>
-                    </div>
-                  ))
-                )}
-              </div>
-            </div>
+            <BaristaQueue 
+              activeOrders={activeOrders}
+              onCompleteOrder={onCompleteOrder}
+              onCancelOrder={onCancelOrder}
+              isMobile={isMobile}
+            />
           )}
 
           {activeRightTab === 'delivery' && <div style={{ animation: 'fadeIn 0.2s ease', flexGrow: 1 }}><DeliveryWidget onAddDeliveryToRevenue={onAddDeliveryToRevenue} /></div>}
