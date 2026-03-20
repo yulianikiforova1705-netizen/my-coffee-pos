@@ -46,6 +46,13 @@ const CoreModule = () => {
     }
   };
 
+  const getRoleIcon = (role) => {
+    if (role === 'Владелец') return '👑';
+    if (role === 'Управляющий') return '👔';
+    if (role === 'Бариста') return '☕';
+    return '👤';
+  };
+
   const ownerTabs = [
     { id: 'Сводка', icon: '📊', label: 'Главная сводка' },
     { id: 'Журнал', icon: '📋', label: 'Журнал событий' },
@@ -92,7 +99,7 @@ const CoreModule = () => {
         <LandingPage appData={logic.appData} onRoleSelect={logic.handleRoleRequest} />
       ) : (
         <>
-          {/* ВЕРХНЯЯ ПАНЕЛЬ С ВОЗВРАЩЕННЫМ ЛОГОТИПОМ */}
+          {/* ВЕРХНЯЯ ПАНЕЛЬ С ЛОГОТИПОМ И ИКОНКОЙ РОЛИ */}
           <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', justifyContent: 'space-between', alignItems: isMobile ? 'flex-start' : 'center', gap: '16px', marginBottom: '24px', backgroundColor: 'var(--bg-card)', padding: '16px 24px', borderRadius: '16px', boxShadow: '0 4px 6px -1px var(--shadow-color)' }}>
             
             <div style={{ display: 'flex', alignItems: 'center', gap: '16px', flexShrink: 0, width: isMobile ? '100%' : 'auto', justifyContent: isMobile ? 'space-between' : 'flex-start' }}>
@@ -106,7 +113,9 @@ const CoreModule = () => {
                   <h1 style={{ fontSize: '18px', fontWeight: '800', margin: '0 0 4px 0', color: 'var(--text-main)', letterSpacing: '-0.5px', whiteSpace: 'nowrap' }}>GOURMET COFFEE</h1>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                     <div style={{ backgroundColor: '#10b981', width: '8px', height: '8px', borderRadius: '50%' }}></div>
-                    <span style={{ fontSize: '12px', fontWeight: 'bold', color: 'var(--text-muted)' }}>{logic.currentRole} ONLINE</span>
+                    <span style={{ fontSize: '12px', fontWeight: 'bold', color: 'var(--text-muted)' }}>
+                      {getRoleIcon(logic.currentRole)} {logic.currentRole} ONLINE
+                    </span>
                   </div>
                 </div>
               </div>
@@ -140,7 +149,7 @@ const CoreModule = () => {
           {/* ОСНОВНОЙ КОНТЕНТ */}
           <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', gap: isMobile ? '16px' : '24px', alignItems: 'flex-start', flex: 1, width: '100%', maxWidth: '100vw' }}>
             
-            {/* САЙДБАР С УВЕЛИЧЕННЫМИ ИКОНКАМИ */}
+            {/* САЙДБАР */}
             {logic.currentRole !== 'Бариста' && (
               <div className="hide-scroll" style={{ 
                 flex: isMobile ? 'none' : '0 0 240px', 
