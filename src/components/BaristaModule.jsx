@@ -16,9 +16,9 @@ const BaristaModule = ({
   const [activeCategory, setActiveCategory] = useState('Все');
   const [activeRightTab, setActiveRightTab] = useState('cart'); 
 
-  // 🚀 МОБИЛЬНАЯ АДАПТАЦИЯ (Переключатель экранов для телефона)
+  // 🚀 МОБИЛЬНАЯ АДАПТАЦИЯ
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
-  const [mobileView, setMobileView] = useState('menu'); // 'menu' или 'cart'
+  const [mobileView, setMobileView] = useState('menu'); 
 
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth <= 768);
@@ -61,7 +61,6 @@ const BaristaModule = ({
     if (stopList.includes(item.id)) return;
     setCart([...cart, item]);
     if (activeRightTab !== 'cart') setActiveRightTab('cart');
-    // На телефоне НЕ перекидываем сразу в корзину, даем набрать товары
   };
 
   const removeFromCart = (indexToRemove) => {
@@ -124,7 +123,7 @@ const BaristaModule = ({
       setFloatingRevenue(null);
       setCheckoutStep('rating');
       setShowCustomerDisplay(true);
-      if (isMobile) setMobileView('menu'); // Возвращаем на меню после оплаты
+      if (isMobile) setMobileView('menu');
     }, 700); 
   };
 
@@ -156,7 +155,6 @@ const BaristaModule = ({
   const challengeProgress = Math.min((currentDessertsSold / challengeGoal) * 100, 100);
 
   return (
-    // На телефоне добавляем отступ снизу, чтобы нижнее меню не перекрывало контент
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%', gap: isMobile ? '12px' : '20px', paddingBottom: isMobile ? '80px' : '0' }}>
       
       <style>
@@ -198,7 +196,7 @@ const BaristaModule = ({
 
       <div style={{ display: 'flex', gap: '24px', alignItems: 'flex-start', flexGrow: 1, flexDirection: isMobile ? 'column' : 'row' }}>
         
-        {/* ЛЕВАЯ ЧАСТЬ (МЕНЮ) - Скрываем на телефоне, если открыта корзина */}
+        {/* ЛЕВАЯ ЧАСТЬ (МЕНЮ) */}
         <div style={{ flex: 1.8, display: (!isMobile || mobileView === 'menu') ? 'flex' : 'none', flexDirection: 'column', gap: '16px', width: '100%' }}>
           
           <div style={{ backgroundColor: 'rgba(59, 130, 246, 0.05)', border: '1px solid rgba(59, 130, 246, 0.2)', borderRadius: '16px', padding: '12px 16px', display: 'flex', alignItems: 'center', gap: '16px' }}>
@@ -214,7 +212,6 @@ const BaristaModule = ({
             </div>
           </div>
 
-          {/* КАТЕГОРИИ МЕНЮ */}
           <div className="hide-scroll" style={{ display: 'flex', gap: '8px', overflowX: 'auto', paddingBottom: '8px' }}>
             {categories.map(cat => (
               <button key={cat} onClick={() => setActiveCategory(cat)} style={{ padding: '14px 20px', backgroundColor: activeCategory === cat ? '#3b82f6' : 'var(--bg-card)', color: activeCategory === cat ? 'white' : 'var(--text-main)', border: activeCategory === cat ? 'none' : '1px solid var(--border-color)', borderRadius: '12px', cursor: 'pointer', fontWeight: 'bold', whiteSpace: 'nowrap', transition: 'all 0.2s', flexShrink: 0, fontSize: '15px' }}>
@@ -223,7 +220,6 @@ const BaristaModule = ({
             ))}
           </div>
 
-          {/* КНОПКИ ТОВАРОВ */}
           <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(auto-fill, minmax(130px, 1fr))' : 'repeat(auto-fill, minmax(140px, 1fr))', gap: '12px' }}>
             {filteredMenu.map(item => {
               const isStopped = stopList.includes(item.id);
@@ -248,7 +244,7 @@ const BaristaModule = ({
           </div>
         </div>
 
-        {/* ПРАВАЯ ЧАСТЬ (КОРЗИНА И ОЧЕРЕДЬ) - Скрываем на телефоне, если открыто меню */}
+        {/* ПРАВАЯ ЧАСТЬ (КОРЗИНА И ОЧЕРЕДЬ) */}
         <div style={{ flex: 1, display: (!isMobile || mobileView === 'cart') ? 'flex' : 'none', flexDirection: 'column', gap: '16px', height: isMobile ? 'auto' : '100%', minHeight: isMobile ? 'auto' : '600px', width: '100%' }}>
           
           <div style={{ display: 'flex', gap: '6px', backgroundColor: 'var(--bg-card)', padding: '8px', borderRadius: '16px', boxShadow: '0 2px 4px -1px var(--shadow-color)', border: '1px solid var(--border-color)', overflowX: 'auto' }} className="hide-scroll">
@@ -262,12 +258,15 @@ const BaristaModule = ({
             <button onClick={() => setActiveRightTab('delivery')} style={{ flex: 1, minWidth: '80px', padding: '12px 4px', borderRadius: '10px', border: 'none', backgroundColor: activeRightTab === 'delivery' ? '#10b981' : 'transparent', color: activeRightTab === 'delivery' ? 'white' : 'var(--text-main)', fontWeight: 'bold', cursor: 'pointer', transition: 'all 0.2s', fontSize: '13px' }}>
               🛵 Дост.
             </button>
+            {/* 🚀 ВЕРНУЛИ КНОПКУ TELEGRAM СЮДА */}
+            <button onClick={() => setActiveRightTab('telegram')} style={{ flex: 1, minWidth: '80px', padding: '12px 4px', borderRadius: '10px', border: 'none', backgroundColor: activeRightTab === 'telegram' ? '#0088cc' : 'transparent', color: activeRightTab === 'telegram' ? 'white' : 'var(--text-main)', fontWeight: 'bold', cursor: 'pointer', transition: 'all 0.2s', fontSize: '13px' }}>
+              ✈️ TG
+            </button>
             <button onClick={() => setActiveRightTab('tools')} style={{ flex: 1, minWidth: '80px', padding: '12px 4px', borderRadius: '10px', border: 'none', backgroundColor: activeRightTab === 'tools' ? '#8b5cf6' : 'transparent', color: activeRightTab === 'tools' ? 'white' : 'var(--text-main)', fontWeight: 'bold', cursor: 'pointer', transition: 'all 0.2s', fontSize: '13px' }}>
               🛠 Инстр.
             </button>
           </div>
 
-          {/* ВКЛАДКА КАССЫ */}
           {activeRightTab === 'cart' && (
             <div style={{ backgroundColor: 'var(--bg-card)', borderRadius: '24px', boxShadow: '0 10px 25px -5px var(--shadow-color)', display: 'flex', flexDirection: 'column', flexGrow: 1, border: '1px solid var(--border-color)', position: 'relative', overflow: 'hidden' }}>
               
