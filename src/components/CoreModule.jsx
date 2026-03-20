@@ -23,7 +23,6 @@ const CoreModule = () => {
   const [showBaristaCabinet, setShowBaristaCabinet] = useState(false);
   const [isFullScreen, setIsFullScreen] = useState(false);
   
-  // 🚀 ДОБАВЛЯЕМ ДЕТЕКТОР МОБИЛЬНОГО ТЕЛЕФОНА
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
 
   useEffect(() => {
@@ -93,44 +92,48 @@ const CoreModule = () => {
         <LandingPage appData={logic.appData} onRoleSelect={logic.handleRoleRequest} />
       ) : (
         <>
-          {/* ВЕРХНЯЯ ПАНЕЛЬ (HEADER) Адаптирована под мобильные */}
-          <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', justifyContent: 'space-between', alignItems: isMobile ? 'flex-start' : 'center', gap: isMobile ? '16px' : '0', marginBottom: isMobile ? '16px' : '32px', backgroundColor: 'var(--bg-card)', padding: isMobile ? '16px' : '20px 24px', borderRadius: '16px', boxShadow: '0 4px 6px -1px var(--shadow-color)', overflowX: 'auto' }} className="hide-scroll">
-            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexShrink: 0, width: '100%', justifyContent: isMobile ? 'space-between' : 'flex-start' }}>
+          {/* ВЕРХНЯЯ ПАНЕЛЬ (HEADER) */}
+          <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', justifyContent: 'space-between', alignItems: isMobile ? 'flex-start' : 'center', gap: '16px', marginBottom: '24px', backgroundColor: 'var(--bg-card)', padding: '16px 24px', borderRadius: '16px', boxShadow: '0 4px 6px -1px var(--shadow-color)' }}>
+            
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexShrink: 0, width: isMobile ? '100%' : 'auto', justifyContent: isMobile ? 'space-between' : 'flex-start' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                 <div style={{ fontSize: '24px' }}>☕</div>
                 <div>
-                  <h1 style={{ fontSize: '18px', fontWeight: '800', margin: '0', color: 'var(--text-main)', letterSpacing: '-0.5px' }}>GOURMET COFFEE</h1>
+                  <h1 style={{ fontSize: '18px', fontWeight: '800', margin: '0', color: 'var(--text-main)', letterSpacing: '-0.5px', whiteSpace: 'nowrap' }}>GOURMET COFFEE</h1>
                   <span style={{ fontSize: '11px', fontWeight: 'bold', color: '#10b981' }}>● {logic.currentRole}</span>
                 </div>
               </div>
-              
-              {/* Кнопка "Выйти" на мобильном уезжает наверх для экономии места */}
-              {isMobile && (
-                <button onClick={() => logic.setCurrentRole(null)} style={{ padding: '8px 12px', backgroundColor: 'transparent', color: '#ef4444', border: '1px solid #ef4444', borderRadius: '8px', fontWeight: 'bold', fontSize: '12px' }}>Выйти</button>
-              )}
             </div>
 
-            <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: isMobile ? 'wrap' : 'nowrap', width: isMobile ? '100%' : 'auto' }}>
+            <div className="hide-scroll" style={{ display: 'flex', gap: '8px', alignItems: 'center', width: isMobile ? '100%' : 'auto', overflowX: 'auto', paddingBottom: isMobile ? '4px' : '0' }}>
+              <div style={{ color: 'var(--text-muted)', fontSize: '12px', fontWeight: '600', backgroundColor: 'var(--bg-main)', padding: '8px 12px', borderRadius: '8px', border: '1px solid var(--border-color)', display: 'flex', alignItems: 'center', gap: '8px', whiteSpace: 'nowrap' }}>
+                <span>📅 {logic.dateStr}</span><span style={{ color: '#3b82f6', fontWeight: 'bold' }}>⏱️ {logic.timeStr}</span>
+              </div>
+
               {!isMobile && (
-                <button onClick={toggleFullScreen} style={{ padding: '8px', backgroundColor: 'var(--btn-bg)', border: '1px solid var(--border-color)', borderRadius: '8px', cursor: 'pointer' }}>{isFullScreen ? '↙️' : '🖥️'}</button>
+                <button onClick={toggleFullScreen} style={{ padding: '8px', backgroundColor: 'var(--btn-bg)', border: '1px solid var(--border-color)', borderRadius: '8px', cursor: 'pointer', whiteSpace: 'nowrap' }}>{isFullScreen ? '↙️' : '🖥️'}</button>
               )}
-              <button onClick={() => logic.setIsDarkMode(!logic.isDarkMode)} style={{ padding: '8px', backgroundColor: 'var(--btn-bg)', border: 'none', borderRadius: '8px' }}>{logic.isDarkMode ? '☀️' : '🌙'}</button>
-              <button onClick={logic.handleBackup} style={{ padding: '8px 12px', backgroundColor: 'var(--btn-bg)', border: '1px solid var(--border-color)', borderRadius: '8px', fontSize: '12px', fontWeight: '600' }}>💾 Бэкап</button>
-              <button onClick={() => logic.fileInputRef.current.click()} style={{ padding: '8px 12px', backgroundColor: '#2563eb', color: 'white', border: 'none', borderRadius: '8px', fontSize: '12px', fontWeight: '600' }}>📂 Импорт</button>
-              <input type="file" accept=".json" ref={logic.fileInputRef} onChange={logic.handleImport} style={{ display: 'none' }} />
               
-              {!isMobile && (
-                 <button onClick={() => logic.setCurrentRole(null)} style={{ padding: '8px 12px', backgroundColor: 'transparent', color: '#ef4444', border: '1px solid #ef4444', borderRadius: '8px', fontWeight: 'bold', fontSize: '12px' }}>Выйти</button>
+              {logic.currentRole === 'Владелец' && (
+                <button onClick={() => logic.setShowTelegramModal(true)} style={{ padding: '8px 12px', backgroundColor: '#2ca5e0', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', fontSize: '12px', whiteSpace: 'nowrap' }}>Отчет</button>
               )}
+              
+              {logic.currentRole !== 'Бариста' && (
+                <button onClick={() => logic.setShowArchiveModal(true)} style={{ padding: '8px 12px', backgroundColor: 'var(--btn-bg)', color: 'var(--text-main)', border: '1px solid var(--border-color)', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', fontSize: '12px', whiteSpace: 'nowrap' }}>Архив</button>
+              )}
+
+              <button onClick={() => logic.setIsDarkMode(!logic.isDarkMode)} style={{ padding: '8px', backgroundColor: 'var(--btn-bg)', border: 'none', borderRadius: '8px', cursor: 'pointer', whiteSpace: 'nowrap' }}>{logic.isDarkMode ? '☀️' : '🌙'}</button>
+              <button onClick={logic.handleBackup} style={{ padding: '8px 12px', backgroundColor: 'var(--btn-bg)', border: '1px solid var(--border-color)', borderRadius: '8px', cursor: 'pointer', fontSize: '12px', fontWeight: '600', whiteSpace: 'nowrap' }}>💾 Бэкап</button>
+              <button onClick={() => logic.setCurrentRole(null)} style={{ padding: '8px 12px', backgroundColor: 'transparent', color: '#ef4444', border: '1px solid #ef4444', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', fontSize: '12px', whiteSpace: 'nowrap' }}>🚪 Выйти</button>
             </div>
           </div>
 
           <PWAModule />
 
-          {/* ОСНОВНОЙ КОНТЕНТ (Теперь 100% перестраивается в колонку на телефоне) */}
+          {/* ОСНОВНОЙ КОНТЕНТ */}
           <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', gap: isMobile ? '16px' : '24px', alignItems: 'flex-start', flex: 1, width: '100%', maxWidth: '100vw' }}>
             
-            {/* САЙДБАР (На мобильном превращается в скроллируемую горизонтальную ленту) */}
+            {/* САЙДБАР */}
             {logic.currentRole !== 'Бариста' && (
               <div className="hide-scroll" style={{ 
                 flex: isMobile ? 'none' : '0 0 240px', 
@@ -158,7 +161,6 @@ const CoreModule = () => {
                   );
                 })}
 
-                {/* Кнопка сброса (на телефоне в конце ленты) */}
                 {logic.currentRole === 'Владелец' && (
                   <button onClick={logic.handleHardReset} style={{ flexShrink: 0, padding: '12px 16px', backgroundColor: 'transparent', color: '#ef4444', border: '1px solid #ef4444', borderRadius: '12px', cursor: 'pointer', fontWeight: 'bold', fontSize: '12px', marginTop: isMobile ? '0' : 'auto' }}>💣 Factory Reset</button>
                 )}
@@ -233,28 +235,76 @@ const CoreModule = () => {
 
               {logic.currentRole === 'Бариста' && (
                 <BaristaModule 
-                  onCloseShift={logic.handleCloseShift} onNewOrder={logic.handleCreateOrder} onOpenDrawer={logic.handleOpenDrawer} menuItems={logic.menuItems} stopList={logic.stopList} onToggleStopList={logic.handleToggleStopList} clients={logic.clients} salarySettings={logic.salarySettings} baristaStats={logic.baristaStats} baristas={logic.baristas} promocodes={logic.promocodes} cashbackPercent={logic.cashbackPercent} loggedInBarista={logic.loggedInBarista}
+                  onCloseShift={logic.handleCloseShift} 
+                  onNewOrder={logic.handleCreateOrder} 
+                  onOpenDrawer={logic.handleOpenDrawer} 
+                  menuItems={logic.menuItems} 
+                  stopList={logic.stopList} 
+                  onToggleStopList={logic.handleToggleStopList} 
+                  clients={logic.clients} 
+                  salarySettings={logic.salarySettings} 
+                  baristaStats={logic.baristaStats} 
+                  baristas={logic.baristas} 
+                  promocodes={logic.promocodes} 
+                  cashbackPercent={logic.cashbackPercent} 
+                  loggedInBarista={logic.loggedInBarista}
                   onRequestBaristaSwitch={(b) => { logic.setPinModal({ isOpen: true, targetRole: 'Смена Бариста', targetBarista: b }); logic.setPinInput(''); }}
-                  onRateBarista={logic.handleRateBarista} onAddDeliveryToRevenue={logic.handleAddDeliveryRevenue} handleWriteOff={logic.handleWriteOff} ingredients={logic.ingredients} orders={logic.orders} onCompleteOrder={logic.handleCompleteOrder} onCancelOrder={logic.handleCancelOrder} 
+                  onRateBarista={logic.handleRateBarista} 
+                  onAddDeliveryToRevenue={logic.handleAddDeliveryRevenue} 
+                  handleWriteOff={logic.handleWriteOff} 
+                  ingredients={logic.ingredients} 
+                  orders={logic.orders} 
+                  onCompleteOrder={logic.handleCompleteOrder} 
+                  onCancelOrder={logic.handleCancelOrder} 
                 />
               )}
             </div>
           </div>
 
           <DashboardModals 
-            showTelegramModal={logic.showTelegramModal} setShowTelegramModal={logic.setShowTelegramModal} currentRevenue={logic.currentRevenue} totalManualExpenses={logic.totalManualExpenses} currentNetProfit={logic.currentNetProfit} topSales={logic.topSales} showProcurementModal={logic.showProcurementModal} setShowProcurementModal={logic.setShowProcurementModal} ingredients={logic.ingredients} menuItems={logic.menuItems} showArchiveModal={logic.showArchiveModal} setShowArchiveModal={logic.setShowArchiveModal} shiftArchive={logic.shiftArchive} onApproveProcurement={logic.handleApproveProcurement}
+            showTelegramModal={logic.showTelegramModal} 
+            setShowTelegramModal={logic.setShowTelegramModal} 
+            currentRevenue={logic.currentRevenue} 
+            totalManualExpenses={logic.totalManualExpenses} 
+            currentNetProfit={logic.currentNetProfit} 
+            topSales={logic.topSales} 
+            showProcurementModal={logic.showProcurementModal} 
+            setShowProcurementModal={logic.setShowProcurementModal} 
+            ingredients={logic.ingredients} 
+            menuItems={logic.menuItems} 
+            showArchiveModal={logic.showArchiveModal} 
+            setShowArchiveModal={logic.setShowArchiveModal} 
+            shiftArchive={logic.shiftArchive} 
+            onApproveProcurement={logic.handleApproveProcurement}
+          />
+
+          <BaristaCabinet 
+            isOpen={showBaristaCabinet} 
+            onClose={() => setShowBaristaCabinet(false)} 
+            baristaName={logic.loggedInBarista} 
+            baristaStats={logic.baristaStats} 
+            salarySettings={logic.salarySettings} 
           />
         </>
       )}
 
+      {/* ПИН-КОД */}
       {logic.pinModal.isOpen && (
         <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.8)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', backdropFilter: 'blur(8px)' }}>
-          <div style={{ backgroundColor: 'var(--bg-card)', padding: '30px', borderRadius: '20px', width: '300px', textAlign: 'center' }}>
-            <h3 style={{ margin: '0 0 20px 0', fontSize: '18px' }}>ВХОД</h3>
-            <input type="password" maxLength="4" value={logic.pinInput} onChange={(e) => logic.setPinInput(e.target.value.replace(/\D/g, ''))} style={{ width: '100%', fontSize: '28px', textAlign: 'center', padding: '10px', borderRadius: '10px', border: `2px solid var(--border-color)`, backgroundColor: 'var(--bg-main)', letterSpacing: '8px' }} autoFocus />
+          <div style={{ backgroundColor: '#ffffff', padding: '30px', borderRadius: '20px', width: '300px', textAlign: 'center', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)' }}>
+            <h3 style={{ margin: '0 0 20px 0', fontSize: '18px', color: '#111827' }}>ВХОД</h3>
+            <input 
+              type="password" 
+              maxLength="4" 
+              value={logic.pinInput} 
+              onChange={(e) => logic.setPinInput(e.target.value.replace(/\D/g, ''))} 
+              onKeyDown={(e) => { if (e.key === 'Enter') logic.handlePinSubmit(); }}
+              style={{ width: '100%', fontSize: '28px', textAlign: 'center', padding: '10px', borderRadius: '10px', border: `2px solid #e5e7eb`, backgroundColor: '#f3f4f6', color: '#111827', letterSpacing: '8px', boxSizing: 'border-box' }} 
+              autoFocus 
+            />
             <div style={{ display: 'flex', gap: '10px', marginTop: '20px' }}>
-              <button onClick={logic.cancelPin} style={{ flex: 1, padding: '10px', borderRadius: '8px', border: 'none' }}>ОТМЕНА</button>
-              <button onClick={logic.handlePinSubmit} style={{ flex: 1, padding: '10px', backgroundColor: '#3b82f6', color: 'white', borderRadius: '8px', border: 'none', fontWeight: 'bold' }}>ВОЙТИ</button>
+              <button onClick={logic.cancelPin} style={{ flex: 1, padding: '10px', borderRadius: '8px', border: 'none', backgroundColor: '#e5e7eb', color: '#111827', fontWeight: 'bold', cursor: 'pointer' }}>ОТМЕНА</button>
+              <button onClick={logic.handlePinSubmit} style={{ flex: 1, padding: '10px', backgroundColor: '#3b82f6', color: 'white', borderRadius: '8px', border: 'none', fontWeight: 'bold', cursor: 'pointer' }}>ВОЙТИ</button>
             </div>
           </div>
         </div>
