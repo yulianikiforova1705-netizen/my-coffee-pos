@@ -7,6 +7,7 @@ import { CustomerDisplayModal, ZReportModal } from './BaristaModals';
 import BaristaMenu from './BaristaMenu';
 import BaristaCart from './BaristaCart';
 import BaristaQueue from './BaristaQueue';
+import BaristaCabinet from './BaristaCabinet'; // 🚀 Вернули импорт кабинета
 
 const BaristaModule = ({
   onCloseShift, onNewOrder, onOpenDrawer, menuItems = [], stopList = [],
@@ -22,6 +23,9 @@ const BaristaModule = ({
 
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
   const [mobileView, setMobileView] = useState('menu'); 
+
+  // 🚀 Состояние для открытия кабинета
+  const [showBaristaCabinet, setShowBaristaCabinet] = useState(false);
 
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth <= 768);
@@ -170,17 +174,22 @@ const BaristaModule = ({
           }
           .hide-scroll::-webkit-scrollbar { display: none; }
           .hide-scroll { -ms-overflow-style: none; scrollbar-width: none; }
+          .barista-profile-hover:hover { background-color: rgba(59, 130, 246, 0.1); }
         `}
       </style>
 
-      {/* ВЕРХНЯЯ ПАНЕЛЬ С ИСПРАВЛЕННЫМ ОТСТУПОМ */}
+      {/* ВЕРХНЯЯ ПАНЕЛЬ */}
       <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', justifyContent: 'space-between', alignItems: isMobile ? 'stretch' : 'center', gap: '12px', backgroundColor: 'var(--bg-card)', padding: '16px', borderRadius: '16px', boxShadow: '0 4px 6px -1px var(--shadow-color)' }}>
         
-        {/* Добавил gap: '20px' чтобы кнопка не наезжала на текст */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '20px' }}>
           
-          {/* flexShrink: 0 запрещает сплющивать этот блок */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexShrink: 0 }}>
+          {/* 🚀 Теперь блок с именем кликабельный и открывает кабинет */}
+          <div 
+            onClick={() => setShowBaristaCabinet(true)}
+            className="barista-profile-hover"
+            style={{ display: 'flex', alignItems: 'center', gap: '12px', flexShrink: 0, cursor: 'pointer', padding: '6px 12px', borderRadius: '12px', transition: '0.2s', marginLeft: '-12px' }}
+            title="Открыть личный кабинет"
+          >
             <div style={{ width: '40px', height: '40px', borderRadius: '50%', backgroundColor: '#3b82f6', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '20px', fontWeight: 'bold' }}>
               {loggedInBarista.charAt(0)}
             </div>
@@ -323,6 +332,15 @@ const BaristaModule = ({
       <ZReportModal 
         showZReport={showZReport} shiftTime={new Date().getTime()} shiftRevenue={baristaStats[loggedInBarista]?.revenue || 0}
         baristas={baristas} baristaStats={baristaStats} salarySettings={salarySettings} finishZReport={finishZReport}
+      />
+
+      {/* 🚀 ВЕРНУЛИ КОМПОНЕНТ КАБИНЕТА В САМЫЙ НИЗ */}
+      <BaristaCabinet 
+        isOpen={showBaristaCabinet} 
+        onClose={() => setShowBaristaCabinet(false)} 
+        baristaName={loggedInBarista} 
+        baristaStats={baristaStats} 
+        salarySettings={salarySettings} 
       />
     </div>
   );
