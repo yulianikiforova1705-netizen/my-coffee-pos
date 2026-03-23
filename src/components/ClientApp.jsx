@@ -20,9 +20,23 @@ const ClientApp = ({ appData, clients = {} }) => {
     };
   }, []);
 
-  // 🚀 ИСПРАВЛЕННАЯ ОШИБКА: добавил phone во временного гостя!
-  const phoneDigits = '9990000000';
-  const currentGuest = clients[phoneDigits] || { name: 'Гость', points: 150, phone: '9990000000' };
+  // 🛡️ Бронебойная защита: берем первого реального клиента из базы
+  // Если база пуста, используем тестовый номер
+  const availablePhones = Object.keys(clients);
+  const targetPhone = availablePhones.length > 0 ? availablePhones[0] : '9990000000';
+  const dbGuest = clients[targetPhone] || {};
+  
+  // Гарантируем, что ни одно поле не будет undefined
+  const currentGuest = {
+    name: dbGuest.name || 'Любимый гость',
+    points: dbGuest.points || 150,
+    phone: targetPhone
+  };
+
+  // Безопасное получение последних 4 цифр (даже если номер короткий)
+  const displayPhone = currentGuest.phone.length >= 4 
+    ? currentGuest.phone.slice(-4) 
+    : currentGuest.phone;
 
   return (
     <div style={{ backgroundColor: '#f9fafb', minHeight: '100vh', fontFamily: 'system-ui, -apple-system, sans-serif', color: '#111827', position: 'relative', overflow: 'hidden' }}>
@@ -101,7 +115,7 @@ const ClientApp = ({ appData, clients = {} }) => {
                   <img src={`https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${currentGuest.phone}`} alt="Guest QR Code" style={{ border: '10px solid white', borderRadius: '8px' }} />
                 </div>
                 <div style={{ fontSize: '14px', color: '#6b7280', letterSpacing: '2px' }}>
-                  +7 *** *** {currentGuest.phone.slice(-4)}
+                  +7 *** *** {displayPhone}
                 </div>
               </div>
             </div>
