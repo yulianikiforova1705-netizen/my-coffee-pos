@@ -20,14 +20,13 @@ const ClientApp = ({ appData, clients = {} }) => {
     };
   }, []);
 
-  // Находим первого реального клиента или используем тестовые данные
   const availablePhones = Object.keys(clients);
   const targetPhone = availablePhones.length > 0 ? availablePhones[0] : '9990000000';
   const dbGuest = clients[targetPhone] || {};
   
   const currentGuest = {
     name: dbGuest.name || 'Любимый гость',
-    points: dbGuest.points || 1350, // Сделаем побольше для красоты
+    points: dbGuest.points || 1350, 
     phone: targetPhone
   };
 
@@ -35,7 +34,6 @@ const ClientApp = ({ appData, clients = {} }) => {
     ? currentGuest.phone.slice(-4) 
     : currentGuest.phone;
 
-  // Рассчитываем прогресс до следующего уровня (например, каждые 5000 баллов - новый уровень)
   const nextLevelPoints = 5000;
   const progressToNextLevel = Math.min(((currentGuest.points % nextLevelPoints) / nextLevelPoints) * 100, 100);
 
@@ -51,7 +49,6 @@ const ClientApp = ({ appData, clients = {} }) => {
         @keyframes float { 0%, 100% { transform: translateY(0px); } 50% { transform: translateY(-10px); } }
         .hide-scroll::-webkit-scrollbar { display: none; }
         .hide-scroll { -ms-overflow-style: none; scrollbar-width: none; }
-        .gourmet-qr img { mix-blend-mode: color-dodge; }
       `}</style>
 
       {/* ☕ ЭКРАН ЗАСТАВКИ */}
@@ -105,10 +102,8 @@ const ClientApp = ({ appData, clients = {} }) => {
                 overflow: 'hidden', 
                 border: '1px solid rgba(255,255,255,0.1)'
               }}>
-                {/* Эффект блика */}
                 <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', background: 'linear-gradient(30deg, transparent 0%, rgba(255,255,255,0.2) 50%, transparent 100%)', animation: 'shine 3s infinite', pointerEvents: 'none' }} />
                 
-                {/* Фоновая иконка */}
                 <div style={{ position: 'absolute', top: '-10px', right: '-10px', opacity: 0.08, fontSize: '140px', transform: 'rotate(-15deg)' }}>☕</div>
                 
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
@@ -128,7 +123,6 @@ const ClientApp = ({ appData, clients = {} }) => {
                   </div>
                 </div>
                 
-                {/* Прогресс-бар */}
                 <div style={{ marginBottom: '8px' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', marginBottom: '6px', color: 'rgba(255,255,255,0.8)' }}>
                     <span>Уровень: Ценитель</span>
@@ -154,7 +148,7 @@ const ClientApp = ({ appData, clients = {} }) => {
                   Покажите этот код бариста
                 </div>
                 
-                <div className="gourmet-qr" style={{ 
+                <div style={{ 
                   width: '210px', 
                   height: '210px', 
                   backgroundColor: '#fff', 
@@ -167,11 +161,11 @@ const ClientApp = ({ appData, clients = {} }) => {
                   position: 'relative', 
                   boxShadow: '0 0 30px rgba(59, 130, 246, 0.2), inset 0 0 15px rgba(0,0,0,0.1)' 
                 }}>
-                  {/* Угловые элементы для футуристичности */}
                   {[ 'top:5px;left:5px', 'top:5px;right:5px', 'bottom:5px;left:5px', 'bottom:5px;right:5px'].map((pos, idx) => (
                     <div key={idx} style={{ position: 'absolute', ...Object.fromEntries(pos.split(';').map(p=>p.split(':'))), width: '20px', height: '20px', border: '3px solid #3b82f6', borderRight: pos.includes('right') ? 'none' : '3px solid #3b82f6', borderLeft: pos.includes('left') ? 'none' : '3px solid #3b82f6', borderTop: pos.includes('top') ? 'none' : '3px solid #3b82f6', borderBottom: pos.includes('bottom') ? 'none' : '3px solid #3b82f6' }} />
                   ))}
-                  <img src={`https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${currentGuest.phone}&color=0f172a`} alt="Guest QR Code" style={{ borderRadius: '10px' }} />
+                  {/* Теперь QR будет виден идеально */}
+                  <img src={`https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${currentGuest.phone}&color=0f172a`} alt="Guest QR Code" style={{ borderRadius: '10px', width: '100%', height: '100%' }} />
                 </div>
                 
                 <div style={{ 
