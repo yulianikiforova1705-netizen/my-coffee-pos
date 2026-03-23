@@ -99,16 +99,20 @@ const CoreModule = () => {
       `}</style>
 
       {logic.currentRole === null ? (
-        <div style={{ position: 'relative', width: '100%', minHeight: '100vh', paddingBottom: '100px' }}>
-          <LandingPage appData={logic.appData} onRoleSelect={logic.handleRoleRequest} />
+        <div style={{ position: 'relative', width: '100%', minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
+          <div style={{ flexGrow: 1 }}>
+            <LandingPage appData={logic.appData} onRoleSelect={logic.handleRoleRequest} />
+          </div>
           
-          {/* 🚀 ИСПРАВЛЕННАЯ КНОПКА ДЛЯ ВХОДА В ПРИЛОЖЕНИЕ ГОСТЯ */}
-          <button 
-            onClick={() => logic.setCurrentRole('Гость')} 
-            style={{ position: 'fixed', bottom: '30px', left: '50%', transform: 'translateX(-50%)', padding: '16px 32px', backgroundColor: '#10b981', color: 'white', border: 'none', borderRadius: '16px', cursor: 'pointer', fontWeight: '900', fontSize: '18px', boxShadow: '0 10px 25px -5px rgba(16, 185, 129, 0.4)', zIndex: 9999, display: 'flex', alignItems: 'center', gap: '12px', transition: '0.2s', whiteSpace: 'nowrap' }}
-          >
-            <span style={{ fontSize: '24px' }}>📱</span> Приложение гостя
-          </button>
+          {/* 🚀 ТЕПЕРЬ КНОПКА ВПИСАНА В ДИЗАЙН И НЕ НАЕЗЖАЕТ НА КАРТОЧКИ */}
+          <div style={{ padding: '20px 20px 60px 20px', display: 'flex', justifyContent: 'center' }}>
+            <button 
+              onClick={() => logic.setCurrentRole('Гость')} 
+              style={{ padding: '16px 32px', backgroundColor: '#10b981', color: 'white', border: 'none', borderRadius: '16px', cursor: 'pointer', fontWeight: '900', fontSize: '18px', boxShadow: '0 10px 25px -5px rgba(16, 185, 129, 0.4)', display: 'flex', alignItems: 'center', gap: '12px', transition: '0.2s', whiteSpace: 'nowrap' }}
+            >
+              <span style={{ fontSize: '24px' }}>📱</span> Приложение гостя
+            </button>
+          </div>
         </div>
       ) : logic.currentRole === 'Гость' ? (
         <>
