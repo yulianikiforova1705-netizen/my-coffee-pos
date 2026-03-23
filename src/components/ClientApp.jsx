@@ -77,9 +77,8 @@ const ClientApp = ({ appData, clients = {}, onClose }) => {
       )}
 
       {/* 🏠 ОСНОВНОЙ КОНТЕНТ */}
-      {/* 🚀 Уменьшили paddingBottom, так как меню стало тоньше */}
       {!showSplash && (
-        <div style={{ animation: 'cardAppearance 0.8s cubic-bezier(0.23, 1, 0.32, 1) forwards', padding: '20px', paddingBottom: '65px', display: 'flex', flexDirection: 'column', gap: '24px' }}>
+        <div style={{ animation: 'cardAppearance 0.8s cubic-bezier(0.23, 1, 0.32, 1) forwards', padding: '20px', paddingBottom: '80px', display: 'flex', flexDirection: 'column', gap: '24px' }}>
           
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
@@ -211,9 +210,25 @@ const ClientApp = ({ appData, clients = {}, onClose }) => {
         </div>
       )}
 
-      {/* 🚀 📱 ИДЕАЛЬНО ТОНКАЯ НИЖНЯЯ МЕНЮ В СТИЛЕ iOS */}
+      {/* 🚀 📱 ИДЕАЛЬНО ТОНКАЯ НИЖНЯЯ ПАНЕЛЬ С ЖЕСТКОЙ ВЫСОТОЙ */}
       {!showSplash && (
-        <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, backgroundColor: 'rgba(15, 23, 42, 0.85)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)', padding: '8px 16px', display: 'flex', justifyContent: 'space-between', boxShadow: '0 -4px 20px rgba(0,0,0,0.4)', zIndex: 100, borderTop: '1px solid rgba(255,255,255,0.05)' }}>
+        <div style={{ 
+          position: 'fixed', 
+          bottom: 0, 
+          left: 0, 
+          right: 0, 
+          height: '65px', /* Жестко фиксируем тонкую высоту */
+          backgroundColor: 'rgba(15, 23, 42, 0.85)', 
+          backdropFilter: 'blur(20px)', 
+          WebkitBackdropFilter: 'blur(20px)', 
+          display: 'flex', 
+          justifyContent: 'space-around', 
+          alignItems: 'center',
+          boxShadow: '0 -4px 20px rgba(0,0,0,0.4)', 
+          zIndex: 100, 
+          borderTop: '1px solid rgba(255,255,255,0.05)',
+          paddingBottom: 'env(safe-area-inset-bottom)' /* Поддержка челки снизу на iPhone */
+        }}>
           {[
             { id: 'card', label: 'Лояльность', icon: '💳' },
             { id: 'menu', label: 'Предзаказ', icon: '☕' },
@@ -221,9 +236,35 @@ const ClientApp = ({ appData, clients = {}, onClose }) => {
           ].map(tab => {
             const isActive = activeTab === tab.id;
             return (
-              <button key={tab.id} onClick={() => setActiveTab(tab.id)} style={{ flex: 1, padding: '4px 0', backgroundColor: 'transparent', color: isActive ? '#3b82f6' : '#64748b', border: 'none', fontSize: '10px', fontWeight: 'bold', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px', cursor: 'pointer', transition: 'all 0.2s ease' }}>
-                <span style={{ fontSize: '22px', filter: isActive ? 'drop-shadow(0 0 8px rgba(59, 130, 246, 0.6))' : 'none', transform: isActive ? 'scale(1.1)' : 'scale(1)', transition: '0.2s' }}>{tab.icon}</span>
-                {tab.label}
+              <button 
+                key={tab.id} 
+                onClick={() => setActiveTab(tab.id)} 
+                style={{ 
+                  flex: 1, 
+                  height: '100%',
+                  backgroundColor: 'transparent', /* Абсолютно никакого фона */
+                  color: isActive ? '#3b82f6' : '#64748b', 
+                  border: 'none', 
+                  display: 'flex', 
+                  flexDirection: 'column', 
+                  alignItems: 'center', 
+                  justifyContent: 'center',
+                  gap: '4px', 
+                  cursor: 'pointer',
+                  padding: 0
+                }}
+              >
+                <span style={{ 
+                  fontSize: '22px', 
+                  transform: isActive ? 'scale(1.1)' : 'scale(1)', 
+                  transition: '0.2s',
+                  textShadow: isActive ? '0 0 10px rgba(59, 130, 246, 0.5)' : 'none'
+                }}>
+                  {tab.icon}
+                </span>
+                <span style={{ fontSize: '10px', fontWeight: isActive ? '700' : '500' }}>
+                  {tab.label}
+                </span>
               </button>
             );
           })}
