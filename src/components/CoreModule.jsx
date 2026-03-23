@@ -17,8 +17,6 @@ import WeatherAIWidget from './WeatherAIWidget';
 import AdvancedInventory from './AdvancedInventory';
 import BaristaCabinet from './BaristaCabinet';
 import DeliveryWidget from './DeliveryWidget';
-
-// 🚀 ИМПОРТИРУЕМ ПРИЛОЖЕНИЕ ГОСТЯ
 import ClientApp from './ClientApp'; 
 
 const CoreModule = () => {
@@ -105,16 +103,11 @@ const CoreModule = () => {
           onGuestEnter={() => logic.setCurrentRole('Гость')} 
         />
       ) : logic.currentRole === 'Гость' ? (
-        <>
-          <button 
-            onClick={() => logic.setCurrentRole(null)} 
-            style={{ position: 'fixed', top: '12px', right: '12px', zIndex: 999999, padding: '6px 12px', backgroundColor: 'rgba(0,0,0,0.3)', color: 'rgba(255,255,255,0.8)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', cursor: 'pointer', backdropFilter: 'blur(8px)', fontWeight: 'bold', fontSize: '12px', transition: '0.2s' }}
-          >
-            ✖ Закрыть
-          </button>
-          
-          <ClientApp appData={logic.appData} clients={logic.clients} />
-        </>
+        <ClientApp 
+          appData={logic.appData} 
+          clients={logic.clients} 
+          onClose={() => logic.setCurrentRole(null)} 
+        />
       ) : (
         <>
           {/* ВЕРХНЯЯ ПАНЕЛЬ С ЛОГОТИПОМ И ИКОНКОЙ РОЛИ */}

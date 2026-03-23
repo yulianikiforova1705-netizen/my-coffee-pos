@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 
-const ClientApp = ({ appData, clients = {} }) => {
+const ClientApp = ({ appData, clients = {}, onClose }) => {
   const [showSplash, setShowSplash] = useState(true);
   const [activeTab, setActiveTab] = useState('card');
 
@@ -78,14 +78,25 @@ const ClientApp = ({ appData, clients = {} }) => {
 
       {/* 🏠 ОСНОВНОЙ КОНТЕНТ */}
       {!showSplash && (
-        <div style={{ animation: 'cardAppearance 0.8s cubic-bezier(0.23, 1, 0.32, 1) forwards', padding: '20px', paddingBottom: '90px', display: 'flex', flexDirection: 'column', gap: '24px' }}>
+        <div style={{ animation: 'cardAppearance 0.8s cubic-bezier(0.23, 1, 0.32, 1) forwards', padding: '20px', paddingBottom: '75px', display: 'flex', flexDirection: 'column', gap: '24px' }}>
           
+          {/* 🚀 Шапка с кнопкой назад */}
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <div>
-              <div style={{ fontSize: '14px', color: '#94a3b8' }}>Добро пожаловать,</div>
-              <div style={{ fontSize: '22px', fontWeight: '900', color: '#fff', letterSpacing: '-0.5px' }}>{currentGuest.name} ✨</div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+              {onClose && (
+                <button 
+                  onClick={onClose} 
+                  style={{ background: 'transparent', border: 'none', color: '#94a3b8', fontSize: '26px', cursor: 'pointer', padding: '0 8px 0 0', display: 'flex', alignItems: 'center', transition: '0.2s' }}
+                >
+                  ←
+                </button>
+              )}
+              <div>
+                <div style={{ fontSize: '14px', color: '#94a3b8' }}>Добро пожаловать,</div>
+                <div style={{ fontSize: '22px', fontWeight: '900', color: '#fff', letterSpacing: '-0.5px' }}>{currentGuest.name} ✨</div>
+              </div>
             </div>
-            <div style={{ width: '48px', height: '48px', borderRadius: '50%', background: 'linear-gradient(135deg, #1e293b 0%, #334155 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '20px', border: '2px solid rgba(255,255,255,0.1)', boxShadow: 'inset 0 2px 4px rgba(255,255,255,0.05)' }}>👤</div>
+            <div style={{ width: '48px', height: '48px', borderRadius: '50%', background: 'linear-gradient(135deg, #1e293b 0%, #334155 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '20px', border: '2px solid rgba(255,255,255,0.1)', boxShadow: 'inset 0 2px 4px rgba(255,255,255,0.05)', flexShrink: 0 }}>👤</div>
           </div>
 
           {activeTab === 'card' && (
@@ -105,7 +116,6 @@ const ClientApp = ({ appData, clients = {} }) => {
                 <div style={{ position: 'absolute', top: '-10px', right: '-10px', opacity: 0.08, fontSize: '120px', transform: 'rotate(-15deg)' }}>☕</div>
                 
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-                  {/* 🚀 Изменили текст здесь */}
                   <div style={{ fontSize: '12px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '2px', color: 'rgba(255,255,255,0.9)' }}>
                     Loyalty Card
                   </div>
@@ -201,9 +211,9 @@ const ClientApp = ({ appData, clients = {} }) => {
         </div>
       )}
 
-      {/* 📱 НИЖНЕЕ МЕНЮ (СДЕЛАЛИ УЖЕ И АККУРАТНЕЕ) */}
+      {/* 🚀 📱 НИЖНЕЕ МЕНЮ (СТАЛО КОМПАКТНЫМ И УЗКИМ) */}
       {!showSplash && (
-        <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, backgroundColor: 'rgba(30, 41, 59, 0.95)', backdropFilter: 'blur(15px)', padding: '8px 16px 16px 16px', display: 'flex', gap: '8px', boxShadow: '0 -5px 20px rgba(0,0,0,0.3)', zIndex: 100, borderTop: '1px solid rgba(255,255,255,0.08)' }}>
+        <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, backgroundColor: 'rgba(30, 41, 59, 0.95)', backdropFilter: 'blur(15px)', padding: '6px 12px 12px 12px', display: 'flex', gap: '4px', boxShadow: '0 -5px 20px rgba(0,0,0,0.3)', zIndex: 100, borderTop: '1px solid rgba(255,255,255,0.08)' }}>
           {[
             { id: 'card', label: 'Лояльность', icon: '💳' },
             { id: 'menu', label: 'Предзаказ', icon: '☕' },
@@ -211,8 +221,8 @@ const ClientApp = ({ appData, clients = {} }) => {
           ].map(tab => {
             const isActive = activeTab === tab.id;
             return (
-              <button key={tab.id} onClick={() => setActiveTab(tab.id)} style={{ flex: 1, padding: '8px', borderRadius: '12px', backgroundColor: isActive ? 'rgba(59, 130, 246, 0.15)' : 'transparent', color: isActive ? '#fff' : '#94a3b8', fontWeight: 'bold', border: isActive ? '1px solid rgba(59, 130, 246, 0.3)' : '1px solid transparent', fontSize: '11px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px', cursor: 'pointer', transition: 'all 0.2s ease' }}>
-                <span style={{ fontSize: '20px', filter: isActive ? 'drop-shadow(0 0 5px rgba(59, 130, 246, 0.5))' : 'none' }}>{tab.icon}</span>
+              <button key={tab.id} onClick={() => setActiveTab(tab.id)} style={{ flex: 1, padding: '6px', borderRadius: '10px', backgroundColor: isActive ? 'rgba(59, 130, 246, 0.15)' : 'transparent', color: isActive ? '#fff' : '#94a3b8', fontWeight: 'bold', border: isActive ? '1px solid rgba(59, 130, 246, 0.3)' : '1px solid transparent', fontSize: '10px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px', cursor: 'pointer', transition: 'all 0.2s ease' }}>
+                <span style={{ fontSize: '18px', filter: isActive ? 'drop-shadow(0 0 5px rgba(59, 130, 246, 0.5))' : 'none' }}>{tab.icon}</span>
                 {tab.label}
               </button>
             );
