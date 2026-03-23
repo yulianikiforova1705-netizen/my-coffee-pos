@@ -18,6 +18,9 @@ import AdvancedInventory from './AdvancedInventory';
 import BaristaCabinet from './BaristaCabinet';
 import DeliveryWidget from './DeliveryWidget';
 
+// 🚀 ИМПОРТИРУЕМ ПРИЛОЖЕНИЕ ГОСТЯ
+import ClientApp from './ClientApp'; 
+
 const CoreModule = () => {
   const logic = useCoffeeLogic();
   const [showBaristaCabinet, setShowBaristaCabinet] = useState(false);
@@ -71,7 +74,7 @@ const CoreModule = () => {
 
   return (
     <div data-theme={logic.isDarkMode ? 'dark' : 'light'} className="theme-wrapper" style={{ 
-      padding: logic.currentRole ? (isFullScreen ? '10px' : (isMobile ? '12px' : '24px')) : '0', 
+      padding: (logic.currentRole && logic.currentRole !== 'Гость') ? (isFullScreen ? '10px' : (isMobile ? '12px' : '24px')) : '0', 
       backgroundColor: 'var(--bg-main)', 
       minHeight: '100vh', 
       fontFamily: 'system-ui, -apple-system, sans-serif', 
@@ -96,7 +99,29 @@ const CoreModule = () => {
       `}</style>
 
       {logic.currentRole === null ? (
-        <LandingPage appData={logic.appData} onRoleSelect={logic.handleRoleRequest} />
+        <div style={{ position: 'relative', width: '100%', minHeight: '100vh' }}>
+          <LandingPage appData={logic.appData} onRoleSelect={logic.handleRoleRequest} />
+          
+          {/* 🚀 КНОПКА ДЛЯ ВХОДА В ПРИЛОЖЕНИЕ ГОСТЯ */}
+          <button 
+            onClick={() => logic.setCurrentRole('Гость')} 
+            style={{ position: 'absolute', bottom: '40px', left: '50%', transform: 'translateX(-50%)', padding: '16px 32px', backgroundColor: '#10b981', color: 'white', border: 'none', borderRadius: '16px', cursor: 'pointer', fontWeight: '900', fontSize: '18px', boxShadow: '0 10px 25px -5px rgba(16, 185, 129, 0.4)', zIndex: 9999, display: 'flex', alignItems: 'center', gap: '12px', transition: '0.2s', whiteSpace: 'nowrap' }}
+          >
+            <span style={{ fontSize: '24px' }}>📱</span> Приложение гостя
+          </button>
+        </div>
+      ) : logic.currentRole === 'Гость' ? (
+        <>
+          {/* 🚀 КНОПКА ВЫХОДА ИЗ КЛИЕНТСКОГО ПРИЛОЖЕНИЯ ОБРАТНО В КАССУ */}
+          <button 
+            onClick={() => logic.setCurrentRole(null)} 
+            style={{ position: 'fixed', top: '20px', right: '20px', zIndex: 999999, padding: '10px 16px', backgroundColor: 'rgba(0,0,0,0.1)', color: '#111827', border: 'none', borderRadius: '12px', cursor: 'pointer', backdropFilter: 'blur(8px)', fontWeight: 'bold', fontSize: '14px' }}
+          >
+            ✖ Закрыть
+          </button>
+          
+          <ClientApp appData={logic.appData} clients={logic.clients} />
+        </>
       ) : (
         <>
           {/* ВЕРХНЯЯ ПАНЕЛЬ С ЛОГОТИПОМ И ИКОНКОЙ РОЛИ */}
