@@ -77,10 +77,10 @@ const ClientApp = ({ appData, clients = {}, onClose }) => {
       )}
 
       {/* 🏠 ОСНОВНОЙ КОНТЕНТ */}
+      {/* 🚀 Уменьшили paddingBottom, так как меню стало тоньше */}
       {!showSplash && (
-        <div style={{ animation: 'cardAppearance 0.8s cubic-bezier(0.23, 1, 0.32, 1) forwards', padding: '20px', paddingBottom: '75px', display: 'flex', flexDirection: 'column', gap: '24px' }}>
+        <div style={{ animation: 'cardAppearance 0.8s cubic-bezier(0.23, 1, 0.32, 1) forwards', padding: '20px', paddingBottom: '65px', display: 'flex', flexDirection: 'column', gap: '24px' }}>
           
-          {/* 🚀 Шапка с кнопкой назад */}
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
               {onClose && (
@@ -211,9 +211,9 @@ const ClientApp = ({ appData, clients = {}, onClose }) => {
         </div>
       )}
 
-      {/* 🚀 📱 НИЖНЕЕ МЕНЮ (СТАЛО КОМПАКТНЫМ И УЗКИМ) */}
+      {/* 🚀 📱 ИДЕАЛЬНО ТОНКАЯ НИЖНЯЯ МЕНЮ В СТИЛЕ iOS */}
       {!showSplash && (
-        <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, backgroundColor: 'rgba(30, 41, 59, 0.95)', backdropFilter: 'blur(15px)', padding: '6px 12px 12px 12px', display: 'flex', gap: '4px', boxShadow: '0 -5px 20px rgba(0,0,0,0.3)', zIndex: 100, borderTop: '1px solid rgba(255,255,255,0.08)' }}>
+        <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, backgroundColor: 'rgba(15, 23, 42, 0.85)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)', padding: '8px 16px', display: 'flex', justifyContent: 'space-between', boxShadow: '0 -4px 20px rgba(0,0,0,0.4)', zIndex: 100, borderTop: '1px solid rgba(255,255,255,0.05)' }}>
           {[
             { id: 'card', label: 'Лояльность', icon: '💳' },
             { id: 'menu', label: 'Предзаказ', icon: '☕' },
@@ -221,8 +221,8 @@ const ClientApp = ({ appData, clients = {}, onClose }) => {
           ].map(tab => {
             const isActive = activeTab === tab.id;
             return (
-              <button key={tab.id} onClick={() => setActiveTab(tab.id)} style={{ flex: 1, padding: '6px', borderRadius: '10px', backgroundColor: isActive ? 'rgba(59, 130, 246, 0.15)' : 'transparent', color: isActive ? '#fff' : '#94a3b8', fontWeight: 'bold', border: isActive ? '1px solid rgba(59, 130, 246, 0.3)' : '1px solid transparent', fontSize: '10px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px', cursor: 'pointer', transition: 'all 0.2s ease' }}>
-                <span style={{ fontSize: '18px', filter: isActive ? 'drop-shadow(0 0 5px rgba(59, 130, 246, 0.5))' : 'none' }}>{tab.icon}</span>
+              <button key={tab.id} onClick={() => setActiveTab(tab.id)} style={{ flex: 1, padding: '4px 0', backgroundColor: 'transparent', color: isActive ? '#3b82f6' : '#64748b', border: 'none', fontSize: '10px', fontWeight: 'bold', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px', cursor: 'pointer', transition: 'all 0.2s ease' }}>
+                <span style={{ fontSize: '22px', filter: isActive ? 'drop-shadow(0 0 8px rgba(59, 130, 246, 0.6))' : 'none', transform: isActive ? 'scale(1.1)' : 'scale(1)', transition: '0.2s' }}>{tab.icon}</span>
                 {tab.label}
               </button>
             );
