@@ -1,6 +1,6 @@
 import React from 'react';
 
-const LandingPage = ({ appData, onRoleSelect }) => {
+const LandingPage = ({ appData, onRoleSelect, onGuestEnter }) => {
   const OwnerIcon = () => (
     <svg className="role-icon-svg crown-icon" viewBox="0 0 64 64" fill="none" stroke="#f59e0b" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
       <path d="M12 44 L6 20 L22 30 L32 10 L42 30 L58 20 L52 44 Z" fill="rgba(245, 158, 11, 0.1)"/>
@@ -68,6 +68,32 @@ const LandingPage = ({ appData, onRoleSelect }) => {
         .steam-2 { animation-delay: 0.3s; }
         .steam-3 { animation-delay: 0.6s; }
         .role-card-new:hover .steam-line { stroke: #fff; animation-duration: 1s; opacity: 1; }
+        
+        /* 🚀 СТИЛИ ДЛЯ НОВОЙ КНОПКИ ГОСТЯ */
+        .guest-btn-glass {
+          margin-top: 48px;
+          padding: 16px 32px;
+          background: rgba(16, 185, 129, 0.1);
+          backdrop-filter: blur(10px);
+          border: 1px solid rgba(16, 185, 129, 0.3);
+          border-radius: 16px;
+          color: #10b981;
+          font-size: 18px;
+          font-weight: 800;
+          cursor: pointer;
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          transition: all 0.3s ease;
+        }
+        .guest-btn-glass:hover {
+          transform: translateY(-4px);
+          background: rgba(16, 185, 129, 0.2);
+          border-color: #10b981;
+          color: #fff;
+          box-shadow: 0 10px 25px -5px rgba(16, 185, 129, 0.3);
+        }
+
         @keyframes crown-wobble { 0%, 100% { transform: scale(1.1) rotate(0deg); } 25% { transform: scale(1.1) rotate(-5deg); } 75% { transform: scale(1.1) rotate(5deg); } }
         @keyframes clip-bounce { 0%, 100% { transform: scale(1.1) translateY(0); } 50% { transform: scale(1.1) translateY(-10px); } }
         @keyframes steam-rise { 0% { stroke-dashoffset: 10; transform: translateY(0); opacity: 0; } 20% { opacity: 0.8; } 80% { opacity: 0.8; } 100% { stroke-dashoffset: 0; transform: translateY(-5px); opacity: 0; } }
@@ -90,6 +116,13 @@ const LandingPage = ({ appData, onRoleSelect }) => {
           </div>
         ))}
       </div>
+
+      {/* 🚀 ИНТЕГРИРОВАННАЯ КНОПКА ГОСТЯ */}
+      {onGuestEnter && (
+        <button className="guest-btn-glass" onClick={onGuestEnter}>
+          <span style={{ fontSize: '24px' }}>📱</span> Приложение гостя
+        </button>
+      )}
     </div>
   );
 };

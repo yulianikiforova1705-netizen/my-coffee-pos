@@ -99,21 +99,11 @@ const CoreModule = () => {
       `}</style>
 
       {logic.currentRole === null ? (
-        <div style={{ position: 'relative', width: '100%', minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
-          <div style={{ flexGrow: 1 }}>
-            <LandingPage appData={logic.appData} onRoleSelect={logic.handleRoleRequest} />
-          </div>
-          
-          {/* 🚀 ТЕПЕРЬ КНОПКА ВПИСАНА В ДИЗАЙН И НЕ НАЕЗЖАЕТ НА КАРТОЧКИ */}
-          <div style={{ padding: '20px 20px 60px 20px', display: 'flex', justifyContent: 'center' }}>
-            <button 
-              onClick={() => logic.setCurrentRole('Гость')} 
-              style={{ padding: '16px 32px', backgroundColor: '#10b981', color: 'white', border: 'none', borderRadius: '16px', cursor: 'pointer', fontWeight: '900', fontSize: '18px', boxShadow: '0 10px 25px -5px rgba(16, 185, 129, 0.4)', display: 'flex', alignItems: 'center', gap: '12px', transition: '0.2s', whiteSpace: 'nowrap' }}
-            >
-              <span style={{ fontSize: '24px' }}>📱</span> Приложение гостя
-            </button>
-          </div>
-        </div>
+        <LandingPage 
+          appData={logic.appData} 
+          onRoleSelect={logic.handleRoleRequest} 
+          onGuestEnter={() => logic.setCurrentRole('Гость')} 
+        />
       ) : logic.currentRole === 'Гость' ? (
         <>
           <button 
@@ -220,7 +210,7 @@ const CoreModule = () => {
                       <WeatherAIWidget allLowStock={logic.allLowStock} baristaEfficiency={logic.baristaEfficiency} hourlyHeatmap={logic.hourlyHeatmap} />
                       <GoalModule currentRevenue={logic.currentRevenue} targetRevenue={46500} />
                       <StatsModule stats={logic.stats} />
-                      <PnLWidget currentRevenue={logic.currentRevenue} costOfGoods={logic.costOfGoods} totalManualExpenses={logic.currentNetProfit} currentNetProfit={logic.currentNetProfit} />
+                      <PnLWidget currentRevenue={logic.currentRevenue} costOfGoods={logic.costOfGoods} totalManualExpenses={logic.totalManualExpenses} currentNetProfit={logic.currentNetProfit} />
                       <SalesAnalyticsWidget categoryStats={logic.categoryStats} catColors={logic.catColors} topSales={logic.topSales} />
                       <ChartModule currentRevenue={logic.currentRevenue} />
                       <TableModule orders={logic.orders} onCompleteOrder={logic.handleCompleteOrder} onCancelOrder={logic.handleCancelOrder} allowExport={true} />
