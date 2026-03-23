@@ -99,20 +99,19 @@ const CoreModule = () => {
       `}</style>
 
       {logic.currentRole === null ? (
-        <div style={{ position: 'relative', width: '100%', minHeight: '100vh' }}>
+        <div style={{ position: 'relative', width: '100%', minHeight: '100vh', paddingBottom: '100px' }}>
           <LandingPage appData={logic.appData} onRoleSelect={logic.handleRoleRequest} />
           
-          {/* 🚀 КНОПКА ДЛЯ ВХОДА В ПРИЛОЖЕНИЕ ГОСТЯ */}
+          {/* 🚀 ИСПРАВЛЕННАЯ КНОПКА ДЛЯ ВХОДА В ПРИЛОЖЕНИЕ ГОСТЯ */}
           <button 
             onClick={() => logic.setCurrentRole('Гость')} 
-            style={{ position: 'absolute', bottom: '40px', left: '50%', transform: 'translateX(-50%)', padding: '16px 32px', backgroundColor: '#10b981', color: 'white', border: 'none', borderRadius: '16px', cursor: 'pointer', fontWeight: '900', fontSize: '18px', boxShadow: '0 10px 25px -5px rgba(16, 185, 129, 0.4)', zIndex: 9999, display: 'flex', alignItems: 'center', gap: '12px', transition: '0.2s', whiteSpace: 'nowrap' }}
+            style={{ position: 'fixed', bottom: '30px', left: '50%', transform: 'translateX(-50%)', padding: '16px 32px', backgroundColor: '#10b981', color: 'white', border: 'none', borderRadius: '16px', cursor: 'pointer', fontWeight: '900', fontSize: '18px', boxShadow: '0 10px 25px -5px rgba(16, 185, 129, 0.4)', zIndex: 9999, display: 'flex', alignItems: 'center', gap: '12px', transition: '0.2s', whiteSpace: 'nowrap' }}
           >
             <span style={{ fontSize: '24px' }}>📱</span> Приложение гостя
           </button>
         </div>
       ) : logic.currentRole === 'Гость' ? (
         <>
-          {/* 🚀 КНОПКА ВЫХОДА ИЗ КЛИЕНТСКОГО ПРИЛОЖЕНИЯ ОБРАТНО В КАССУ */}
           <button 
             onClick={() => logic.setCurrentRole(null)} 
             style={{ position: 'fixed', top: '20px', right: '20px', zIndex: 999999, padding: '10px 16px', backgroundColor: 'rgba(0,0,0,0.1)', color: '#111827', border: 'none', borderRadius: '12px', cursor: 'pointer', backdropFilter: 'blur(8px)', fontWeight: 'bold', fontSize: '14px' }}
@@ -217,7 +216,7 @@ const CoreModule = () => {
                       <WeatherAIWidget allLowStock={logic.allLowStock} baristaEfficiency={logic.baristaEfficiency} hourlyHeatmap={logic.hourlyHeatmap} />
                       <GoalModule currentRevenue={logic.currentRevenue} targetRevenue={46500} />
                       <StatsModule stats={logic.stats} />
-                      <PnLWidget currentRevenue={logic.currentRevenue} costOfGoods={logic.costOfGoods} totalManualExpenses={logic.totalManualExpenses} currentNetProfit={logic.currentNetProfit} />
+                      <PnLWidget currentRevenue={logic.currentRevenue} costOfGoods={logic.costOfGoods} totalManualExpenses={logic.currentNetProfit} currentNetProfit={logic.currentNetProfit} />
                       <SalesAnalyticsWidget categoryStats={logic.categoryStats} catColors={logic.catColors} topSales={logic.topSales} />
                       <ChartModule currentRevenue={logic.currentRevenue} />
                       <TableModule orders={logic.orders} onCompleteOrder={logic.handleCompleteOrder} onCancelOrder={logic.handleCancelOrder} allowExport={true} />
