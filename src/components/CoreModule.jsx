@@ -108,7 +108,7 @@ const CoreModule = () => {
         <>
           <button 
             onClick={() => logic.setCurrentRole(null)} 
-            style={{ position: 'fixed', top: '20px', right: '20px', zIndex: 999999, padding: '10px 16px', backgroundColor: 'rgba(0,0,0,0.1)', color: '#111827', border: 'none', borderRadius: '12px', cursor: 'pointer', backdropFilter: 'blur(8px)', fontWeight: 'bold', fontSize: '14px' }}
+            style={{ position: 'fixed', top: '12px', right: '12px', zIndex: 999999, padding: '6px 12px', backgroundColor: 'rgba(0,0,0,0.3)', color: 'rgba(255,255,255,0.8)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', cursor: 'pointer', backdropFilter: 'blur(8px)', fontWeight: 'bold', fontSize: '12px', transition: '0.2s' }}
           >
             ✖ Закрыть
           </button>
