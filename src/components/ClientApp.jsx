@@ -20,42 +20,38 @@ const ClientApp = ({ appData, clients = {} }) => {
     };
   }, []);
 
-  // 🛡️ Бронебойная защита: берем первого реального клиента из базы
-  // Если база пуста, используем тестовый номер
+  // Находим первого реального клиента или используем тестовые данные
   const availablePhones = Object.keys(clients);
   const targetPhone = availablePhones.length > 0 ? availablePhones[0] : '9990000000';
   const dbGuest = clients[targetPhone] || {};
   
-  // Гарантируем, что ни одно поле не будет undefined
   const currentGuest = {
     name: dbGuest.name || 'Любимый гость',
-    points: dbGuest.points || 150,
+    points: dbGuest.points || 1350, // Сделаем побольше для красоты
     phone: targetPhone
   };
 
-  // Безопасное получение последних 4 цифр (даже если номер короткий)
   const displayPhone = currentGuest.phone.length >= 4 
     ? currentGuest.phone.slice(-4) 
     : currentGuest.phone;
 
+  // Рассчитываем прогресс до следующего уровня (например, каждые 5000 баллов - новый уровень)
+  const nextLevelPoints = 5000;
+  const progressToNextLevel = Math.min(((currentGuest.points % nextLevelPoints) / nextLevelPoints) * 100, 100);
+
   return (
-    <div style={{ backgroundColor: '#f9fafb', minHeight: '100vh', fontFamily: 'system-ui, -apple-system, sans-serif', color: '#111827', position: 'relative', overflow: 'hidden' }}>
+    <div style={{ backgroundColor: '#0f172a', minHeight: '100vh', fontFamily: 'system-ui, -apple-system, sans-serif', color: '#f8fafc', position: 'relative', overflow: 'hidden' }}>
       
       <style>{`
-        @keyframes splashFadeIn {
-          from { opacity: 0; transform: scale(0.9); }
-          to { opacity: 1; transform: scale(1); }
-        }
-        @keyframes splashFadeOut {
-          from { opacity: 1; transform: scale(1); }
-          to { opacity: 0; transform: scale(1.1); }
-        }
-        @keyframes cardAppearance {
-          from { opacity: 0; transform: translateY(20px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
+        @keyframes splashFadeIn { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }
+        @keyframes splashFadeOut { from { opacity: 1; transform: scale(1); } to { opacity: 0; transform: scale(1.1); } }
+        @keyframes cardAppearance { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes shine { 0% { transform: translateX(-100%) rotate(30deg); } 100% { transform: translateX(100%) rotate(30deg); } }
+        @keyframes pulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.7; transform: scale(1.05); } }
+        @keyframes float { 0%, 100% { transform: translateY(0px); } 50% { transform: translateY(-10px); } }
         .hide-scroll::-webkit-scrollbar { display: none; }
         .hide-scroll { -ms-overflow-style: none; scrollbar-width: none; }
+        .gourmet-qr img { mix-blend-mode: color-dodge; }
       `}</style>
 
       {/* ☕ ЭКРАН ЗАСТАВКИ */}
@@ -64,20 +60,20 @@ const ClientApp = ({ appData, clients = {} }) => {
           id="client-splash"
           style={{ 
             position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, 
-            backgroundColor: '#ffffff', zIndex: 99999, 
+            backgroundColor: '#0f172a', zIndex: 99999, 
             display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '20px',
             animation: 'splashFadeIn 0.5s ease-out forwards', willChange: 'opacity, transform'
           }}
         >
-          <svg width="120" height="120" viewBox="0 0 80 80" fill="none" style={{ filter: 'drop-shadow(0 4px 6px rgba(59, 130, 246, 0.2))' }}>
+          <svg width="120" height="120" viewBox="0 0 80 80" fill="none" style={{ filter: 'drop-shadow(0 0 15px rgba(59, 130, 246, 0.5))', animation: 'float 2s ease-in-out infinite' }}>
             <path d="M40 5 C60 5, 75 20, 75 40 C75 60, 60 75, 40 75 C20 75, 5 60, 5 40 C5 20, 20 5, 40 5 Z" stroke="#3b82f6" strokeWidth="3" strokeDasharray="4 4"/>
-            <path d="M25 30 h30 a4 4 0 0 1 4 4 v20 a10 10 0 0 1 -10 10 h-18 a10 10 0 0 1 -10 -10 v-20 a4 4 0 0 1 4 -4 Z" fill="#ffffff" stroke="#3b82f6" strokeWidth="2"/>
+            <path d="M25 30 h30 a4 4 0 0 1 4 4 v20 a10 10 0 0 1 -10 10 h-18 a10 10 0 0 1 -10 -10 v-20 a4 4 0 0 1 4 -4 Z" fill="#0f172a" stroke="#3b82f6" strokeWidth="2"/>
             <path d="M59 36 a6 6 0 0 1 0 12 h-3" stroke="#3b82f6" strokeWidth="2"/>
           </svg>
-          <div style={{ fontSize: '24px', fontWeight: '800', color: '#111827', letterSpacing: '-1px' }}>
+          <div style={{ fontSize: '24px', fontWeight: '800', color: '#fff', letterSpacing: '-1px' }}>
             GOURMET COFFEE
           </div>
-          <div style={{ fontSize: '14px', color: '#6b7280', marginTop: '-10px' }}>
+          <div style={{ fontSize: '14px', color: '#94a3b8', marginTop: '-10px' }}>
             Приложение гостя
           </div>
         </div>
@@ -85,53 +81,137 @@ const ClientApp = ({ appData, clients = {} }) => {
 
       {/* 🏠 ОСНОВНОЙ КОНТЕНТ */}
       {!showSplash && (
-        <div style={{ animation: 'cardAppearance 0.6s ease-out forwards', padding: '20px', paddingBottom: '90px' }}>
+        <div style={{ animation: 'cardAppearance 0.8s cubic-bezier(0.23, 1, 0.32, 1) forwards', padding: '20px', paddingBottom: '100px', display: 'flex', flexDirection: 'column', gap: '24px' }}>
           
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+          {/* Шапка приветствия */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <div>
-              <div style={{ fontSize: '14px', color: '#6b7280' }}>Рады видеть вас,</div>
-              <div style={{ fontSize: '20px', fontWeight: '800', color: '#111827' }}>{currentGuest.name}! 👋</div>
+              <div style={{ fontSize: '14px', color: '#94a3b8' }}>Добро пожаловать в элиту,</div>
+              <div style={{ fontSize: '22px', fontWeight: '900', color: '#fff', letterSpacing: '-0.5px' }}>{currentGuest.name} ✨</div>
             </div>
-            <div style={{ width: '48px', height: '48px', borderRadius: '50%', backgroundColor: '#e5e7eb', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '20px' }}>👤</div>
+            <div style={{ width: '52px', height: '52px', borderRadius: '50%', background: 'linear-gradient(135deg, #1e293b 0%, #334155 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '22px', border: '2px solid rgba(255,255,255,0.1)', boxShadow: 'inset 0 2px 4px rgba(255,255,255,0.05)' }}>👤</div>
           </div>
 
           {activeTab === 'card' && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-              
-              <div style={{ background: 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)', padding: '24px', borderRadius: '24px', color: 'white', boxShadow: '0 10px 20px rgba(59, 130, 246, 0.3)', position: 'relative', overflow: 'hidden' }}>
-                <div style={{ position: 'absolute', top: '-20px', right: '-20px', opacity: 0.1, fontSize: '100px' }}>☕</div>
-                <div style={{ fontSize: '14px', opacity: 0.8, marginBottom: '8px' }}>Ваш баланс:</div>
-                <div style={{ fontSize: '36px', fontWeight: '900', marginBottom: '20px', letterSpacing: '-1px' }}>
-                  {currentGuest.points} <span style={{ fontSize: '20px', fontWeight: 'bold' }}>баллов</span>
+            <>
+              {/* 💳 ВЕЛИКОЛЕПНАЯ КАРТА ЛОЯЛЬНОСТИ */}
+              <div style={{ 
+                background: 'linear-gradient(135deg, #3b82f6 0%, #a855f7 50%, #db2777 100%)', 
+                padding: '30px', 
+                borderRadius: '28px', 
+                color: 'white', 
+                boxShadow: '0 20px 40px -10px rgba(168, 85, 247, 0.3), 0 0 20px rgba(59, 130, 246, 0.2)', 
+                position: 'relative', 
+                overflow: 'hidden', 
+                border: '1px solid rgba(255,255,255,0.1)'
+              }}>
+                {/* Эффект блика */}
+                <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', background: 'linear-gradient(30deg, transparent 0%, rgba(255,255,255,0.2) 50%, transparent 100%)', animation: 'shine 3s infinite', pointerEvents: 'none' }} />
+                
+                {/* Фоновая иконка */}
+                <div style={{ position: 'absolute', top: '-10px', right: '-10px', opacity: 0.08, fontSize: '140px', transform: 'rotate(-15deg)' }}>☕</div>
+                
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+                  <div style={{ fontSize: '12px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '2px', color: 'rgba(255,255,255,0.8)' }}>
+                    Black Card
+                  </div>
+                  <div style={{ fontSize: '20px', animation: 'float 3s ease-in-out infinite' }}>👑</div>
                 </div>
-                <div style={{ backgroundColor: 'white', color: '#1d4ed8', padding: '12px 20px', borderRadius: '12px', fontWeight: 'bold', display: 'inline-flex', alignItems: 'center', gap: '8px', fontSize: '14px' }}>
-                  <span>🔄 1 балл = 1 рубль</span>
+                
+                <div style={{ fontSize: '14px', opacity: 0.8, marginBottom: '6px' }}>Доступный баланс:</div>
+                <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px', marginBottom: '24px' }}>
+                  <div style={{ fontSize: '48px', fontWeight: '900', letterSpacing: '-2px', textShadow: '0 2px 10px rgba(0,0,0,0.2)' }}>
+                    {currentGuest.points}
+                  </div>
+                  <div style={{ fontSize: '20px', fontWeight: 'bold', opacity: 0.9 }}>
+                    баллов
+                  </div>
+                </div>
+                
+                {/* Прогресс-бар */}
+                <div style={{ marginBottom: '8px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', marginBottom: '6px', color: 'rgba(255,255,255,0.8)' }}>
+                    <span>Уровень: Ценитель</span>
+                    <span>{currentGuest.points % nextLevelPoints} / {nextLevelPoints} до уровня "Эксперт"</span>
+                  </div>
+                  <div style={{ width: '100%', height: '8px', backgroundColor: 'rgba(255,255,255,0.15)', borderRadius: '4px', overflow: 'hidden', border: '1px solid rgba(255,255,255,0.1)', boxShadow: 'inset 0 1px 2px rgba(0,0,0,0.2)' }}>
+                    <div style={{ width: `${progressToNextLevel}%`, height: '100%', background: 'linear-gradient(90deg, #fff 0%, #3b82f6 100%)', borderRadius: '4px', boxShadow: '0 0 10px #fff' }} />
+                  </div>
                 </div>
               </div>
 
-              <div style={{ backgroundColor: 'white', padding: '24px', borderRadius: '24px', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)', border: '1px solid #e5e7eb', textAlign: 'center' }}>
-                <div style={{ fontSize: '16px', fontWeight: 'bold', marginBottom: '16px' }}>Покажите этот код бариста</div>
-                <div style={{ width: '180px', height: '180px', backgroundColor: '#f3f4f6', margin: '0 auto 16px auto', borderRadius: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
-                  <img src={`https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${currentGuest.phone}`} alt="Guest QR Code" style={{ border: '10px solid white', borderRadius: '8px' }} />
+              {/* 📷 QR-КОД */}
+              <div style={{ 
+                backgroundColor: 'rgba(255, 255, 255, 0.03)', 
+                backdropFilter: 'blur(10px)', 
+                padding: '30px', 
+                borderRadius: '28px', 
+                border: '1px solid rgba(255,255,255,0.06)', 
+                textAlign: 'center', 
+                boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)'
+              }}>
+                <div style={{ fontSize: '16px', fontWeight: 'bold', color: '#fff', marginBottom: '20px', letterSpacing: '-0.3px' }}>
+                  Покажите этот код бариста
                 </div>
-                <div style={{ fontSize: '14px', color: '#6b7280', letterSpacing: '2px' }}>
+                
+                <div className="gourmet-qr" style={{ 
+                  width: '210px', 
+                  height: '210px', 
+                  backgroundColor: '#fff', 
+                  margin: '0 auto 20px auto', 
+                  borderRadius: '20px', 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  justifyContent: 'center', 
+                  padding: '15px', 
+                  position: 'relative', 
+                  boxShadow: '0 0 30px rgba(59, 130, 246, 0.2), inset 0 0 15px rgba(0,0,0,0.1)' 
+                }}>
+                  {/* Угловые элементы для футуристичности */}
+                  {[ 'top:5px;left:5px', 'top:5px;right:5px', 'bottom:5px;left:5px', 'bottom:5px;right:5px'].map((pos, idx) => (
+                    <div key={idx} style={{ position: 'absolute', ...Object.fromEntries(pos.split(';').map(p=>p.split(':'))), width: '20px', height: '20px', border: '3px solid #3b82f6', borderRight: pos.includes('right') ? 'none' : '3px solid #3b82f6', borderLeft: pos.includes('left') ? 'none' : '3px solid #3b82f6', borderTop: pos.includes('top') ? 'none' : '3px solid #3b82f6', borderBottom: pos.includes('bottom') ? 'none' : '3px solid #3b82f6' }} />
+                  ))}
+                  <img src={`https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${currentGuest.phone}&color=0f172a`} alt="Guest QR Code" style={{ borderRadius: '10px' }} />
+                </div>
+                
+                <div style={{ 
+                  fontSize: '15px', 
+                  color: '#94a3b8', 
+                  letterSpacing: '3px', 
+                  backgroundColor: 'rgba(255,255,255,0.05)', 
+                  padding: '10px 20px', 
+                  borderRadius: '10px', 
+                  display: 'inline-block',
+                  fontFamily: 'Courier New, monospace'
+                }}>
                   +7 *** *** {displayPhone}
                 </div>
               </div>
-            </div>
+
+              {/* АКЦИЯ ДНЯ */}
+              <div style={{ background: 'linear-gradient(135deg, rgba(239, 68, 68, 0.1) 0%, rgba(245, 158, 11, 0.1) 100%)', padding: '20px', borderRadius: '24px', border: '1px solid rgba(239, 68, 68, 0.2)', display: 'flex', alignItems: 'center', gap: '16px' }}>
+                <div style={{ fontSize: '32px', animation: 'pulse 1.5s infinite' }}>🎁</div>
+                <div>
+                  <div style={{ color: '#f59e0b', fontWeight: 'bold', fontSize: '15px' }}>Акция дня!</div>
+                  <div style={{ color: '#fff', fontSize: '14px' }}>Скидка 20% на все десерты после 18:00!</div>
+                </div>
+              </div>
+            </>
           )}
 
           {activeTab === 'menu' && (
-            <div style={{ textAlign: 'center', color: '#6b7280', marginTop: '40px' }}>
-              <div style={{ fontSize: '40px' }}>☕</div>
-              <div style={{ fontWeight: 'bold', marginTop: '10px' }}>Меню в разработке</div>
+            <div style={{ textAlign: 'center', color: '#94a3b8', marginTop: '60px' }}>
+              <div style={{ fontSize: '60px', animation: 'float 3s ease-in-out infinite' }}>☕</div>
+              <div style={{ fontWeight: 'bold', marginTop: '15px', fontSize: '18px', color: '#fff' }}>Режим предзаказа</div>
+              <p style={{ fontSize: '14px' }}>Готовим для вас великолепное меню.</p>
             </div>
           )}
         </div>
       )}
 
+      {/* 📱 НИЖНЕЕ МЕНЮ */}
       {!showSplash && (
-        <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, backgroundColor: 'rgba(255,255,255,0.95)', backdropFilter: 'blur(10px)', padding: '12px 20px 20px 20px', display: 'flex', gap: '10px', boxShadow: '0 -4px 15px rgba(0,0,0,0.05)', zIndex: 100, borderTop: '1px solid #e5e7eb' }}>
+        <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, backgroundColor: 'rgba(30, 41, 59, 0.9)', backdropFilter: 'blur(15px)', padding: '12px 20px 20px 20px', display: 'flex', gap: '10px', boxShadow: '0 -10px 25px rgba(0,0,0,0.2)', zIndex: 100, borderTop: '1px solid rgba(255,255,255,0.08)' }}>
           {[
             { id: 'card', label: 'Лояльность', icon: '💳' },
             { id: 'menu', label: 'Предзаказ', icon: '☕' },
@@ -139,8 +219,8 @@ const ClientApp = ({ appData, clients = {} }) => {
           ].map(tab => {
             const isActive = activeTab === tab.id;
             return (
-              <button key={tab.id} onClick={() => setActiveTab(tab.id)} style={{ flex: 1, padding: '12px', borderRadius: '14px', backgroundColor: isActive ? '#3b82f6' : 'transparent', color: isActive ? 'white' : '#6b7280', fontWeight: 'bold', border: 'none', fontSize: '13px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px', cursor: 'pointer', transition: '0.2s' }}>
-                <span style={{ fontSize: '20px' }}>{tab.icon}</span>
+              <button key={tab.id} onClick={() => setActiveTab(tab.id)} style={{ flex: 1, padding: '14px', borderRadius: '16px', backgroundColor: isActive ? 'rgba(59, 130, 246, 0.15)' : 'transparent', color: isActive ? '#fff' : '#94a3b8', fontWeight: 'bold', border: isActive ? '1px solid rgba(59, 130, 246, 0.3)' : '1px solid transparent', fontSize: '13px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '5px', cursor: 'pointer', transition: 'all 0.3s ease' }}>
+                <span style={{ fontSize: '20px', filter: isActive ? 'drop-shadow(0 0 5px rgba(59, 130, 246, 0.5))' : 'none' }}>{tab.icon}</span>
                 {tab.label}
               </button>
             );
