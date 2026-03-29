@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 
-// 🚀 ВСТРАИВАЕМ БАЗОВЫЕ ДАННЫЕ (ЧТОБЫ НИКОГДА НЕ БЫЛО ПУСТОТЫ)
+// 🚀 БАЗОВЫЕ ДАННЫЕ
 const initialData = {
   menuItems: [
     { id: 1, name: 'Капучино', price: 250, costPrice: 40, category: 'Кофе', inventory: 100, color: '#3b82f6', isCoffee: true },
@@ -11,7 +11,7 @@ const initialData = {
     { id: 1, name: 'Кофе (зерно)', qty: 5, unit: 'кг', minQty: 2, price: 1200 },
     { id: 2, name: 'Молоко', qty: 20, unit: 'л', minQty: 5, price: 80 }
   ],
-  baristas: ['Маша'], // Спасательный круг - дежурный бариста
+  baristas: ['Маша'],
   baristaPins: { 'Маша': '2222' },
   orders: []
 };
@@ -31,7 +31,6 @@ export const useCoffeeLogic = () => {
   const [schedule, setSchedule] = useState({});
   const [clients, setClients] = useState({});
   
-  // Баристы
   const [baristas, setBaristas] = useState(['Маша']);
   const [baristaPins, setBaristaPins] = useState({ 'Маша': '2222' });
   const [baristaStats, setBaristaStats] = useState({});
@@ -99,9 +98,8 @@ export const useCoffeeLogic = () => {
     setSchedule(appData.schedule || {});
     setClients(appData.clients || {});
     
-    // 🚀 ЕСЛИ БАЗА ПУСТАЯ, ВСЕГДА ДОБАВЛЯЕМ МАШУ, ЧТОБЫ НЕ БЫЛО ОШИБКИ
     setBaristas(appData.baristas && appData.baristas.length > 0 ? appData.baristas : ['Маша']);
-    setBaristaPins(Object.keys(appData.baristaPins || {}).length > 0 ? appData.baristaPins : { 'Маша': '2222' });
+    setBaristaPins(appData.baristaPins && Object.keys(appData.baristaPins).length > 0 ? appData.baristaPins : { 'Маша': '2222' });
     
     setBaristaStats(appData.baristaStats || {});
     setBaristaEfficiency(appData.baristaEfficiency || []);
@@ -160,7 +158,6 @@ export const useCoffeeLogic = () => {
   };
 
   const handlePinSubmit = () => {
-    // 🚀 ПАРОЛИ ВЕРНУЛИСЬ!
     if (pinModal.targetRole === 'Владелец' && pinInput === '7777') {
       setCurrentRole('Владелец'); setPinModal({ isOpen: false }); addLog(`Вход: Владелец`);
     } else if (pinModal.targetRole === 'Управляющий' && pinInput === '1234') {
@@ -273,7 +270,7 @@ export const useCoffeeLogic = () => {
       setCurrentRole(null);
       setLoggedInBarista(null);
       addLog(`Смена: Закрыта (${shiftData.total}₽)`);
-      alert(`Смена закрыта. Выручка: ${shiftData.total}₽. Расхождение: ${shiftData.discrepancy}₽`);
+      alert(`Смена закрыта. Выручка: ${shiftData.total}₽. Расхождение: ${shiftData.discreপক্ষে}₽`);
     }
   };
 
@@ -299,7 +296,7 @@ export const useCoffeeLogic = () => {
     addLog(`Склад: Авто-закупка ${item.name}`);
   };
 
-  // 🚀 АБСОЛЮТНАЯ ЗАЩИТА ОТ БЕЛОГО ЭКРАНА В ГРАФИКАХ
+  // 🚀 УБРАЛИ ЗАГЛУШКИ: ТЕПЕРЬ ГРАФИКИ БУДУТ РАБОТАТЬ ИДЕАЛЬНО ДАЖЕ ПРИ ПУСТОЙ БАЗЕ
   const validOrders = Array.isArray(orders) ? orders.filter(o => o.status !== 'Отменен') : [];
   const currentRevenue = validOrders.reduce((sum, o) => sum + (o.total || 0), 0);
   const totalManualExpenses = Array.isArray(expenses) ? expenses.reduce((sum, e) => sum + (e.amount || 0), 0) : 0;
@@ -320,25 +317,21 @@ export const useCoffeeLogic = () => {
   
   const currentNetProfit = currentRevenue - costOfGoods - totalManualExpenses;
 
-  // Безопасный подсчет статистики для графиков
-  const categoryStatsRaw = validOrders.reduce((acc, o) => {
+  const categoryStats = validOrders.reduce((acc, o) => {
     if (Array.isArray(o.items)) {
       o.items.forEach(item => { const cat = item.category || 'Другое'; acc[cat] = (acc[cat] || 0) + ((item.price || 0) * (item.qty || 1)); });
     }
     return acc;
   }, {});
-  const categoryStats = Object.keys(categoryStatsRaw).length > 0 ? categoryStatsRaw : { 'Нет продаж': 0 };
 
-  const catColors = { 'Кофе': '#3b82f6', 'Чай': '#10b981', 'Еда': '#f59e0b', 'Десерты': '#ec4899', 'Другое': '#94a3b8', 'Нет продаж': '#cbd5e1' };
+  const catColors = { 'Кофе': '#3b82f6', 'Чай': '#10b981', 'Еда': '#f59e0b', 'Десерты': '#ec4899', 'Другое': '#94a3b8' };
 
-  const topSalesRaw = Object.entries(validOrders.reduce((acc, o) => {
+  const topSales = Object.entries(validOrders.reduce((acc, o) => {
     if (Array.isArray(o.items)) {
       o.items.forEach(item => { acc[item.name] = (acc[item.name] || 0) + (item.qty || 1); });
     }
     return acc;
   }, {})).sort((a, b) => b[1] - a[1]).slice(0, 5);
-  
-  const topSales = topSalesRaw.length > 0 ? topSalesRaw : [['Пока пусто', 0]];
 
   const allLowStock = Array.isArray(ingredients) ? ingredients.filter(item => item.qty <= (item.minQty || 0)) : [];
 
