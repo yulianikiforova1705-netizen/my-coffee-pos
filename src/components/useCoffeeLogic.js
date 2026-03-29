@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 
-// 🚀 ЗАШИЛИ СТАРТОВЫЕ ДАННЫЕ ПРЯМО СЮДА (Vercel больше не будет ругаться)
 const initialData = {
   menuItems: [
     { id: 1, name: 'Капучино', price: 250, costPrice: 40, category: 'Кофе', inventory: 100, color: '#3b82f6', isCoffee: true },
@@ -48,7 +47,6 @@ export const useCoffeeLogic = () => {
   const [dateStr, setDateStr] = useState('');
   const [timeStr, setTimeStr] = useState('');
 
-  // 🚀 МАГИЯ ИКОНОК
   const getSmartIcon = (name, category) => {
     const text = ((name || '') + ' ' + (category || '')).toLowerCase();
 
@@ -133,7 +131,7 @@ export const useCoffeeLogic = () => {
 
   const handleHardReset = () => {
     if (window.confirm("ВНИМАНИЕ! Это удалит ВСЕ данные (кроме заводских) из браузера. Вы уверены?")) {
-      if (window.prompt("Введите 0000 для подтверждения сброса") === "0000") {
+      if (window.prompt("Введите 7777 для подтверждения сброса") === "7777") { 
         localStorage.removeItem('coffeeAppData');
         setAppData(initialData);
         window.location.reload();
@@ -152,9 +150,10 @@ export const useCoffeeLogic = () => {
   };
 
   const handlePinSubmit = () => {
-    if (pinModal.targetRole === 'Владелец' && pinInput === '0000') {
+    // 🚀 ВЕРНУЛИ СТАРЫЕ ПАРОЛИ
+    if (pinModal.targetRole === 'Владелец' && pinInput === '7777') {
       setCurrentRole('Владелец'); setPinModal({ isOpen: false }); addLog(`Вход: Владелец`);
-    } else if (pinModal.targetRole === 'Управляющий' && pinInput === '1111') {
+    } else if (pinModal.targetRole === 'Управляющий' && pinInput === '1234') {
       setCurrentRole('Управляющий'); setPinModal({ isOpen: false }); addLog(`Вход: Управляющий`);
     } else if (pinModal.targetRole === 'Смена Бариста' || pinModal.targetRole === 'Выбор Бариста') {
       const bName = pinModal.targetBarista || (baristas.length > 0 ? baristas[0] : null);
@@ -173,7 +172,7 @@ export const useCoffeeLogic = () => {
   const handleAddMenuItem = (newItem) => {
     const itemWithIcon = {
       ...newItem,
-      id: Date.now(), // Убеждаемся, что ID уникальный
+      id: Date.now(), 
       icon: getSmartIcon(newItem.name, newItem.category)
     };
     setMenuItems([...menuItems, itemWithIcon]);
@@ -228,16 +227,18 @@ export const useCoffeeLogic = () => {
     setOrders([{ ...order, id: Date.now(), time: new Date().toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' }), barista: loggedInBarista }, ...orders]);
     
     let updatedInv = [...ingredients];
-    order.items.forEach(item => {
-      if (item.recipe) {
-        item.recipe.forEach(req => {
-          const idx = updatedInv.findIndex(ing => String(ing.id) === String(req.ingredientId));
-          if (idx > -1) {
-            updatedInv[idx] = { ...updatedInv[idx], qty: Math.max(0, updatedInv[idx].qty - (req.amount * item.qty)) };
-          }
-        });
-      }
-    });
+    if (order.items) {
+      order.items.forEach(item => {
+        if (item.recipe) {
+          item.recipe.forEach(req => {
+            const idx = updatedInv.findIndex(ing => String(ing.id) === String(req.ingredientId));
+            if (idx > -1) {
+              updatedInv[idx] = { ...updatedInv[idx], qty: Math.max(0, updatedInv[idx].qty - (req.amount * item.qty)) };
+            }
+          });
+        }
+      });
+    }
     setIngredients(updatedInv);
 
     const bStats = { ...baristaStats };
@@ -311,49 +312,58 @@ export const useCoffeeLogic = () => {
     addLog(`Склад: Авто-закупка ${item.name}`);
   };
 
-  const validOrders = orders.filter(o => o.status !== 'Отменен');
-  const currentRevenue = validOrders.reduce((sum, o) => sum + o.total, 0);
-  const totalManualExpenses = expenses.reduce((sum, e) => sum + e.amount, 0);
+  // 🚀 ЗАЩИТА ОТ БЕЛОГО ЭКРАНА: Проверяем наличие данных перед вычислениями
+  const validOrders = Array.isArray(orders) ? orders.filter(o => o.status !== 'Отменен') : [];
+  const currentRevenue = validOrders.reduce((sum, o) => sum + (o.total || 0), 0);
+  const totalManualExpenses = Array.isArray(expenses) ? expenses.reduce((sum, e) => sum + (e.amount || 0), 0) : 0;
   
   let costOfGoods = 0;
   validOrders.forEach(o => {
-    o.items.forEach(item => {
-      if (item.recipe) {
-        item.recipe.forEach(req => {
-          const ing = ingredients.find(i => String(i.id) === String(req.ingredientId));
-          if (ing && ing.qty > 0) { costOfGoods += (ing.price / ing.qty) * req.amount * item.qty; }
-        });
-      }
-    });
+    if (Array.isArray(o.items)) {
+      o.items.forEach(item => {
+        if (Array.isArray(item.recipe)) {
+          item.recipe.forEach(req => {
+            const ing = ingredients.find(i => String(i.id) === String(req.ingredientId));
+            if (ing && ing.qty > 0) { costOfGoods += (ing.price / ing.qty) * req.amount * item.qty; }
+          });
+        }
+      });
+    }
   });
   
   const currentNetProfit = currentRevenue - costOfGoods - totalManualExpenses;
 
   const categoryStats = validOrders.reduce((acc, o) => {
-    o.items.forEach(item => { const cat = item.category || 'Другое'; acc[cat] = (acc[cat] || 0) + (item.price * item.qty); });
+    if (Array.isArray(o.items)) {
+      o.items.forEach(item => { const cat = item.category || 'Другое'; acc[cat] = (acc[cat] || 0) + ((item.price || 0) * (item.qty || 1)); });
+    }
     return acc;
   }, {});
 
   const catColors = { 'Кофе': '#3b82f6', 'Чай': '#10b981', 'Еда': '#f59e0b', 'Десерты': '#ec4899', 'Другое': '#94a3b8' };
 
   const topSales = Object.entries(validOrders.reduce((acc, o) => {
-    o.items.forEach(item => { acc[item.name] = (acc[item.name] || 0) + item.qty; });
+    if (Array.isArray(o.items)) {
+      o.items.forEach(item => { acc[item.name] = (acc[item.name] || 0) + (item.qty || 1); });
+    }
     return acc;
   }, {})).sort((a, b) => b[1] - a[1]).slice(0, 5);
 
-  const allLowStock = ingredients.filter(item => item.qty <= item.minQty);
+  const allLowStock = Array.isArray(ingredients) ? ingredients.filter(item => item.qty <= (item.minQty || 0)) : [];
 
   const hourlyHeatmap = Array(12).fill(0);
   validOrders.forEach(o => {
-    const hour = parseInt(o.time.split(':')[0]);
-    if (hour >= 8 && hour <= 19) hourlyHeatmap[hour - 8]++;
+    if (o.time) {
+      const hour = parseInt(o.time.split(':')[0]);
+      if (hour >= 8 && hour <= 19 && !isNaN(hour)) hourlyHeatmap[hour - 8]++;
+    }
   });
 
   const stats = [
     { label: 'Выручка сегодня', value: `${currentRevenue} ₽`, trend: '+12%', color: '#10b981' },
     { label: 'Заказов', value: validOrders.length, trend: '+5%', color: '#3b82f6' },
     { label: 'Средний чек', value: validOrders.length ? `${Math.round(currentRevenue / validOrders.length)} ₽` : '0 ₽', trend: '+2%', color: '#f59e0b' },
-    { label: 'Гостей в базе', value: Object.keys(clients).length, trend: '+1', color: '#ec4899' }
+    { label: 'Гостей в базе', value: clients ? Object.keys(clients).length : 0, trend: '+1', color: '#ec4899' }
   ];
 
   return {
