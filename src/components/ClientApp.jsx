@@ -2,11 +2,11 @@ import React, { useState, useEffect } from 'react';
 
 const ClientApp = ({ appData, clients = {}, onClose }) => {
   const [showSplash, setShowSplash] = useState(true);
-  const [activeTab, setActiveTab] = useState('card');
+  const [activeTab, setActiveTab] = useState('menu'); // Откроем сразу меню для проверки
   
-  // Состояния для меню и корзины
+  // Состояния для меню и корзины (теперь храним количество: { id_товара: количество })
   const [activeCategory, setActiveCategory] = useState('Все');
-  const [cart, setCart] = useState([]);
+  const [cart, setCart] = useState({});
 
   useEffect(() => {
     const fadeTimer = setTimeout(() => {
@@ -58,11 +58,42 @@ const ClientApp = ({ appData, clients = {}, onClose }) => {
     ? mockMenu 
     : mockMenu.filter(item => item.category === activeCategory);
 
-  const addToCart = (item) => {
-    setCart([...cart, item]);
+  // Функции для работы с корзиной
+  const getQuantity = (id) => cart[id] || 0;
+
+  const updateCart = (id, delta) => {
+    setCart(prev => {
+      const current = prev[id] || 0;
+      const next = Math.max(0, current + delta);
+      const newCart = { ...prev };
+      if (next === 0) {
+        delete newCart[id];
+      } else {
+        newCart[id] = next;
+      }
+      return newCart;
+    });
   };
 
-  const cartTotal = cart.reduce((sum, item) => sum + item.price, 0);
+  const clearCart = (e) => {
+    e.stopPropagation(); // Чтобы не кликалась вся зеленая кнопка
+    setCart({});
+  };
+
+  // Считаем общую сумму и количество
+  const cartItemsCount = Object.values(cart).reduce((sum, qty) => sum + qty, 0);
+  const cartTotal = Object.entries(cart).reduce((sum, [id, qty]) => {
+    const item = mockMenu.find(m => m.id === parseInt(id));
+    return sum + (item ? item.price * qty : 0);
+  }, 0);
+
+  // Функция для выбора анимации по категории
+  const getAnimationForCategory = (category) => {
+    if (category === 'Кофе' || category === 'Чай') return 'anim-coffee 3s ease-in-out infinite';
+    if (category === 'Выпечка') return 'anim-pastry 4s ease-in-out infinite';
+    if (category === 'Десерты') return 'anim-dessert 2s ease-in-out infinite';
+    return 'none';
+  };
 
   return (
     <div style={{ backgroundColor: '#0f172a', minHeight: '100vh', fontFamily: 'system-ui, -apple-system, sans-serif', color: '#f8fafc', position: 'relative', overflow: 'hidden' }}>
@@ -72,9 +103,13 @@ const ClientApp = ({ appData, clients = {}, onClose }) => {
         @keyframes splashFadeOut { from { opacity: 1; transform: scale(1); } to { opacity: 0; transform: scale(1.1); } }
         @keyframes cardAppearance { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
         @keyframes shine { 0% { transform: translateX(-100%) rotate(30deg); } 100% { transform: translateX(100%) rotate(30deg); } }
-        @keyframes pulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.7; transform: scale(1.05); } }
-        @keyframes float { 0%, 100% { transform: translateY(0px); } 50% { transform: translateY(-10px); } }
         @keyframes slideUp { from { transform: translateY(100px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        
+        /* 🚀 НОВЫЕ АНИМАЦИИ ДЛЯ ИКОНОК */
+        @keyframes anim-coffee { 0%, 100% { transform: translateY(0) rotate(0deg); } 50% { transform: translateY(-6px) rotate(3deg); } }
+        @keyframes anim-pastry { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.08); } }
+        @keyframes anim-dessert { 0%, 100% { transform: translateY(0); } 25% { transform: translateY(-5px) rotate(-5deg); } 75% { transform: translateY(-5px) rotate(5deg); } }
+        
         .hide-scroll::-webkit-scrollbar { display: none; }
         .hide-scroll { -ms-overflow-style: none; scrollbar-width: none; }
       `}</style>
@@ -90,7 +125,7 @@ const ClientApp = ({ appData, clients = {}, onClose }) => {
             animation: 'splashFadeIn 0.5s ease-out forwards', willChange: 'opacity, transform'
           }}
         >
-          <svg width="120" height="120" viewBox="0 0 80 80" fill="none" style={{ filter: 'drop-shadow(0 0 15px rgba(59, 130, 246, 0.5))', animation: 'float 2s ease-in-out infinite' }}>
+          <svg width="120" height="120" viewBox="0 0 80 80" fill="none" style={{ filter: 'drop-shadow(0 0 15px rgba(59, 130, 246, 0.5))', animation: 'anim-coffee 3s ease-in-out infinite' }}>
             <path d="M40 5 C60 5, 75 20, 75 40 C75 60, 60 75, 40 75 C20 75, 5 60, 5 40 C5 20, 20 5, 40 5 Z" stroke="#3b82f6" strokeWidth="3" strokeDasharray="4 4"/>
             <path d="M25 30 h30 a4 4 0 0 1 4 4 v20 a10 10 0 0 1 -10 10 h-18 a10 10 0 0 1 -10 -10 v-20 a4 4 0 0 1 4 -4 Z" fill="#0f172a" stroke="#3b82f6" strokeWidth="2"/>
             <path d="M59 36 a6 6 0 0 1 0 12 h-3" stroke="#3b82f6" strokeWidth="2"/>
@@ -106,7 +141,7 @@ const ClientApp = ({ appData, clients = {}, onClose }) => {
 
       {/* 🏠 ОСНОВНОЙ КОНТЕНТ */}
       {!showSplash && (
-        <div style={{ animation: 'cardAppearance 0.8s cubic-bezier(0.23, 1, 0.32, 1) forwards', padding: '20px', paddingBottom: '140px', display: 'flex', flexDirection: 'column', gap: '24px' }}>
+        <div style={{ animation: 'cardAppearance 0.8s cubic-bezier(0.23, 1, 0.32, 1) forwards', padding: '20px', paddingBottom: '160px', display: 'flex', flexDirection: 'column', gap: '24px' }}>
           
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
@@ -135,7 +170,7 @@ const ClientApp = ({ appData, clients = {}, onClose }) => {
                 
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
                   <div style={{ fontSize: '12px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '2px', color: 'rgba(255,255,255,0.9)' }}>Loyalty Card</div>
-                  <div style={{ fontSize: '18px', animation: 'float 3s ease-in-out infinite' }}>👑</div>
+                  <div style={{ fontSize: '18px' }}>👑</div>
                 </div>
                 
                 <div style={{ fontSize: '13px', opacity: 0.8, marginBottom: '4px' }}>Доступный баланс:</div>
@@ -202,63 +237,80 @@ const ClientApp = ({ appData, clients = {}, onClose }) => {
 
               {/* Список товаров */}
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))', gap: '16px' }}>
-                {filteredMenu.map(item => (
-                  <div key={item.id} style={{ 
-                    backgroundColor: 'rgba(255,255,255,0.03)', 
-                    border: '1px solid rgba(255,255,255,0.06)', 
-                    borderRadius: '20px', 
-                    padding: '16px', 
-                    display: 'flex', 
-                    flexDirection: 'column', 
-                    gap: '12px',
-                    boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)'
-                  }}>
-                    <div style={{ 
-                      height: '100px', 
-                      backgroundColor: 'rgba(255,255,255,0.02)', 
-                      borderRadius: '16px', 
+                {filteredMenu.map(item => {
+                  const qty = getQuantity(item.id);
+                  return (
+                    <div key={item.id} style={{ 
+                      backgroundColor: 'rgba(255,255,255,0.03)', 
+                      border: qty > 0 ? '1px solid #3b82f6' : '1px solid rgba(255,255,255,0.06)', 
+                      borderRadius: '20px', 
+                      padding: '16px', 
                       display: 'flex', 
-                      alignItems: 'center', 
-                      justifyContent: 'center', 
-                      fontSize: '48px',
-                      boxShadow: 'inset 0 2px 10px rgba(0,0,0,0.2)'
+                      flexDirection: 'column', 
+                      gap: '12px',
+                      boxShadow: qty > 0 ? '0 0 15px rgba(59, 130, 246, 0.2)' : '0 4px 6px -1px rgba(0,0,0,0.1)',
+                      transition: 'all 0.3s ease'
                     }}>
-                      {item.icon}
+                      <div style={{ 
+                        height: '100px', 
+                        backgroundColor: 'rgba(255,255,255,0.02)', 
+                        borderRadius: '16px', 
+                        display: 'flex', 
+                        alignItems: 'center', 
+                        justifyContent: 'center', 
+                        fontSize: '48px',
+                        boxShadow: 'inset 0 2px 10px rgba(0,0,0,0.2)'
+                      }}>
+                        {/* 🚀 ИКОНКА С АНИМАЦИЕЙ */}
+                        <div style={{ animation: getAnimationForCategory(item.category) }}>
+                          {item.icon}
+                        </div>
+                      </div>
+                      <div>
+                        <div style={{ fontSize: '15px', fontWeight: 'bold', color: '#fff', marginBottom: '4px', lineHeight: '1.2' }}>{item.name}</div>
+                        <div style={{ fontSize: '12px', color: '#64748b', lineHeight: '1.3', height: '32px', overflow: 'hidden' }}>{item.desc}</div>
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 'auto' }}>
+                        <div style={{ fontSize: '16px', fontWeight: '900', color: '#10b981' }}>{item.price} ₽</div>
+                        
+                        {/* 🚀 БЛОК УПРАВЛЕНИЯ КОРЗИНОЙ [- 1 +] */}
+                        {qty > 0 ? (
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', backgroundColor: 'rgba(59, 130, 246, 0.15)', borderRadius: '12px', padding: '4px' }}>
+                            <button onClick={() => updateCart(item.id, -1)} style={{ width: '26px', height: '26px', borderRadius: '8px', backgroundColor: 'transparent', color: '#3b82f6', border: 'none', fontSize: '18px', fontWeight: 'bold', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>-</button>
+                            <span style={{ fontSize: '14px', fontWeight: 'bold', width: '14px', textAlign: 'center', color: '#fff' }}>{qty}</span>
+                            <button onClick={() => updateCart(item.id, 1)} style={{ width: '26px', height: '26px', borderRadius: '8px', backgroundColor: '#3b82f6', color: 'white', border: 'none', fontSize: '16px', fontWeight: 'bold', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>+</button>
+                          </div>
+                        ) : (
+                          <button 
+                            onClick={() => updateCart(item.id, 1)}
+                            style={{ 
+                              width: '32px', height: '32px', 
+                              borderRadius: '10px', 
+                              backgroundColor: '#3b82f6', 
+                              color: 'white', 
+                              border: 'none', 
+                              fontSize: '18px', 
+                              fontWeight: 'bold',
+                              display: 'flex', alignItems: 'center', justifyContent: 'center',
+                              cursor: 'pointer',
+                              boxShadow: '0 4px 10px rgba(59, 130, 246, 0.3)'
+                            }}
+                          >
+                            +
+                          </button>
+                        )}
+                      </div>
                     </div>
-                    <div>
-                      <div style={{ fontSize: '15px', fontWeight: 'bold', color: '#fff', marginBottom: '4px', lineHeight: '1.2' }}>{item.name}</div>
-                      <div style={{ fontSize: '12px', color: '#64748b', lineHeight: '1.3', height: '32px', overflow: 'hidden' }}>{item.desc}</div>
-                    </div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 'auto' }}>
-                      <div style={{ fontSize: '16px', fontWeight: '900', color: '#10b981' }}>{item.price} ₽</div>
-                      <button 
-                        onClick={() => addToCart(item)}
-                        style={{ 
-                          width: '32px', height: '32px', 
-                          borderRadius: '10px', 
-                          backgroundColor: '#3b82f6', 
-                          color: 'white', 
-                          border: 'none', 
-                          fontSize: '18px', 
-                          fontWeight: 'bold',
-                          display: 'flex', alignItems: 'center', justifyContent: 'center',
-                          cursor: 'pointer',
-                          boxShadow: '0 4px 10px rgba(59, 130, 246, 0.3)'
-                        }}
-                      >
-                        +
-                      </button>
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
           )}
         </div>
       )}
 
-      {/* 🛒 ПЛАВАЮЩАЯ КНОПКА КОРЗИНЫ (Появляется только если в корзине что-то есть) */}
-      {!showSplash && cart.length > 0 && activeTab === 'menu' && (
+      {/* 🛒 ПЛАВАЮЩАЯ КНОПКА КОРЗИНЫ С КНОПКОЙ "ОЧИСТИТЬ" */}
+      {!showSplash && cartItemsCount > 0 && activeTab === 'menu' && (
         <div style={{ 
           position: 'fixed', bottom: '85px', left: '20px', right: '20px', 
           backgroundColor: '#10b981', 
@@ -267,22 +319,27 @@ const ClientApp = ({ appData, clients = {}, onClose }) => {
           display: 'flex', justifyContent: 'space-between', alignItems: 'center',
           boxShadow: '0 10px 25px rgba(16, 185, 129, 0.4)',
           animation: 'slideUp 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards',
-          zIndex: 99,
-          cursor: 'pointer'
+          zIndex: 99
         }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <div style={{ width: '36px', height: '36px', backgroundColor: 'rgba(255,255,255,0.2)', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '18px', fontWeight: 'bold', color: '#fff' }}>
-              {cart.length}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+            <div style={{ width: '38px', height: '38px', backgroundColor: 'rgba(255,255,255,0.2)', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '16px', fontWeight: 'bold', color: '#fff' }}>
+              {cartItemsCount}
             </div>
-            <div style={{ color: '#fff', fontWeight: '600', fontSize: '15px' }}>В корзине</div>
+            <div style={{ display: 'flex', flexDirection: 'column' }}>
+              <span style={{ color: '#fff', fontWeight: '800', fontSize: '15px' }}>В корзине</span>
+              {/* 🚀 КНОПКА ОЧИСТКИ */}
+              <span onClick={clearCart} style={{ color: 'rgba(255,255,255,0.8)', fontSize: '12px', fontWeight: '600', textDecoration: 'underline', cursor: 'pointer', marginTop: '2px' }}>
+                Очистить всё
+              </span>
+            </div>
           </div>
-          <div style={{ color: '#fff', fontWeight: '900', fontSize: '18px' }}>
+          <div style={{ color: '#fff', fontWeight: '900', fontSize: '20px' }}>
             {cartTotal} ₽
           </div>
         </div>
       )}
 
-      {/* 🚀 📱 ИДЕАЛЬНО ТОНКАЯ НИЖНЯЯ ПАНЕЛЬ С ЖЕСТКОЙ ВЫСОТОЙ (СОХРАНЕНА) */}
+      {/* 🚀 📱 ИДЕАЛЬНО ТОНКАЯ НИЖНЯЯ ПАНЕЛЬ С ЖЕСТКОЙ ВЫСОТОЙ */}
       {!showSplash && (
         <div style={{ 
           position: 'fixed', 
