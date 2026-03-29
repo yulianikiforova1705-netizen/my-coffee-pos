@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 
 const ClientApp = ({ appData, clients = {}, onClose }) => {
   const [showSplash, setShowSplash] = useState(true);
-  const [activeTab, setActiveTab] = useState('profile'); 
+  const [activeTab, setActiveTab] = useState('menu'); 
   
   const [isDarkMode, setIsDarkMode] = useState(false);
   
@@ -48,21 +48,28 @@ const ClientApp = ({ appData, clients = {}, onClose }) => {
   const nextLevelPoints = 5000;
   const progressToNextLevel = Math.min(((currentGuest.points % nextLevelPoints) / nextLevelPoints) * 100, 100);
 
-  const mockMenu = [
-    { id: 1, name: 'Капучино', price: 250, category: 'Кофе', icon: '☕', desc: 'Классика с густой пенкой' },
-    { id: 2, name: 'Латте Макиато', price: 280, category: 'Кофе', icon: '🥛', desc: 'Много взбитого молока' },
-    { id: 3, name: 'Флэт Уайт', price: 260, category: 'Кофе', icon: '☕', desc: 'Двойной эспрессо и молоко' },
-    { id: 4, name: 'Матча Латте', price: 320, category: 'Чай', icon: '🍵', desc: 'Японский зеленый чай' },
-    { id: 5, name: 'Круассан классический', price: 180, category: 'Выпечка', icon: '🥐', desc: 'Свежий и хрустящий' },
-    { id: 6, name: 'Миндальный круассан', price: 240, category: 'Выпечка', icon: '🥐', desc: 'С миндальным кремом' },
-    { id: 7, name: 'Макарон', price: 120, category: 'Десерты', icon: '🧁', desc: 'Французский десерт' },
+  // 🚀 МАГИЯ СИНХРОНИЗАЦИИ: Берем реальное меню из базы данных
+  // Если база вдруг пустая (например, при первом запуске), показываем тестовое меню
+  const fallbackMenu = [
+    { id: 991, name: 'Капучино', price: 250, category: 'Кофе', icon: '☕', desc: 'Классика с густой пенкой' },
+    { id: 992, name: 'Круассан', price: 180, category: 'Выпечка', icon: '🥐', desc: 'Свежий и хрустящий' }
   ];
 
-  const categories = ['Все', 'Кофе', 'Чай', 'Выпечка', 'Десерты'];
+  // Формируем финальное меню, добавляя иконки по умолчанию, если их нет в базе
+  const realMenu = (appData?.menuItems && appData.menuItems.length > 0) 
+    ? appData.menuItems.map(item => ({
+        ...item,
+        icon: item.icon || (item.category === 'Выпечка' || item.category === 'Еда' ? '🥐' : '☕'),
+        desc: item.desc || 'Отличный выбор'
+      }))
+    : fallbackMenu;
+
+  // 🚀 АВТОМАТИЧЕСКИЕ КАТЕГОРИИ: Собираем уникальные категории из реального меню
+  const categories = ['Все', ...new Set(realMenu.map(item => item.category).filter(Boolean))];
   
   const filteredMenu = activeCategory === 'Все' 
-    ? mockMenu 
-    : mockMenu.filter(item => item.category === activeCategory);
+    ? realMenu 
+    : realMenu.filter(item => item.category === activeCategory);
 
   const getQuantity = (id) => cart[id] || 0;
 
@@ -86,14 +93,16 @@ const ClientApp = ({ appData, clients = {}, onClose }) => {
 
   const cartItemsCount = Object.values(cart).reduce((sum, qty) => sum + qty, 0);
   const cartTotal = Object.entries(cart).reduce((sum, [id, qty]) => {
-    const item = mockMenu.find(m => m.id === parseInt(id));
+    const item = realMenu.find(m => m.id === id || m.id === parseInt(id));
     return sum + (item ? item.price * qty : 0);
   }, 0);
 
   const getAnimationForCategory = (category) => {
-    if (category === 'Кофе' || category === 'Чай') return 'anim-coffee 3s ease-in-out infinite';
-    if (category === 'Выпечка') return 'anim-pastry 4s ease-in-out infinite';
-    if (category === 'Десерты') return 'anim-dessert 2s ease-in-out infinite';
+    if (!category) return 'none';
+    const cat = category.toLowerCase();
+    if (cat.includes('кофе') || cat.includes('чай') || cat.includes('напит')) return 'anim-coffee 3s ease-in-out infinite';
+    if (cat.includes('выпечка') || cat.includes('хлеб')) return 'anim-pastry 4s ease-in-out infinite';
+    if (cat.includes('десерт') || cat.includes('сладк')) return 'anim-dessert 2s ease-in-out infinite';
     return 'none';
   };
 
@@ -188,7 +197,6 @@ const ClientApp = ({ appData, clients = {}, onClose }) => {
               </div>
             </div>
             
-            {/* 🚀 Очищенная шапка (только аватарка) */}
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
               <div style={{ width: '48px', height: '48px', borderRadius: '50%', background: 'linear-gradient(135deg, #3b82f6 0%, #1e293b 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '20px', border: '2px solid rgba(255,255,255,0.1)', color: '#fff', boxShadow: 'inset 0 2px 4px rgba(255,255,255,0.2)', flexShrink: 0 }}>👤</div>
             </div>
@@ -231,7 +239,7 @@ const ClientApp = ({ appData, clients = {}, onClose }) => {
             </>
           )}
 
-          {/* ПРЕДЗАКАЗ */}
+          {/* 🚀 ДИНАМИЧЕСКИЙ ПРЕДЗАКАЗ */}
           {activeTab === 'menu' && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', animation: 'fadeIn 0.4s ease' }}>
               <div className="hide-scroll" style={{ display: 'flex', gap: '10px', overflowX: 'auto', paddingBottom: '5px', margin: '0 -20px', padding: '0 20px' }}>
@@ -241,34 +249,41 @@ const ClientApp = ({ appData, clients = {}, onClose }) => {
                   </button>
                 ))}
               </div>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))', gap: '16px' }}>
-                {filteredMenu.map(item => {
-                  const qty = getQuantity(item.id);
-                  return (
-                    <div key={item.id} style={{ backgroundColor: 'var(--card-bg)', border: qty > 0 ? '1px solid #3b82f6' : '1px solid var(--border-color)', borderRadius: '20px', padding: '16px', display: 'flex', flexDirection: 'column', gap: '12px', boxShadow: qty > 0 ? '0 0 15px rgba(59, 130, 246, 0.2)' : 'var(--shadow-sm)', transition: 'all 0.3s ease' }}>
-                      <div style={{ height: '100px', backgroundColor: 'var(--icon-bg)', borderRadius: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '48px' }}>
-                        <div style={{ animation: getAnimationForCategory(item.category) }}>{item.icon}</div>
+              
+              {filteredMenu.length === 0 ? (
+                <div style={{ textAlign: 'center', padding: '40px 20px', color: 'var(--text-muted)' }}>
+                  В этой категории пока ничего нет 😔
+                </div>
+              ) : (
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))', gap: '16px' }}>
+                  {filteredMenu.map(item => {
+                    const qty = getQuantity(item.id);
+                    return (
+                      <div key={item.id} style={{ backgroundColor: 'var(--card-bg)', border: qty > 0 ? '1px solid #3b82f6' : '1px solid var(--border-color)', borderRadius: '20px', padding: '16px', display: 'flex', flexDirection: 'column', gap: '12px', boxShadow: qty > 0 ? '0 0 15px rgba(59, 130, 246, 0.2)' : 'var(--shadow-sm)', transition: 'all 0.3s ease' }}>
+                        <div style={{ height: '100px', backgroundColor: 'var(--icon-bg)', borderRadius: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '48px' }}>
+                          <div style={{ animation: getAnimationForCategory(item.category) }}>{item.icon}</div>
+                        </div>
+                        <div>
+                          <div style={{ fontSize: '15px', fontWeight: 'bold', color: 'var(--text-main)', marginBottom: '4px', lineHeight: '1.2' }}>{item.name}</div>
+                          <div style={{ fontSize: '12px', color: 'var(--text-muted)', lineHeight: '1.3', height: '32px', overflow: 'hidden' }}>{item.desc}</div>
+                        </div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 'auto' }}>
+                          <div style={{ fontSize: '16px', fontWeight: '900', color: '#10b981' }}>{item.price} ₽</div>
+                          {qty > 0 ? (
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', backgroundColor: 'rgba(59, 130, 246, 0.15)', borderRadius: '12px', padding: '4px' }}>
+                              <button onClick={() => updateCart(item.id, -1)} style={{ width: '26px', height: '26px', borderRadius: '8px', backgroundColor: 'transparent', color: '#3b82f6', border: 'none', fontSize: '18px', fontWeight: 'bold', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>-</button>
+                              <span style={{ fontSize: '14px', fontWeight: 'bold', width: '14px', textAlign: 'center', color: 'var(--text-main)' }}>{qty}</span>
+                              <button onClick={() => updateCart(item.id, 1)} style={{ width: '26px', height: '26px', borderRadius: '8px', backgroundColor: '#3b82f6', color: 'white', border: 'none', fontSize: '16px', fontWeight: 'bold', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>+</button>
+                            </div>
+                          ) : (
+                            <button onClick={() => updateCart(item.id, 1)} style={{ width: '32px', height: '32px', borderRadius: '10px', backgroundColor: '#3b82f6', color: 'white', border: 'none', fontSize: '18px', fontWeight: 'bold', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', boxShadow: '0 4px 10px rgba(59, 130, 246, 0.3)' }}>+</button>
+                          )}
+                        </div>
                       </div>
-                      <div>
-                        <div style={{ fontSize: '15px', fontWeight: 'bold', color: 'var(--text-main)', marginBottom: '4px', lineHeight: '1.2' }}>{item.name}</div>
-                        <div style={{ fontSize: '12px', color: 'var(--text-muted)', lineHeight: '1.3', height: '32px', overflow: 'hidden' }}>{item.desc}</div>
-                      </div>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 'auto' }}>
-                        <div style={{ fontSize: '16px', fontWeight: '900', color: '#10b981' }}>{item.price} ₽</div>
-                        {qty > 0 ? (
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', backgroundColor: 'rgba(59, 130, 246, 0.15)', borderRadius: '12px', padding: '4px' }}>
-                            <button onClick={() => updateCart(item.id, -1)} style={{ width: '26px', height: '26px', borderRadius: '8px', backgroundColor: 'transparent', color: '#3b82f6', border: 'none', fontSize: '18px', fontWeight: 'bold', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>-</button>
-                            <span style={{ fontSize: '14px', fontWeight: 'bold', width: '14px', textAlign: 'center', color: 'var(--text-main)' }}>{qty}</span>
-                            <button onClick={() => updateCart(item.id, 1)} style={{ width: '26px', height: '26px', borderRadius: '8px', backgroundColor: '#3b82f6', color: 'white', border: 'none', fontSize: '16px', fontWeight: 'bold', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>+</button>
-                          </div>
-                        ) : (
-                          <button onClick={() => updateCart(item.id, 1)} style={{ width: '32px', height: '32px', borderRadius: '10px', backgroundColor: '#3b82f6', color: 'white', border: 'none', fontSize: '18px', fontWeight: 'bold', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', boxShadow: '0 4px 10px rgba(59, 130, 246, 0.3)' }}>+</button>
-                        )}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
+                    );
+                  })}
+                </div>
+              )}
             </div>
           )}
 
@@ -293,7 +308,6 @@ const ClientApp = ({ appData, clients = {}, onClose }) => {
                 </div>
               </div>
 
-              {/* МЕНЮ ПРОФИЛЯ */}
               <div style={{ backgroundColor: 'var(--card-bg)', borderRadius: '24px', border: '1px solid var(--border-color)', overflow: 'hidden', boxShadow: 'var(--shadow-sm)' }}>
                 {[
                   { icon: '🕒', label: 'История заказов' },
@@ -342,7 +356,7 @@ const ClientApp = ({ appData, clients = {}, onClose }) => {
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '24px' }}>
               {Object.entries(cart).map(([id, qty]) => {
-                const item = mockMenu.find(m => m.id === parseInt(id));
+                const item = realMenu.find(m => m.id === id || m.id === parseInt(id));
                 if (!item) return null;
                 return (
                   <div key={id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid var(--border-color)', paddingBottom: '16px' }}>
@@ -381,7 +395,6 @@ const ClientApp = ({ appData, clients = {}, onClose }) => {
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
               
-              {/* Переключатель темы (переехал сюда) */}
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingBottom: '16px', borderBottom: '1px solid var(--border-color)' }}>
                 <div>
                   <div style={{ fontSize: '16px', fontWeight: 'bold', color: 'var(--text-main)' }}>Темная тема</div>
@@ -392,7 +405,6 @@ const ClientApp = ({ appData, clients = {}, onClose }) => {
                 </div>
               </div>
 
-              {/* Переключатель уведомлений */}
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingBottom: '16px', borderBottom: '1px solid var(--border-color)' }}>
                 <div>
                   <div style={{ fontSize: '16px', fontWeight: 'bold', color: 'var(--text-main)' }}>Push-уведомления</div>
@@ -403,13 +415,11 @@ const ClientApp = ({ appData, clients = {}, onClose }) => {
                 </div>
               </div>
 
-              {/* Редактирование имени */}
               <div style={{ paddingBottom: '16px', borderBottom: '1px solid var(--border-color)' }}>
                 <div style={{ fontSize: '14px', fontWeight: 'bold', color: 'var(--text-muted)', marginBottom: '8px' }}>ВАШЕ ИМЯ</div>
                 <input type="text" defaultValue={currentGuest.name} style={{ width: '100%', padding: '12px 16px', borderRadius: '12px', border: '1px solid var(--border-color)', backgroundColor: 'var(--icon-bg)', color: 'var(--text-main)', fontSize: '16px', outline: 'none', boxSizing: 'border-box' }} />
               </div>
 
-              {/* Удаление аккаунта */}
               <button onClick={() => alert('Функция удаления аккаунта требует подтверждения по SMS.')} style={{ width: '100%', padding: '16px', backgroundColor: 'rgba(239, 68, 68, 0.1)', color: '#ef4444', border: '1px solid rgba(239, 68, 68, 0.2)', borderRadius: '16px', fontSize: '16px', fontWeight: 'bold', cursor: 'pointer', marginTop: '10px' }}>
                 Удалить профиль
               </button>
