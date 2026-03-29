@@ -14,7 +14,7 @@ const BaristaMenu = ({
   challengeProgress
 }) => {
 
-  // 🚀 ВСТРАИВАЕМ ЖЕЛЕЗНУЮ ЛОГИКУ ПРЯМО В МЕНЮ БАРИСТЫ
+  // 🚀 ВСТРАИВАЕМ ЖЕЛЕЗНУЮ ЛОГИКУ ПРЯМО В МЕНЮ БАРИСТЫ (ИСПРАВЛЕН РАФ)
   const getSmartIconDisplay = (item) => {
     const text = ((item.name || '') + ' ' + (item.category || '')).toLowerCase();
     
@@ -29,9 +29,10 @@ const BaristaMenu = ({
     if (text.includes('суп')) return '🥣';
     
     if (text.includes('матча') || text.includes('чай')) return '🍵';
-    if (text.includes('лимонад') || text.includes('айс') || text.includes('сок') || text.includes('фреш') || text.includes('смузи') || text.includes('вода') || text.includes('колд') || text.includes('раф')) return '🥤';
-  // 🚀 Добавили раф, латте, капучино в горячие напитки:
-    if (text.includes('какао') || text.includes('шоколад') || text.includes('латте') || text.includes('капучино') || text.includes('эспрессо')) return '☕';
+    if (text.includes('лимонад') || text.includes('айс') || text.includes('сок') || text.includes('фреш') || text.includes('смузи') || text.includes('вода') || text.includes('колд')) return '🥤';
+    
+    // ☕ Раф теперь здесь, вместе с латте и капучино:
+    if (text.includes('какао') || text.includes('шоколад') || text.includes('латте') || text.includes('капучино') || text.includes('эспрессо') || text.includes('раф')) return '☕';
 
     if (text.includes('еда') || text.includes('перекус')) return '🥪';
     

@@ -78,10 +78,8 @@ export const useCoffeeLogic = () => {
   const [showProcurementModal, setShowProcurementModal] = useState(false);
   const [showArchiveModal, setShowArchiveModal] = useState(false);
 
-  // 🚀 УМНЫЙ ПОДБОРЩИК ИКОНОК (ИДЕАЛЬНАЯ ВЕРСИЯ)
   const getSmartIcon = (name, category) => {
     const text = ((name || '') + ' ' + (category || '')).toLowerCase();
-
     if (text.includes('круассан')) return '🥐';
     if (text.includes('ролл') || text.includes('рол ') || text.includes('шаурма') || text.includes('wrap') || text.includes('врап')) return '🌯';
     if (text.includes('сэндвич') || text.includes('сендвич') || text.includes('панини') || text.includes('тост')) return '🥪';
@@ -91,14 +89,10 @@ export const useCoffeeLogic = () => {
     if (text.includes('булоч') || text.includes('хлеб') || text.includes('выпеч')) return '🥐';
     if (text.includes('салат') || text.includes('боул')) return '🥗';
     if (text.includes('суп')) return '🥣';
-    
     if (text.includes('матча') || text.includes('чай')) return '🍵';
     if (text.includes('лимонад') || text.includes('айс') || text.includes('сок') || text.includes('фреш') || text.includes('смузи') || text.includes('вода') || text.includes('колд')) return '🥤';
-   // 🚀 Добавили раф, латте, капучино в горячие напитки:
-    if (text.includes('какао') || text.includes('шоколад')) return '☕';
-
+    if (text.includes('какао') || text.includes('шоколад') || text.includes('раф') || text.includes('латте') || text.includes('капучино') || text.includes('эспрессо')) return '☕';
     if (text.includes('еда') || text.includes('перекус')) return '🥪';
-    
     return '☕'; 
   };
 
@@ -149,6 +143,15 @@ export const useCoffeeLogic = () => {
     });
   };
 
+  // 🚀 НОВАЯ ФУНКЦИЯ ДЛЯ СИНХРОНИЗАЦИИ МЕНЮ С FIREBASE
+  const updateMenu = (updater) => {
+    setMenuItems(prev => {
+      const next = typeof updater === 'function' ? updater(prev) : updater;
+      setDoc(doc(db, 'system', 'menu'), { items: next }).catch(e => console.error(e));
+      return next;
+    });
+  };
+
   useEffect(() => {
     try {
       const qOrders = query(collection(db, 'orders'), orderBy('timestamp', 'desc'));
@@ -162,7 +165,12 @@ export const useCoffeeLogic = () => {
       const unsubIngredients = onSnapshot(doc(db, 'system', 'ingredients'), (docSnap) => {
         if (docSnap.exists() && docSnap.data().items) setIngredients(docSnap.data().items);
       });
-      return () => { unsubOrders(); unsubStats(); unsubIngredients(); };
+      // 🚀 СЛУШАЕМ МЕНЮ ИЗ FIREBASE ДЛЯ СИНХРОНИЗАЦИИ НА ТЕЛЕФОНЕ
+      const unsubMenu = onSnapshot(doc(db, 'system', 'menu'), (docSnap) => {
+        if (docSnap.exists() && docSnap.data().items) setMenuItems(docSnap.data().items);
+      });
+      
+      return () => { unsubOrders(); unsubStats(); unsubIngredients(); unsubMenu(); };
     } catch (e) { console.log("Firebase sync waiting"); }
   }, []);
 
@@ -174,7 +182,8 @@ export const useCoffeeLogic = () => {
         if (parsed.appData) setAppData(prev => ({ ...prev, ...parsed.appData })); 
         if (parsed.city) setCity(parsed.city);
         if (parsed.stopList) setStopList(parsed.stopList);
-        if (parsed.menuItems) setMenuItems(parsed.menuItems); if (parsed.clients) setClients(parsed.clients); 
+        if (parsed.menuItems && menuItems.length <= 8) setMenuItems(parsed.menuItems); 
+        if (parsed.clients) setClients(parsed.clients); 
         if (parsed.salarySettings) setSalarySettings(parsed.salarySettings); 
         if (parsed.baristaStats) {
           const upgradedStats = {}; Object.keys(parsed.baristaStats).forEach(b => { upgradedStats[b] = { ...parsed.baristaStats[b], ratingSum: parsed.baristaStats[b].ratingSum || 0, ratingCount: parsed.baristaStats[b].ratingCount || 0 }; }); setBaristaStats(upgradedStats);
@@ -269,7 +278,8 @@ export const useCoffeeLogic = () => {
         return i;
       });
     });
-    setMenuItems(prevMenu => {
+    // 🚀 ТЕПЕРЬ СОХРАНЯЕТСЯ И В ОБЛАКО ТОЖЕ
+    updateMenu(prevMenu => {
       return prevMenu.map(m => {
         if (m.inventory !== undefined && m.inventory <= 5) {
           const cost = 20 * (m.costPrice || 0);
@@ -314,21 +324,21 @@ export const useCoffeeLogic = () => {
   };
   const cancelPin = () => setPinModal({ isOpen: false, targetRole: '', targetBarista: '' });
 
-  // 🚀 ДОБАВЛЯЕМ УМНЫЕ ИКОНКИ ПРИ СОЗДАНИИ/РЕДАКТИРОВАНИИ
+  // 🚀 ТЕПЕРЬ СОХРАНЯЕТСЯ И В ОБЛАКО ТОЖЕ
   const handleAddMenuItem = (newItem) => { 
     const newId = menuItems.length > 0 ? Math.max(...menuItems.map(i => i.id)) + 1 : 1; 
     const itemWithIcon = { ...newItem, id: newId, icon: getSmartIcon(newItem.name, newItem.category) };
-    setMenuItems([...menuItems, itemWithIcon]); 
+    updateMenu([...menuItems, itemWithIcon]); 
     addLog(`Добавлена позиция: ${itemWithIcon.name}`, 'info'); 
   };
   const handleEditMenuItem = (updatedItem) => { 
     const itemWithIcon = { ...updatedItem, icon: getSmartIcon(updatedItem.name, updatedItem.category) };
-    setMenuItems(prev => prev.map(item => item.id === itemWithIcon.id ? itemWithIcon : item)); 
+    updateMenu(menuItems.map(item => item.id === itemWithIcon.id ? itemWithIcon : item)); 
     addLog(`Позиция меню обновлена: ${itemWithIcon.name}`, 'info'); 
   };
+  const handleDeleteMenuItem = (id) => { updateMenu(menuItems.filter(i => i.id !== id)); setStopList(stopList.filter(i => i !== id)); };
+  const handleUpdateInventory = (itemId, newAmount) => { updateMenu(menuItems.map(i => i.id === itemId ? { ...i, inventory: newAmount } : i)); };
   
-  const handleDeleteMenuItem = (id) => { setMenuItems(menuItems.filter(i => i.id !== id)); setStopList(stopList.filter(i => i !== id)); };
-  const handleUpdateInventory = (itemId, newAmount) => { setMenuItems(prev => prev.map(i => i.id === itemId ? { ...i, inventory: newAmount } : i)); };
   const handleToggleStopList = (itemId) => setStopList(prev => prev.includes(itemId) ? prev.filter(id => id !== itemId) : [...prev, itemId]);
 
   const handleCreateOrder = (orderDescription, totalSum, phone = '', pointsSpent = 0, tips = 0, activeBarista = 'Маша', orderType = 'В зале') => {
@@ -384,6 +394,7 @@ export const useCoffeeLogic = () => {
     setOrders(updatedOrders);
     const canceledOrder = updatedOrders.find(o => o.id === orderId);
     if(canceledOrder) { setDoc(doc(db, 'orders', orderId.toString()), canceledOrder).catch(e => console.error(e)); }
+    
     sendTelegramMessage(`❌ <b>ОТМЕНА ЗАКАЗА</b>\n\nБыл отменен заказ: ${orderId}\nБариста: ${loggedInBarista}\n🕒 ${new Date().toLocaleTimeString('ru-RU')}`);
   };
 
@@ -415,38 +426,8 @@ export const useCoffeeLogic = () => {
   const timeStr = currentTime.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
 
   const topSales = useMemo(() => { const counts = {}; (orders || []).forEach(order => { if (order.status === 'Отменен') return; (order.item || '').split(' + ').forEach(itemName => counts[itemName] = (counts[itemName] || 0) + 1); }); return Object.entries(counts).sort((a, b) => b[1] - a[1]).slice(0, 3); }, [orders]); 
-  
-  // 🚀 ЗАЩИТА ГРАФИКОВ ОТ НЕИЗВЕСТНЫХ КАТЕГОРИЙ
-  const categoryStats = useMemo(() => { 
-    const statsObj = {}; 
-    let totalRevenue = 0; 
-    if (!(orders || []).filter(o => o.status !== 'Отменен').length) return { stats: { 'Нет продаж': 0 }, total: 0 }; 
-    
-    (orders || []).forEach(order => { 
-      if (order.status === 'Отменен') return; 
-      (order.item || '').split(' + ').forEach(itemName => { 
-        const menuItem = (menuItems || []).find(m => m.name === itemName); 
-        const cat = menuItem?.category || (menuItem?.isDessert ? 'Десерты' : 'Кофе'); 
-        const price = menuItem?.price || 0; 
-        if (statsObj[cat] !== undefined) statsObj[cat] += price; 
-        else statsObj[cat] = price; // Если категории не было в словаре, создаем ее на лету!
-        totalRevenue += price; 
-      }); 
-    }); 
-    return { stats: statsObj, total: totalRevenue }; 
-  }, [orders, menuItems]);
-
-  // Генерируем случайные цвета для новых категорий, чтобы графики не падали
-  const catColors = useMemo(() => {
-    const baseColors = { 'Кофе': '#3b82f6', 'Еда': '#10b981', 'Десерты': '#8b5cf6', 'Зерно': '#f59e0b', 'Выпечка': '#f43f5e', 'Нет продаж': '#cbd5e1' };
-    Object.keys(categoryStats.stats).forEach((cat, index) => {
-      if (!baseColors[cat]) {
-        const fallbackColors = ['#0ea5e9', '#84cc16', '#eab308', '#d946ef', '#14b8a6'];
-        baseColors[cat] = fallbackColors[index % fallbackColors.length];
-      }
-    });
-    return baseColors;
-  }, [categoryStats]);
+  const categoryStats = useMemo(() => { const statsObj = {}; let totalRevenue = 0; if (!(orders || []).filter(o => o.status !== 'Отменен').length) return { stats: { 'Нет продаж': 0 }, total: 0 }; (orders || []).forEach(order => { if (order.status === 'Отменен') return; (order.item || '').split(' + ').forEach(itemName => { const menuItem = (menuItems || []).find(m => m.name === itemName); const cat = menuItem?.category || (menuItem?.isDessert ? 'Десерты' : 'Кофе'); const price = menuItem?.price || 0; if (statsObj[cat] !== undefined) statsObj[cat] += price; else statsObj[cat] = price; totalRevenue += price; }); }); return { stats: statsObj, total: totalRevenue }; }, [orders, menuItems]);
+  const catColors = useMemo(() => { const baseColors = { 'Кофе': '#3b82f6', 'Еда': '#10b981', 'Десерты': '#8b5cf6', 'Зерно': '#f59e0b', 'Выпечка': '#f43f5e', 'Нет продаж': '#cbd5e1' }; Object.keys(categoryStats.stats).forEach((cat, index) => { if (!baseColors[cat]) { const fallbackColors = ['#0ea5e9', '#84cc16', '#eab308', '#d946ef', '#14b8a6']; baseColors[cat] = fallbackColors[index % fallbackColors.length]; } }); return baseColors; }, [categoryStats]);
   
   const baristaEfficiency = useMemo(() => { 
     const bStats = {}; (orders || []).forEach(order => { if (order.status === 'Отменен') return; const b = order.barista || 'Неизвестно'; if (!bStats[b]) bStats[b] = { count: 0, revenue: 0 }; bStats[b].count += 1; bStats[b].revenue += (order.total || 0); }); 
@@ -456,7 +437,6 @@ export const useCoffeeLogic = () => {
   const hourlyHeatmap = useMemo(() => { 
     const hours = Array.from({length: 16}, (_, i) => i + 8); 
     const counts = {}; hours.forEach(h => counts[h] = 0); 
-    
     (orders || []).forEach(o => { 
       if (o.status !== 'Отменен' && o.time) { 
         let h = parseInt(o.time.split(':')[0]); 
@@ -464,7 +444,6 @@ export const useCoffeeLogic = () => {
         if (!isNaN(h) && counts[h] !== undefined) counts[h]++; 
       } 
     }); 
-    
     const maxOrders = Math.max(...Object.values(counts), 1); 
     return hours.map(h => ({ hour: `${h}:00`, count: counts[h], intensity: counts[h] / maxOrders })); 
   }, [orders]);
