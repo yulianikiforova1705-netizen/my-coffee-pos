@@ -53,26 +53,35 @@ const ClientApp = ({ appData, clients = {}, menuItems = [], onClose }) => {
     { id: 992, name: 'Круассан', price: 180, category: 'Выпечка', icon: '🥐', desc: 'Свежий и хрустящий' }
   ];
 
-  // 🚀 МАГИЯ: Умный подборщик иконок
+  // 🚀 ОБНОВЛЕННАЯ МАГИЯ: Умный подборщик иконок v2.0
   const getSmartIcon = (item) => {
-    if (item.icon) return item.icon; // Если иконка уже задана вручную
+    if (item.icon) return item.icon; 
     
-    const name = (item.name || '').toLowerCase();
-    const cat = (item.category || '').toLowerCase();
-    const text = name + ' ' + cat; // Ищем ключевые слова и в названии, и в категории
+    // Склеиваем название и категорию, чтобы искать везде
+    const text = ((item.name || '') + ' ' + (item.category || '')).toLowerCase();
 
+    // Сначала ищем конкретные названия продуктов (чтобы категория не перебивала)
+    if (text.includes('круассан')) return '🥐';
+    if (text.includes('ролл') || text.includes('шаурма') || text.includes('wrap') || text.includes('врап')) return '🌯';
     if (text.includes('сэндвич') || text.includes('сендвич') || text.includes('панини') || text.includes('тост')) return '🥪';
-    if (text.includes('завтрак') || text.includes('яичниц') || text.includes('омлет') || text.includes('сырник')) return '🍳';
-    if (text.includes('десерт') || text.includes('торт') || text.includes('пирож') || text.includes('чизкейк')) return '🍰';
-    if (text.includes('выпеч') || text.includes('круассан') || text.includes('булоч') || text.includes('хлеб')) return '🥐';
+    if (text.includes('сырник') || text.includes('блин') || text.includes('завтрак') || text.includes('омлет') || text.includes('яичниц') || text.includes('каша')) return '🍳';
     if (text.includes('печенье') || text.includes('кукис') || text.includes('макарон')) return '🍪';
-    if (text.includes('чай') || text.includes('матча')) return '🍵';
-    if (text.includes('лимонад') || text.includes('айс') || text.includes('холод') || text.includes('сок') || text.includes('фреш')) return '🥤';
+    if (text.includes('чизкейк') || text.includes('торт') || text.includes('пирож') || text.includes('эклер') || text.includes('десерт') || text.includes('сладк')) return '🍰';
+    if (text.includes('булоч') || text.includes('хлеб') || text.includes('выпеч')) return '🥐';
+    if (text.includes('салат') || text.includes('боул')) return '🥗';
+    if (text.includes('суп')) return '🥣';
     
-    return '☕'; // Если ничего не подошло, ставим классическую кружку кофе
+    // Затем напитки
+    if (text.includes('матча') || text.includes('чай')) return '🍵';
+    if (text.includes('лимонад') || text.includes('айс') || text.includes('сок') || text.includes('фреш') || text.includes('смузи') || text.includes('вода') || text.includes('колд')) return '🥤';
+    if (text.includes('какао') || text.includes('шоколад')) return '☕';
+
+    // Общие категории, если ничего не подошло
+    if (text.includes('еда') || text.includes('перекус')) return '🥪';
+    
+    return '☕'; // По умолчанию кофе
   };
 
-  // Формируем меню с умными иконками
   const realMenu = (menuItems && menuItems.length > 0) 
     ? menuItems.map(item => ({
         ...item,
@@ -113,12 +122,11 @@ const ClientApp = ({ appData, clients = {}, menuItems = [], onClose }) => {
     return sum + (item ? item.price * qty : 0);
   }, 0);
 
-  // Обновленные анимации: еда теперь "дышит", как выпечка
   const getAnimationForCategory = (category) => {
     if (!category) return 'none';
     const cat = category.toLowerCase();
     if (cat.includes('кофе') || cat.includes('чай') || cat.includes('напит')) return 'anim-coffee 3s ease-in-out infinite';
-    if (cat.includes('выпечка') || cat.includes('еда') || cat.includes('сэндвич') || cat.includes('хлеб')) return 'anim-pastry 4s ease-in-out infinite';
+    if (cat.includes('выпечка') || cat.includes('еда') || cat.includes('сэндвич') || cat.includes('ролл') || cat.includes('хлеб')) return 'anim-pastry 4s ease-in-out infinite';
     if (cat.includes('десерт') || cat.includes('сладк')) return 'anim-dessert 2s ease-in-out infinite';
     return 'none';
   };
@@ -187,6 +195,7 @@ const ClientApp = ({ appData, clients = {}, menuItems = [], onClose }) => {
         .hide-scroll { -ms-overflow-style: none; scrollbar-width: none; }
       `}</style>
 
+      {/* ЗАСТАВКА */}
       {showSplash && (
         <div id="client-splash" style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'var(--bg-main)', zIndex: 99999, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '20px', animation: 'splashFadeIn 0.5s ease-out forwards', willChange: 'opacity, transform' }}>
           <svg width="120" height="120" viewBox="0 0 80 80" fill="none" style={{ filter: 'drop-shadow(0 0 15px rgba(59, 130, 246, 0.5))', animation: 'anim-coffee 3s ease-in-out infinite' }}>
@@ -198,6 +207,7 @@ const ClientApp = ({ appData, clients = {}, menuItems = [], onClose }) => {
         </div>
       )}
 
+      {/* ОСНОВНОЙ КОНТЕНТ */}
       {!showSplash && (
         <div style={{ animation: 'cardAppearance 0.8s cubic-bezier(0.23, 1, 0.32, 1) forwards', padding: '20px', paddingBottom: '160px', display: 'flex', flexDirection: 'column', gap: '24px' }}>
           
@@ -217,6 +227,7 @@ const ClientApp = ({ appData, clients = {}, menuItems = [], onClose }) => {
             </div>
           </div>
 
+          {/* ЛОЯЛЬНОСТЬ */}
           {activeTab === 'card' && (
             <>
               <div style={{ background: 'linear-gradient(135deg, #3b82f6 0%, #a855f7 50%, #db2777 100%)', padding: '24px', borderRadius: '24px', color: 'white', boxShadow: '0 15px 30px -10px rgba(168, 85, 247, 0.3), 0 0 15px rgba(59, 130, 246, 0.2)', position: 'relative', overflow: 'hidden', border: '1px solid rgba(255,255,255,0.1)' }}>
@@ -253,6 +264,7 @@ const ClientApp = ({ appData, clients = {}, menuItems = [], onClose }) => {
             </>
           )}
 
+          {/* ПРЕДЗАКАЗ */}
           {activeTab === 'menu' && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', animation: 'fadeIn 0.4s ease' }}>
               <div className="hide-scroll" style={{ display: 'flex', gap: '10px', overflowX: 'auto', paddingBottom: '5px', margin: '0 -20px', padding: '0 20px' }}>
@@ -262,7 +274,7 @@ const ClientApp = ({ appData, clients = {}, menuItems = [], onClose }) => {
                   </button>
                 ))}
               </div>
-              
+
               {filteredMenu.length === 0 ? (
                 <div style={{ textAlign: 'center', padding: '40px 20px', color: 'var(--text-muted)' }}>В этой категории пока ничего нет 😔</div>
               ) : (
@@ -298,6 +310,7 @@ const ClientApp = ({ appData, clients = {}, menuItems = [], onClose }) => {
             </div>
           )}
 
+          {/* ПРОФИЛЬ */}
           {activeTab === 'profile' && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '24px', animation: 'fadeIn 0.4s ease' }}>
               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '30px 20px', backgroundColor: 'var(--card-bg)', borderRadius: '24px', border: '1px solid var(--border-color)', boxShadow: 'var(--shadow-sm)', position: 'relative', overflow: 'hidden' }}>
