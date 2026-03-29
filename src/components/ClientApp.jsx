@@ -2,16 +2,15 @@ import React, { useState, useEffect } from 'react';
 
 const ClientApp = ({ appData, clients = {}, onClose }) => {
   const [showSplash, setShowSplash] = useState(true);
-  const [activeTab, setActiveTab] = useState('menu'); 
+  const [activeTab, setActiveTab] = useState('card'); // Вернул фокус на карту лояльности при старте
   
   const [isDarkMode, setIsDarkMode] = useState(false);
   
   const [activeCategory, setActiveCategory] = useState('Все');
   const [cart, setCart] = useState({});
   
-  // 🚀 НОВОЕ СОСТОЯНИЕ: Открыта ли корзина (шторка)
   const [isCartOpen, setIsCartOpen] = useState(false);
-  const [pickupTime, setPickupTime] = useState('asap'); // 'asap' или 'later'
+  const [pickupTime, setPickupTime] = useState('asap'); 
 
   useEffect(() => {
     const fadeTimer = setTimeout(() => {
@@ -74,7 +73,6 @@ const ClientApp = ({ appData, clients = {}, onClose }) => {
       } else {
         newCart[id] = next;
       }
-      // Если корзина опустела, закрываем шторку
       if (Object.keys(newCart).length === 0) setIsCartOpen(false);
       return newCart;
     });
@@ -99,7 +97,6 @@ const ClientApp = ({ appData, clients = {}, onClose }) => {
     return 'none';
   };
 
-  // Имитация отправки заказа
   const handleCheckout = () => {
     alert(`Заказ на сумму ${cartTotal} ₽ успешно отправлен на кассу!`);
     setCart({});
@@ -121,6 +118,7 @@ const ClientApp = ({ appData, clients = {}, onClose }) => {
           --shadow-sm: 0 4px 10px rgba(0,0,0,0.05);
           --drawer-bg: #ffffff;
           --overlay-bg: rgba(15, 23, 42, 0.4);
+          --phone-bg: #f1f5f9;
         }
         
         .theme-client[data-theme="dark"] {
@@ -134,14 +132,15 @@ const ClientApp = ({ appData, clients = {}, onClose }) => {
           --shadow-sm: 0 4px 6px -1px rgba(0,0,0,0.2);
           --drawer-bg: #1e293b;
           --overlay-bg: rgba(0, 0, 0, 0.6);
+          --phone-bg: rgba(255,255,255,0.05);
         }
 
         @keyframes splashFadeIn { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }
         @keyframes splashFadeOut { from { opacity: 1; transform: scale(1); } to { opacity: 0; transform: scale(1.1); } }
         @keyframes cardAppearance { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes shine { 0% { transform: translateX(-100%) rotate(30deg); } 100% { transform: translateX(100%) rotate(30deg); } }
         @keyframes slideUp { from { transform: translateY(100px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
         
-        /* 🚀 Анимации для шторки корзины */
         @keyframes drawerSlideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
         @keyframes fadeInOverlay { from { opacity: 0; } to { opacity: 1; } }
         
@@ -153,7 +152,7 @@ const ClientApp = ({ appData, clients = {}, onClose }) => {
         .hide-scroll { -ms-overflow-style: none; scrollbar-width: none; }
       `}</style>
 
-      {/* ☕ ЭКРАН ЗАСТАВКИ (Скрыт) */}
+      {/* ☕ ЭКРАН ЗАСТАВКИ */}
       {showSplash && (
         <div 
           id="client-splash"
@@ -212,11 +211,50 @@ const ClientApp = ({ appData, clients = {}, onClose }) => {
             </div>
           </div>
 
+          {/* 🚀 ВОТ ОНА — НАША ВЕРНУВШАЯСЯ КАРТА ЛОЯЛЬНОСТИ! */}
           {activeTab === 'card' && (
-            <div style={{ textAlign: 'center', color: 'var(--text-muted)', marginTop: '40px' }}>
-               <div style={{ fontSize: '60px' }}>💳</div>
-               <div style={{ fontWeight: 'bold', marginTop: '15px', fontSize: '18px', color: 'var(--text-main)' }}>Карта лояльности</div>
-            </div>
+            <>
+              {/* 💳 КАРТА ЛОЯЛЬНОСТИ */}
+              <div style={{ background: 'linear-gradient(135deg, #3b82f6 0%, #a855f7 50%, #db2777 100%)', padding: '24px', borderRadius: '24px', color: 'white', boxShadow: '0 15px 30px -10px rgba(168, 85, 247, 0.3), 0 0 15px rgba(59, 130, 246, 0.2)', position: 'relative', overflow: 'hidden', border: '1px solid rgba(255,255,255,0.1)' }}>
+                <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', background: 'linear-gradient(30deg, transparent 0%, rgba(255,255,255,0.2) 50%, transparent 100%)', animation: 'shine 3s infinite', pointerEvents: 'none' }} />
+                <div style={{ position: 'absolute', top: '-10px', right: '-10px', opacity: 0.08, fontSize: '120px', transform: 'rotate(-15deg)' }}>☕</div>
+                
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+                  <div style={{ fontSize: '12px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '2px', color: 'rgba(255,255,255,0.9)' }}>Loyalty Card</div>
+                  <div style={{ fontSize: '18px' }}>👑</div>
+                </div>
+                
+                <div style={{ fontSize: '13px', opacity: 0.8, marginBottom: '4px' }}>Доступный баланс:</div>
+                <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px', marginBottom: '20px' }}>
+                  <div style={{ fontSize: '42px', fontWeight: '900', letterSpacing: '-2px', textShadow: '0 2px 10px rgba(0,0,0,0.2)' }}>{currentGuest.points}</div>
+                  <div style={{ fontSize: '16px', fontWeight: 'bold', opacity: 0.9 }}>баллов</div>
+                </div>
+                
+                <div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', marginBottom: '6px', color: 'rgba(255,255,255,0.8)' }}>
+                    <span>Уровень: Ценитель</span>
+                    <span>{currentGuest.points % nextLevelPoints} / {nextLevelPoints} до "Эксперт"</span>
+                  </div>
+                  <div style={{ width: '100%', height: '6px', backgroundColor: 'rgba(255,255,255,0.15)', borderRadius: '3px', overflow: 'hidden', border: '1px solid rgba(255,255,255,0.1)' }}>
+                    <div style={{ width: `${progressToNextLevel}%`, height: '100%', background: 'linear-gradient(90deg, #fff 0%, #3b82f6 100%)', borderRadius: '3px', boxShadow: '0 0 10px #fff' }} />
+                  </div>
+                </div>
+              </div>
+
+              {/* 📷 QR-КОД */}
+              <div style={{ backgroundColor: 'var(--card-bg)', backdropFilter: 'blur(10px)', padding: '24px', borderRadius: '24px', border: '1px solid var(--border-color)', textAlign: 'center', boxShadow: 'var(--shadow-sm)' }}>
+                <div style={{ fontSize: '15px', fontWeight: 'bold', color: 'var(--text-main)', marginBottom: '16px', letterSpacing: '-0.3px' }}>Покажите этот код бариста</div>
+                <div style={{ width: '180px', height: '180px', backgroundColor: '#fff', margin: '0 auto 16px auto', borderRadius: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '12px', position: 'relative', boxShadow: '0 0 20px rgba(59, 130, 246, 0.15)' }}>
+                  {[ 'top:5px;left:5px', 'top:5px;right:5px', 'bottom:5px;left:5px', 'bottom:5px;right:5px'].map((pos, idx) => (
+                    <div key={idx} style={{ position: 'absolute', ...Object.fromEntries(pos.split(';').map(p=>p.split(':'))), width: '15px', height: '15px', border: '2px solid #3b82f6', borderRight: pos.includes('right') ? 'none' : '2px solid #3b82f6', borderLeft: pos.includes('left') ? 'none' : '2px solid #3b82f6', borderTop: pos.includes('top') ? 'none' : '2px solid #3b82f6', borderBottom: pos.includes('bottom') ? 'none' : '2px solid #3b82f6' }} />
+                  ))}
+                  <img src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${currentGuest.phone}&color=0f172a`} alt="Guest QR Code" style={{ borderRadius: '8px', width: '100%', height: '100%' }} />
+                </div>
+                <div style={{ fontSize: '14px', color: 'var(--text-muted)', letterSpacing: '2px', backgroundColor: 'var(--phone-bg)', padding: '8px 16px', borderRadius: '8px', display: 'inline-block', fontFamily: 'Courier New, monospace' }}>
+                  +7 *** *** {displayPhone}
+                </div>
+              </div>
+            </>
           )}
 
           {/* ☕ ВИТРИНА ПРЕДЗАКАЗА */}
@@ -388,7 +426,6 @@ const ClientApp = ({ appData, clients = {}, onClose }) => {
                         <div style={{ fontSize: '14px', color: '#10b981', fontWeight: 'bold' }}>{item.price} ₽</div>
                       </div>
                     </div>
-                    {/* Кнопки управления количеством внутри корзины */}
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px', backgroundColor: 'var(--icon-bg)', borderRadius: '12px', padding: '4px 8px' }}>
                       <button onClick={() => updateCart(item.id, -1)} style={{ width: '24px', height: '24px', borderRadius: '6px', backgroundColor: 'var(--card-bg)', color: 'var(--text-main)', border: '1px solid var(--border-color)', fontSize: '16px', fontWeight: 'bold', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>-</button>
                       <span style={{ fontSize: '14px', fontWeight: 'bold', width: '16px', textAlign: 'center', color: 'var(--text-main)' }}>{qty}</span>
