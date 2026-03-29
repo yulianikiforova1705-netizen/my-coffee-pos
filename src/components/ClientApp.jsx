@@ -12,7 +12,6 @@ const ClientApp = ({ appData, clients = {}, onClose }) => {
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [pickupTime, setPickupTime] = useState('asap'); 
 
-  // 🚀 НОВЫЕ СОСТОЯНИЯ ДЛЯ ПРОФИЛЯ
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
 
@@ -104,10 +103,9 @@ const ClientApp = ({ appData, clients = {}, onClose }) => {
     setIsCartOpen(false);
   };
 
-  // 🚀 ОБРАБОТЧИК КЛИКОВ ПО МЕНЮ ПРОФИЛЯ
   const handleProfileMenuClick = (label) => {
     if (label === 'Служба поддержки') {
-      window.open('https://t.me/telegram', '_blank'); // Замени на свой TG
+      window.open('https://t.me/telegram', '_blank'); 
     } else if (label === 'Настройки приложения') {
       setIsSettingsOpen(true);
     } else {
@@ -190,10 +188,8 @@ const ClientApp = ({ appData, clients = {}, onClose }) => {
               </div>
             </div>
             
+            {/* 🚀 Очищенная шапка (только аватарка) */}
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-              <button onClick={() => setIsDarkMode(!isDarkMode)} style={{ width: '40px', height: '40px', borderRadius: '50%', backgroundColor: 'var(--card-bg)', border: '1px solid var(--border-color)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '18px', cursor: 'pointer', boxShadow: 'var(--shadow-sm)', transition: '0.3s' }}>
-                {isDarkMode ? '☀️' : '🌙'}
-              </button>
               <div style={{ width: '48px', height: '48px', borderRadius: '50%', background: 'linear-gradient(135deg, #3b82f6 0%, #1e293b 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '20px', border: '2px solid rgba(255,255,255,0.1)', color: '#fff', boxShadow: 'inset 0 2px 4px rgba(255,255,255,0.2)', flexShrink: 0 }}>👤</div>
             </div>
           </div>
@@ -344,7 +340,6 @@ const ClientApp = ({ appData, clients = {}, onClose }) => {
               <h2 style={{ margin: 0, fontSize: '22px', color: 'var(--text-main)', fontWeight: '900' }}>Ваш заказ</h2>
               <button onClick={() => setIsCartOpen(false)} style={{ background: 'var(--icon-bg)', border: 'none', width: '36px', height: '36px', borderRadius: '50%', fontSize: '18px', cursor: 'pointer', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>✕</button>
             </div>
-            {/* Содержимое корзины (скрыто для экономии места в коде, логика та же) */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '24px' }}>
               {Object.entries(cart).map(([id, qty]) => {
                 const item = mockMenu.find(m => m.id === parseInt(id));
@@ -386,7 +381,7 @@ const ClientApp = ({ appData, clients = {}, onClose }) => {
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
               
-              {/* Переключатель темы */}
+              {/* Переключатель темы (переехал сюда) */}
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingBottom: '16px', borderBottom: '1px solid var(--border-color)' }}>
                 <div>
                   <div style={{ fontSize: '16px', fontWeight: 'bold', color: 'var(--text-main)' }}>Темная тема</div>
