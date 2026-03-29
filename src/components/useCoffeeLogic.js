@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 
+// 🚀 ВСТРАИВАЕМ БАЗОВЫЕ ДАННЫЕ (ЧТОБЫ НИКОГДА НЕ БЫЛО ПУСТОТЫ)
 const initialData = {
   menuItems: [
     { id: 1, name: 'Капучино', price: 250, costPrice: 40, category: 'Кофе', inventory: 100, color: '#3b82f6', isCoffee: true },
@@ -9,7 +10,10 @@ const initialData = {
   ingredients: [
     { id: 1, name: 'Кофе (зерно)', qty: 5, unit: 'кг', minQty: 2, price: 1200 },
     { id: 2, name: 'Молоко', qty: 20, unit: 'л', minQty: 5, price: 80 }
-  ]
+  ],
+  baristas: ['Маша'], // Спасательный круг - дежурный бариста
+  baristaPins: { 'Маша': '2222' },
+  orders: []
 };
 
 export const useCoffeeLogic = () => {
@@ -26,10 +30,13 @@ export const useCoffeeLogic = () => {
   const [logs, setLogs] = useState([]);
   const [schedule, setSchedule] = useState({});
   const [clients, setClients] = useState({});
-  const [baristas, setBaristas] = useState([]);
-  const [baristaPins, setBaristaPins] = useState({});
+  
+  // Баристы
+  const [baristas, setBaristas] = useState(['Маша']);
+  const [baristaPins, setBaristaPins] = useState({ 'Маша': '2222' });
   const [baristaStats, setBaristaStats] = useState({});
   const [baristaEfficiency, setBaristaEfficiency] = useState([]);
+  
   const [salarySettings, setSalarySettings] = useState({ hourlyRate: 200, revenuePercent: 5 });
   const [promocodes, setPromocodes] = useState([]);
   const [cashbackPercent, setCashbackPercent] = useState(5);
@@ -76,7 +83,7 @@ export const useCoffeeLogic = () => {
         const parsed = JSON.parse(saved);
         setAppData(parsed);
       } catch (e) {
-        console.error("Ошибка загрузки данных", e);
+        setAppData(initialData);
       }
     } else {
       setAppData(initialData);
@@ -91,8 +98,11 @@ export const useCoffeeLogic = () => {
     setLogs(appData.logs || []);
     setSchedule(appData.schedule || {});
     setClients(appData.clients || {});
-    setBaristas(appData.baristas || []);
-    setBaristaPins(appData.baristaPins || {});
+    
+    // 🚀 ЕСЛИ БАЗА ПУСТАЯ, ВСЕГДА ДОБАВЛЯЕМ МАШУ, ЧТОБЫ НЕ БЫЛО ОШИБКИ
+    setBaristas(appData.baristas && appData.baristas.length > 0 ? appData.baristas : ['Маша']);
+    setBaristaPins(Object.keys(appData.baristaPins || {}).length > 0 ? appData.baristaPins : { 'Маша': '2222' });
+    
     setBaristaStats(appData.baristaStats || {});
     setBaristaEfficiency(appData.baristaEfficiency || []);
     setSalarySettings(appData.salarySettings || { hourlyRate: 200, revenuePercent: 5 });
@@ -130,7 +140,7 @@ export const useCoffeeLogic = () => {
   };
 
   const handleHardReset = () => {
-    if (window.confirm("ВНИМАНИЕ! Это удалит ВСЕ данные (кроме заводских) из браузера. Вы уверены?")) {
+    if (window.confirm("ВНИМАНИЕ! Это удалит ВСЕ данные из браузера. Вы уверены?")) {
       if (window.prompt("Введите 7777 для подтверждения сброса") === "7777") { 
         localStorage.removeItem('coffeeAppData');
         setAppData(initialData);
@@ -150,7 +160,7 @@ export const useCoffeeLogic = () => {
   };
 
   const handlePinSubmit = () => {
-    // 🚀 ВЕРНУЛИ СТАРЫЕ ПАРОЛИ
+    // 🚀 ПАРОЛИ ВЕРНУЛИСЬ!
     if (pinModal.targetRole === 'Владелец' && pinInput === '7777') {
       setCurrentRole('Владелец'); setPinModal({ isOpen: false }); addLog(`Вход: Владелец`);
     } else if (pinModal.targetRole === 'Управляющий' && pinInput === '1234') {
@@ -170,40 +180,21 @@ export const useCoffeeLogic = () => {
   const cancelPin = () => { setPinModal({ isOpen: false, targetRole: null, targetBarista: null }); setPinInput(''); };
 
   const handleAddMenuItem = (newItem) => {
-    const itemWithIcon = {
-      ...newItem,
-      id: Date.now(), 
-      icon: getSmartIcon(newItem.name, newItem.category)
-    };
+    const itemWithIcon = { ...newItem, id: Date.now(), icon: getSmartIcon(newItem.name, newItem.category) };
     setMenuItems([...menuItems, itemWithIcon]);
     addLog(`Меню: Добавлен ${itemWithIcon.name}`);
   };
 
   const handleEditMenuItem = (updatedItem) => {
-    const itemWithIcon = {
-      ...updatedItem,
-      icon: getSmartIcon(updatedItem.name, updatedItem.category)
-    };
+    const itemWithIcon = { ...updatedItem, icon: getSmartIcon(updatedItem.name, updatedItem.category) };
     setMenuItems(menuItems.map(item => item.id === itemWithIcon.id ? itemWithIcon : item));
     addLog(`Меню: Обновлен ${itemWithIcon.name}`);
   };
 
-  const handleDeleteMenuItem = (id) => {
-    setMenuItems(menuItems.filter(item => item.id !== id));
-    addLog(`Меню: Удален товар`);
-  };
-
-  const handleUpdateInventory = (id, newRecipe) => {
-    setMenuItems(menuItems.map(item => item.id === id ? { ...item, recipe: newRecipe } : item));
-  };
-
-  const handleToggleStopList = (id) => {
-    setStopList(prev => prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]);
-  };
-
-  const handleSaveInventory = (newInv) => {
-    setIngredients(newInv); addLog(`Склад: Инвентаризация сохранена`);
-  };
+  const handleDeleteMenuItem = (id) => { setMenuItems(menuItems.filter(item => item.id !== id)); addLog(`Меню: Удален товар`); };
+  const handleUpdateInventory = (id, newRecipe) => { setMenuItems(menuItems.map(item => item.id === id ? { ...item, recipe: newRecipe } : item)); };
+  const handleToggleStopList = (id) => { setStopList(prev => prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]); };
+  const handleSaveInventory = (newInv) => { setIngredients(newInv); addLog(`Склад: Инвентаризация сохранена`); };
 
   const handleWriteOff = (writeOffList) => {
     let updatedInv = [...ingredients];
@@ -264,7 +255,6 @@ export const useCoffeeLogic = () => {
 
   const handleCompleteOrder = (id) => { setOrders(orders.map(o => o.id === id ? { ...o, status: 'Готов' } : o)); };
   const handleCancelOrder = (id) => { setOrders(orders.map(o => o.id === id ? { ...o, status: 'Отменен' } : o)); };
-
   const handleOpenDrawer = () => { addLog(`Касса: Денежный ящик открыт (${loggedInBarista})`); };
   const handleAddExpense = (e) => { e.preventDefault(); if (expText && expAmount) { setExpenses([{ id: Date.now(), text: expText, category: expCategory, amount: Number(expAmount), date: new Date().toISOString() }, ...expenses]); setExpText(''); setExpAmount(''); addLog(`Финансы: Расход ${expAmount}₽ (${expCategory})`); } };
   
@@ -287,10 +277,7 @@ export const useCoffeeLogic = () => {
     }
   };
 
-  const sendSmsToClient = (phone, msg) => {
-    alert(`SMS отправлено на ${phone}:\n"${msg}"`);
-    addLog(`CRM: SMS для ${phone}`);
-  };
+  const sendSmsToClient = (phone, msg) => { alert(`SMS отправлено на ${phone}:\n"${msg}"`); addLog(`CRM: SMS для ${phone}`); };
 
   const handleRateBarista = (baristaName, rating) => {
     const bStats = { ...baristaStats };
@@ -312,7 +299,7 @@ export const useCoffeeLogic = () => {
     addLog(`Склад: Авто-закупка ${item.name}`);
   };
 
-  // 🚀 ЗАЩИТА ОТ БЕЛОГО ЭКРАНА: Проверяем наличие данных перед вычислениями
+  // 🚀 АБСОЛЮТНАЯ ЗАЩИТА ОТ БЕЛОГО ЭКРАНА В ГРАФИКАХ
   const validOrders = Array.isArray(orders) ? orders.filter(o => o.status !== 'Отменен') : [];
   const currentRevenue = validOrders.reduce((sum, o) => sum + (o.total || 0), 0);
   const totalManualExpenses = Array.isArray(expenses) ? expenses.reduce((sum, e) => sum + (e.amount || 0), 0) : 0;
@@ -333,21 +320,25 @@ export const useCoffeeLogic = () => {
   
   const currentNetProfit = currentRevenue - costOfGoods - totalManualExpenses;
 
-  const categoryStats = validOrders.reduce((acc, o) => {
+  // Безопасный подсчет статистики для графиков
+  const categoryStatsRaw = validOrders.reduce((acc, o) => {
     if (Array.isArray(o.items)) {
       o.items.forEach(item => { const cat = item.category || 'Другое'; acc[cat] = (acc[cat] || 0) + ((item.price || 0) * (item.qty || 1)); });
     }
     return acc;
   }, {});
+  const categoryStats = Object.keys(categoryStatsRaw).length > 0 ? categoryStatsRaw : { 'Нет продаж': 0 };
 
-  const catColors = { 'Кофе': '#3b82f6', 'Чай': '#10b981', 'Еда': '#f59e0b', 'Десерты': '#ec4899', 'Другое': '#94a3b8' };
+  const catColors = { 'Кофе': '#3b82f6', 'Чай': '#10b981', 'Еда': '#f59e0b', 'Десерты': '#ec4899', 'Другое': '#94a3b8', 'Нет продаж': '#cbd5e1' };
 
-  const topSales = Object.entries(validOrders.reduce((acc, o) => {
+  const topSalesRaw = Object.entries(validOrders.reduce((acc, o) => {
     if (Array.isArray(o.items)) {
       o.items.forEach(item => { acc[item.name] = (acc[item.name] || 0) + (item.qty || 1); });
     }
     return acc;
   }, {})).sort((a, b) => b[1] - a[1]).slice(0, 5);
+  
+  const topSales = topSalesRaw.length > 0 ? topSalesRaw : [['Пока пусто', 0]];
 
   const allLowStock = Array.isArray(ingredients) ? ingredients.filter(item => item.qty <= (item.minQty || 0)) : [];
 
