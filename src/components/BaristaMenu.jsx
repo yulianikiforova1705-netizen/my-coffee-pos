@@ -9,11 +9,34 @@ const BaristaMenu = ({
   filteredMenu,
   stopList,
   handleAddToCart,
-  getProductIcon,
   challengeGoal,
   currentDessertsSold,
   challengeProgress
 }) => {
+
+  // 🚀 ВСТРАИВАЕМ ЖЕЛЕЗНУЮ ЛОГИКУ ПРЯМО В МЕНЮ БАРИСТЫ
+  const getSmartIconDisplay = (item) => {
+    const text = ((item.name || '') + ' ' + (item.category || '')).toLowerCase();
+    
+    if (text.includes('круассан')) return '🥐';
+    if (text.includes('ролл') || text.includes('рол ') || text.includes('шаурма') || text.includes('wrap') || text.includes('врап')) return '🌯';
+    if (text.includes('сэндвич') || text.includes('сендвич') || text.includes('панини') || text.includes('тост')) return '🥪';
+    if (text.includes('сырник') || text.includes('блин') || text.includes('завтрак') || text.includes('омлет') || text.includes('яичниц') || text.includes('каша')) return '🍳';
+    if (text.includes('печенье') || text.includes('кукис') || text.includes('макарон')) return '🍪';
+    if (text.includes('чизкейк') || text.includes('торт') || text.includes('пирож') || text.includes('эклер') || text.includes('десерт') || text.includes('сладк')) return '🍰';
+    if (text.includes('булоч') || text.includes('хлеб') || text.includes('выпеч')) return '🥐';
+    if (text.includes('салат') || text.includes('боул')) return '🥗';
+    if (text.includes('суп')) return '🥣';
+    
+    if (text.includes('матча') || text.includes('чай')) return '🍵';
+    if (text.includes('лимонад') || text.includes('айс') || text.includes('сок') || text.includes('фреш') || text.includes('смузи') || text.includes('вода') || text.includes('колд') || text.includes('раф')) return '🥤';
+    if (text.includes('какао') || text.includes('шоколад') || text.includes('латте') || text.includes('капучино') || text.includes('эспрессо')) return '☕';
+
+    if (text.includes('еда') || text.includes('перекус')) return '🥪';
+    
+    return '☕'; 
+  };
+
   return (
     <div style={{ flex: 1.8, display: (!isMobile || mobileView === 'menu') ? 'flex' : 'none', flexDirection: 'column', gap: '16px', width: '100%' }}>
       
@@ -55,9 +78,9 @@ const BaristaMenu = ({
             >
               {isStopped && <div style={{ position: 'absolute', top: '-10px', right: '-10px', backgroundColor: '#ef4444', color: 'white', fontSize: '10px', fontWeight: 'bold', padding: '4px 8px', borderRadius: '8px', zIndex: 10 }}>СТОП</div>}
               
-              {/* 🚀 ИСПРАВЛЕНИЕ: Полностью игнорируем кривую базу данных и всегда вычисляем иконку заново */}
+              {/* 🚀 ИСПОЛЬЗУЕМ ВСТРОЕННУЮ ЛОГИКУ */}
               <div style={{ fontSize: isMobile ? '40px' : '36px', textAlign: 'center', margin: '4px 0' }}>
-                {getProductIcon(item.name, item.category)}
+                {getSmartIconDisplay(item)}
               </div>
               
               <div style={{ textAlign: 'center' }}>
