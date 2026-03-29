@@ -2,9 +2,8 @@ import React, { useState, useEffect } from 'react';
 
 const ClientApp = ({ appData, clients = {}, onClose }) => {
   const [showSplash, setShowSplash] = useState(true);
-  const [activeTab, setActiveTab] = useState('menu'); // Откроем сразу меню для проверки
+  const [activeTab, setActiveTab] = useState('menu'); 
   
-  // Состояния для меню и корзины (теперь храним количество: { id_товара: количество })
   const [activeCategory, setActiveCategory] = useState('Все');
   const [cart, setCart] = useState({});
 
@@ -41,7 +40,6 @@ const ClientApp = ({ appData, clients = {}, onClose }) => {
   const nextLevelPoints = 5000;
   const progressToNextLevel = Math.min(((currentGuest.points % nextLevelPoints) / nextLevelPoints) * 100, 100);
 
-  // 🥐 ТЕСТОВОЕ МЕНЮ ДЛЯ ГОСТЯ
   const mockMenu = [
     { id: 1, name: 'Капучино', price: 250, category: 'Кофе', icon: '☕', desc: 'Классика с густой пенкой' },
     { id: 2, name: 'Латте Макиато', price: 280, category: 'Кофе', icon: '🥛', desc: 'Много взбитого молока' },
@@ -58,7 +56,6 @@ const ClientApp = ({ appData, clients = {}, onClose }) => {
     ? mockMenu 
     : mockMenu.filter(item => item.category === activeCategory);
 
-  // Функции для работы с корзиной
   const getQuantity = (id) => cart[id] || 0;
 
   const updateCart = (id, delta) => {
@@ -76,18 +73,16 @@ const ClientApp = ({ appData, clients = {}, onClose }) => {
   };
 
   const clearCart = (e) => {
-    e.stopPropagation(); // Чтобы не кликалась вся зеленая кнопка
+    e.stopPropagation(); 
     setCart({});
   };
 
-  // Считаем общую сумму и количество
   const cartItemsCount = Object.values(cart).reduce((sum, qty) => sum + qty, 0);
   const cartTotal = Object.entries(cart).reduce((sum, [id, qty]) => {
     const item = mockMenu.find(m => m.id === parseInt(id));
     return sum + (item ? item.price * qty : 0);
   }, 0);
 
-  // Функция для выбора анимации по категории
   const getAnimationForCategory = (category) => {
     if (category === 'Кофе' || category === 'Чай') return 'anim-coffee 3s ease-in-out infinite';
     if (category === 'Выпечка') return 'anim-pastry 4s ease-in-out infinite';
@@ -105,7 +100,6 @@ const ClientApp = ({ appData, clients = {}, onClose }) => {
         @keyframes shine { 0% { transform: translateX(-100%) rotate(30deg); } 100% { transform: translateX(100%) rotate(30deg); } }
         @keyframes slideUp { from { transform: translateY(100px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
         
-        /* 🚀 НОВЫЕ АНИМАЦИИ ДЛЯ ИКОНОК */
         @keyframes anim-coffee { 0%, 100% { transform: translateY(0) rotate(0deg); } 50% { transform: translateY(-6px) rotate(3deg); } }
         @keyframes anim-pastry { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.08); } }
         @keyframes anim-dessert { 0%, 100% { transform: translateY(0); } 25% { transform: translateY(-5px) rotate(-5deg); } 75% { transform: translateY(-5px) rotate(5deg); } }
@@ -210,7 +204,6 @@ const ClientApp = ({ appData, clients = {}, onClose }) => {
           {activeTab === 'menu' && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', animation: 'fadeIn 0.4s ease' }}>
               
-              {/* Категории (горизонтальный скролл) */}
               <div className="hide-scroll" style={{ display: 'flex', gap: '10px', overflowX: 'auto', paddingBottom: '5px', margin: '0 -20px', padding: '0 20px' }}>
                 {categories.map(cat => (
                   <button 
@@ -235,7 +228,6 @@ const ClientApp = ({ appData, clients = {}, onClose }) => {
                 ))}
               </div>
 
-              {/* Список товаров */}
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))', gap: '16px' }}>
                 {filteredMenu.map(item => {
                   const qty = getQuantity(item.id);
@@ -261,7 +253,6 @@ const ClientApp = ({ appData, clients = {}, onClose }) => {
                         fontSize: '48px',
                         boxShadow: 'inset 0 2px 10px rgba(0,0,0,0.2)'
                       }}>
-                        {/* 🚀 ИКОНКА С АНИМАЦИЕЙ */}
                         <div style={{ animation: getAnimationForCategory(item.category) }}>
                           {item.icon}
                         </div>
@@ -273,7 +264,6 @@ const ClientApp = ({ appData, clients = {}, onClose }) => {
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 'auto' }}>
                         <div style={{ fontSize: '16px', fontWeight: '900', color: '#10b981' }}>{item.price} ₽</div>
                         
-                        {/* 🚀 БЛОК УПРАВЛЕНИЯ КОРЗИНОЙ [- 1 +] */}
                         {qty > 0 ? (
                           <div style={{ display: 'flex', alignItems: 'center', gap: '6px', backgroundColor: 'rgba(59, 130, 246, 0.15)', borderRadius: '12px', padding: '4px' }}>
                             <button onClick={() => updateCart(item.id, -1)} style={{ width: '26px', height: '26px', borderRadius: '8px', backgroundColor: 'transparent', color: '#3b82f6', border: 'none', fontSize: '18px', fontWeight: 'bold', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>-</button>
@@ -309,10 +299,10 @@ const ClientApp = ({ appData, clients = {}, onClose }) => {
         </div>
       )}
 
-      {/* 🛒 ПЛАВАЮЩАЯ КНОПКА КОРЗИНЫ С КНОПКОЙ "ОЧИСТИТЬ" */}
+      {/* 🛒 ПЛАВАЮЩАЯ КНОПКА КОРЗИНЫ */}
       {!showSplash && cartItemsCount > 0 && activeTab === 'menu' && (
         <div style={{ 
-          position: 'fixed', bottom: '85px', left: '20px', right: '20px', 
+          position: 'fixed', bottom: '75px', left: '20px', right: '20px', 
           backgroundColor: '#10b981', 
           borderRadius: '16px', 
           padding: '16px 20px', 
@@ -327,7 +317,6 @@ const ClientApp = ({ appData, clients = {}, onClose }) => {
             </div>
             <div style={{ display: 'flex', flexDirection: 'column' }}>
               <span style={{ color: '#fff', fontWeight: '800', fontSize: '15px' }}>В корзине</span>
-              {/* 🚀 КНОПКА ОЧИСТКИ */}
               <span onClick={clearCart} style={{ color: 'rgba(255,255,255,0.8)', fontSize: '12px', fontWeight: '600', textDecoration: 'underline', cursor: 'pointer', marginTop: '2px' }}>
                 Очистить всё
               </span>
@@ -339,24 +328,25 @@ const ClientApp = ({ appData, clients = {}, onClose }) => {
         </div>
       )}
 
-      {/* 🚀 📱 ИДЕАЛЬНО ТОНКАЯ НИЖНЯЯ ПАНЕЛЬ С ЖЕСТКОЙ ВЫСОТОЙ */}
+      {/* 🚀 📱 ИДЕАЛЬНО ТОНКАЯ НИЖНЯЯ ПАНЕЛЬ С ЖЕСТКОЙ ВЫСОТОЙ (55px) */}
       {!showSplash && (
         <div style={{ 
           position: 'fixed', 
           bottom: 0, 
           left: 0, 
           right: 0, 
-          height: '65px', 
-          backgroundColor: 'rgba(15, 23, 42, 0.85)', 
+          height: '55px', /* 🚀 Жесткая высота 55px */
+          backgroundColor: 'rgba(15, 23, 42, 0.95)', 
           backdropFilter: 'blur(20px)', 
           WebkitBackdropFilter: 'blur(20px)', 
           display: 'flex', 
           justifyContent: 'space-around', 
           alignItems: 'center',
-          boxShadow: '0 -4px 20px rgba(0,0,0,0.4)', 
+          boxShadow: '0 -4px 20px rgba(0,0,0,0.5)', 
           zIndex: 100, 
           borderTop: '1px solid rgba(255,255,255,0.05)',
-          paddingBottom: 'env(safe-area-inset-bottom)' 
+          padding: '0', /* 🚀 Убрали все лишние отступы внутри панели */
+          margin: '0'
         }}>
           {[
             { id: 'card', label: 'Лояльность', icon: '💳' },
@@ -370,7 +360,7 @@ const ClientApp = ({ appData, clients = {}, onClose }) => {
                 onClick={() => setActiveTab(tab.id)} 
                 style={{ 
                   flex: 1, 
-                  height: '100%',
+                  height: '55px', /* 🚀 Кнопка занимает всю высоту панели */
                   backgroundColor: 'transparent', 
                   color: isActive ? '#3b82f6' : '#64748b', 
                   border: 'none', 
@@ -378,20 +368,21 @@ const ClientApp = ({ appData, clients = {}, onClose }) => {
                   flexDirection: 'column', 
                   alignItems: 'center', 
                   justifyContent: 'center',
-                  gap: '4px', 
+                  gap: '2px', /* 🚀 Минимальный отступ между иконкой и текстом */
                   cursor: 'pointer',
-                  padding: 0
+                  padding: 0,
+                  margin: 0
                 }}
               >
                 <span style={{ 
-                  fontSize: '22px', 
+                  fontSize: '20px', /* 🚀 Иконки стали чуть аккуратнее */
                   transform: isActive ? 'scale(1.1)' : 'scale(1)', 
                   transition: '0.2s',
                   textShadow: isActive ? '0 0 10px rgba(59, 130, 246, 0.5)' : 'none'
                 }}>
                   {tab.icon}
                 </span>
-                <span style={{ fontSize: '10px', fontWeight: isActive ? '700' : '500' }}>
+                <span style={{ fontSize: '9px', fontWeight: isActive ? '700' : '500', letterSpacing: '0.5px' }}>
                   {tab.label}
                 </span>
               </button>
