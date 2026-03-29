@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 
 const ClientApp = ({ appData, clients = {}, onClose }) => {
   const [showSplash, setShowSplash] = useState(true);
-  const [activeTab, setActiveTab] = useState('card');
+  const [activeTab, setActiveTab] = useState('profile'); // 🚀 Откроем профиль сразу для проверки
   
   const [isDarkMode, setIsDarkMode] = useState(false);
   
@@ -211,9 +211,9 @@ const ClientApp = ({ appData, clients = {}, onClose }) => {
             </div>
           </div>
 
+          {/* 💳 КАРТА ЛОЯЛЬНОСТИ */}
           {activeTab === 'card' && (
             <>
-              {/* 💳 КАРТА ЛОЯЛЬНОСТИ */}
               <div style={{ background: 'linear-gradient(135deg, #3b82f6 0%, #a855f7 50%, #db2777 100%)', padding: '24px', borderRadius: '24px', color: 'white', boxShadow: '0 15px 30px -10px rgba(168, 85, 247, 0.3), 0 0 15px rgba(59, 130, 246, 0.2)', position: 'relative', overflow: 'hidden', border: '1px solid rgba(255,255,255,0.1)' }}>
                 <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', background: 'linear-gradient(30deg, transparent 0%, rgba(255,255,255,0.2) 50%, transparent 100%)', animation: 'shine 3s infinite', pointerEvents: 'none' }} />
                 <div style={{ position: 'absolute', top: '-10px', right: '-10px', opacity: 0.08, fontSize: '120px', transform: 'rotate(-15deg)' }}>☕</div>
@@ -240,7 +240,6 @@ const ClientApp = ({ appData, clients = {}, onClose }) => {
                 </div>
               </div>
 
-              {/* 📷 QR-КОД */}
               <div style={{ backgroundColor: 'var(--card-bg)', backdropFilter: 'blur(10px)', padding: '24px', borderRadius: '24px', border: '1px solid var(--border-color)', textAlign: 'center', boxShadow: 'var(--shadow-sm)' }}>
                 <div style={{ fontSize: '15px', fontWeight: 'bold', color: 'var(--text-main)', marginBottom: '16px', letterSpacing: '-0.3px' }}>Покажите этот код бариста</div>
                 <div style={{ width: '180px', height: '180px', backgroundColor: '#fff', margin: '0 auto 16px auto', borderRadius: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '12px', position: 'relative', boxShadow: '0 0 20px rgba(59, 130, 246, 0.15)' }}>
@@ -259,7 +258,6 @@ const ClientApp = ({ appData, clients = {}, onClose }) => {
           {/* ☕ ВИТРИНА ПРЕДЗАКАЗА */}
           {activeTab === 'menu' && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', animation: 'fadeIn 0.4s ease' }}>
-              
               <div className="hide-scroll" style={{ display: 'flex', gap: '10px', overflowX: 'auto', paddingBottom: '5px', margin: '0 -20px', padding: '0 20px' }}>
                 {categories.map(cat => (
                   <button 
@@ -308,9 +306,7 @@ const ClientApp = ({ appData, clients = {}, onClose }) => {
                         justifyContent: 'center', 
                         fontSize: '48px',
                       }}>
-                        <div style={{ animation: getAnimationForCategory(item.category) }}>
-                          {item.icon}
-                        </div>
+                        <div style={{ animation: getAnimationForCategory(item.category) }}>{item.icon}</div>
                       </div>
                       <div>
                         <div style={{ fontSize: '15px', fontWeight: 'bold', color: 'var(--text-main)', marginBottom: '4px', lineHeight: '1.2' }}>{item.name}</div>
@@ -318,7 +314,6 @@ const ClientApp = ({ appData, clients = {}, onClose }) => {
                       </div>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 'auto' }}>
                         <div style={{ fontSize: '16px', fontWeight: '900', color: '#10b981' }}>{item.price} ₽</div>
-                        
                         {qty > 0 ? (
                           <div style={{ display: 'flex', alignItems: 'center', gap: '6px', backgroundColor: 'rgba(59, 130, 246, 0.15)', borderRadius: '12px', padding: '4px' }}>
                             <button onClick={() => updateCart(item.id, -1)} style={{ width: '26px', height: '26px', borderRadius: '8px', backgroundColor: 'transparent', color: '#3b82f6', border: 'none', fontSize: '18px', fontWeight: 'bold', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>-</button>
@@ -332,12 +327,8 @@ const ClientApp = ({ appData, clients = {}, onClose }) => {
                               width: '32px', height: '32px', 
                               borderRadius: '10px', 
                               backgroundColor: '#3b82f6', 
-                              color: 'white', 
-                              border: 'none', 
-                              fontSize: '18px', 
-                              fontWeight: 'bold',
-                              display: 'flex', alignItems: 'center', justifyContent: 'center',
-                              cursor: 'pointer',
+                              color: 'white', border: 'none', fontSize: '18px', fontWeight: 'bold',
+                              display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer',
                               boxShadow: '0 4px 10px rgba(59, 130, 246, 0.3)'
                             }}
                           >
@@ -349,6 +340,60 @@ const ClientApp = ({ appData, clients = {}, onClose }) => {
                   );
                 })}
               </div>
+            </div>
+          )}
+
+          {/* 🚀 НОВАЯ ВКЛАДКА: ПРОФИЛЬ */}
+          {activeTab === 'profile' && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '24px', animation: 'fadeIn 0.4s ease' }}>
+              
+              {/* Шапка профиля */}
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '30px 20px', backgroundColor: 'var(--card-bg)', borderRadius: '24px', border: '1px solid var(--border-color)', boxShadow: 'var(--shadow-sm)', position: 'relative', overflow: 'hidden' }}>
+                <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '80px', background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(168, 85, 247, 0.1) 100%)' }} />
+                
+                <div style={{ width: '90px', height: '90px', borderRadius: '50%', background: 'linear-gradient(135deg, #3b82f6 0%, #1e293b 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '36px', color: '#fff', marginBottom: '16px', boxShadow: '0 8px 16px rgba(59, 130, 246, 0.3)', position: 'relative', zIndex: 1, border: '4px solid var(--card-bg)' }}>
+                  👤
+                </div>
+                
+                <h2 style={{ margin: '0 0 4px 0', color: 'var(--text-main)', fontSize: '24px', fontWeight: '900', position: 'relative', zIndex: 1 }}>{currentGuest.name}</h2>
+                <div style={{ color: 'var(--text-muted)', fontSize: '15px', fontFamily: 'monospace', position: 'relative', zIndex: 1 }}>+7 *** *** {displayPhone}</div>
+              </div>
+
+              {/* Блок статистики */}
+              <div style={{ display: 'flex', gap: '12px' }}>
+                <div style={{ flex: 1, padding: '16px', backgroundColor: 'var(--card-bg)', borderRadius: '20px', border: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', alignItems: 'center', boxShadow: 'var(--shadow-sm)' }}>
+                  <span style={{ fontSize: '28px', fontWeight: '900', color: '#10b981' }}>12</span>
+                  <span style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '4px', textTransform: 'uppercase', letterSpacing: '0.5px', fontWeight: 'bold' }}>Заказов</span>
+                </div>
+                <div style={{ flex: 1, padding: '16px', backgroundColor: 'var(--card-bg)', borderRadius: '20px', border: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', alignItems: 'center', boxShadow: 'var(--shadow-sm)' }}>
+                  <span style={{ fontSize: '28px', fontWeight: '900', color: '#3b82f6' }}>4.5k</span>
+                  <span style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '4px', textTransform: 'uppercase', letterSpacing: '0.5px', fontWeight: 'bold' }}>Потрачено, ₽</span>
+                </div>
+              </div>
+
+              {/* Меню действий */}
+              <div style={{ backgroundColor: 'var(--card-bg)', borderRadius: '24px', border: '1px solid var(--border-color)', overflow: 'hidden', boxShadow: 'var(--shadow-sm)' }}>
+                {[
+                  { icon: '🕒', label: 'История заказов' },
+                  { icon: '❤️', label: 'Любимые напитки' },
+                  { icon: '💳', label: 'Способы оплаты' },
+                  { icon: '💬', label: 'Служба поддержки' },
+                  { icon: '⚙️', label: 'Настройки приложения' }
+                ].map((item, idx, arr) => (
+                  <div key={idx} style={{ padding: '18px 20px', display: 'flex', alignItems: 'center', gap: '16px', borderBottom: idx === arr.length - 1 ? 'none' : '1px solid var(--border-color)', cursor: 'pointer', transition: 'background-color 0.2s' }}>
+                    <div style={{ width: '36px', height: '36px', borderRadius: '10px', backgroundColor: 'var(--icon-bg)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '18px' }}>
+                      {item.icon}
+                    </div>
+                    <span style={{ flex: 1, fontSize: '15px', fontWeight: '600', color: 'var(--text-main)' }}>{item.label}</span>
+                    <span style={{ color: 'var(--text-muted)', fontSize: '20px' }}>›</span>
+                  </div>
+                ))}
+              </div>
+              
+              <div style={{ textAlign: 'center', marginTop: '10px' }}>
+                <button style={{ background: 'transparent', border: 'none', color: '#ef4444', fontSize: '15px', fontWeight: 'bold', cursor: 'pointer' }}>Выйти из аккаунта</button>
+              </div>
+
             </div>
           )}
         </div>
@@ -393,7 +438,6 @@ const ClientApp = ({ appData, clients = {}, onClose }) => {
             onClick={() => setIsCartOpen(false)}
             style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'var(--overlay-bg)', zIndex: 1000, animation: 'fadeInOverlay 0.3s forwards', backdropFilter: 'blur(4px)' }} 
           />
-          
           <div style={{ 
             position: 'fixed', bottom: 0, left: 0, right: 0, 
             backgroundColor: 'var(--drawer-bg)', 
