@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 
-// Принимаем новый пропс onEditMenuItem
 const MenuSettingsModule = ({ menuItems, onAddMenuItem, onEditMenuItem, onDeleteMenuItem, onUpdateInventory }) => {
   const [newName, setNewName] = useState('');
   const [newPrice, setNewPrice] = useState('');
@@ -9,10 +8,8 @@ const MenuSettingsModule = ({ menuItems, onAddMenuItem, onEditMenuItem, onDelete
   const [newColor, setNewColor] = useState('#10b981');
   const [category, setCategory] = useState('Кофе');
   
-  // 🚀 НОВОЕ: Состояние для отслеживания режима редактирования
   const [editingId, setEditingId] = useState(null);
 
-  // Универсальная функция: сохраняет новый ИЛИ обновляет старый товар
   const handleSubmit = () => {
     if (!newName || !newPrice || !newCost || !newInventory) return;
     
@@ -27,16 +24,14 @@ const MenuSettingsModule = ({ menuItems, onAddMenuItem, onEditMenuItem, onDelete
 
     if (editingId) {
       onEditMenuItem({ ...itemData, id: editingId });
-      setEditingId(null); // Выходим из режима редактирования
+      setEditingId(null); 
     } else {
       onAddMenuItem(itemData);
     }
     
-    // Очищаем форму
     setNewName(''); setNewPrice(''); setNewCost(''); setNewInventory('10'); setCategory('Кофе'); setNewColor('#10b981');
   };
 
-  // 🚀 НОВОЕ: Функция для начала редактирования
   const handleStartEdit = (item) => {
     setEditingId(item.id);
     setNewName(item.name);
@@ -46,7 +41,6 @@ const MenuSettingsModule = ({ menuItems, onAddMenuItem, onEditMenuItem, onDelete
     setNewColor(item.color || '#10b981');
     setCategory(item.category || (item.isDessert ? 'Десерты' : 'Кофе'));
     
-    // Плавный скролл наверх к форме
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
@@ -63,7 +57,30 @@ const MenuSettingsModule = ({ menuItems, onAddMenuItem, onEditMenuItem, onDelete
     }
   };
 
-  const categoryIcons = { 'Кофе': '☕', 'Еда': '🥪', 'Десерты': '🍰', 'Зерно': '🫘' };
+  // 🚀 МАГИЯ: Учим админку понимать те же умные иконки, что и клиенты
+  const getSmartIconDisplay = (item) => {
+    if (item.icon) return item.icon; // Если иконка сохранена в базе, используем её
+    
+    // Если по какой-то причине её нет в базе (старые товары), подбираем на лету
+    const text = ((item.name || '') + ' ' + (item.category || '')).toLowerCase();
+    if (text.includes('круассан')) return '🥐';
+    if (text.includes('ролл') || text.includes('рол ') || text.includes('шаурма') || text.includes('wrap') || text.includes('врап')) return '🌯';
+    if (text.includes('сэндвич') || text.includes('сендвич') || text.includes('панини') || text.includes('тост')) return '🥪';
+    if (text.includes('сырник') || text.includes('блин') || text.includes('завтрак') || text.includes('омлет') || text.includes('яичниц') || text.includes('каша')) return '🍳';
+    if (text.includes('печенье') || text.includes('кукис') || text.includes('макарон')) return '🍪';
+    if (text.includes('чизкейк') || text.includes('торт') || text.includes('пирож') || text.includes('эклер') || text.includes('десерт') || text.includes('сладк')) return '🍰';
+    if (text.includes('булоч') || text.includes('хлеб') || text.includes('выпеч')) return '🥐';
+    if (text.includes('салат') || text.includes('боул')) return '🥗';
+    if (text.includes('суп')) return '🥣';
+    
+    if (text.includes('матча') || text.includes('чай')) return '🍵';
+    if (text.includes('лимонад') || text.includes('айс') || text.includes('сок') || text.includes('фреш') || text.includes('смузи') || text.includes('вода') || text.includes('колд')) return '🥤';
+    if (text.includes('какао') || text.includes('шоколад')) return '☕';
+
+    if (text.includes('еда') || text.includes('перекус')) return '🥪';
+    
+    return '☕'; 
+  };
 
   return (
     <div style={{ backgroundColor: 'var(--bg-card)', padding: '24px', borderRadius: '16px', boxShadow: '0 4px 6px -1px var(--shadow-color)', marginBottom: '24px', transition: 'all 0.3s ease' }}>
@@ -104,7 +121,8 @@ const MenuSettingsModule = ({ menuItems, onAddMenuItem, onEditMenuItem, onDelete
             <div>
               <div style={{ color: 'var(--text-main)', fontWeight: '600', fontSize: '14px', display: 'flex', alignItems: 'center', gap: '6px' }}>
                 {item.name} 
-                <span title={item.category || 'Неизвестно'}>{categoryIcons[item.category] || (item.isDessert ? '🍰' : '☕')}</span>
+                {/* 🚀 ВЫВОДИМ УМНУЮ ИКОНКУ ВМЕСТО СТАРОЙ ЛОГИКИ */}
+                <span title={item.category || 'Неизвестно'}>{getSmartIconDisplay(item)}</span>
               </div>
               <div style={{ color: 'var(--text-muted)', fontSize: '13px', display: 'flex', flexDirection: 'column', gap: '4px', marginTop: '6px' }}>
                 <div style={{ display: 'flex', gap: '12px' }}>
@@ -118,7 +136,6 @@ const MenuSettingsModule = ({ menuItems, onAddMenuItem, onEditMenuItem, onDelete
               </div>
             </div>
             <div style={{ display: 'flex', gap: '4px' }}>
-              {/* 🚀 НОВЫЕ КНОПКИ РЕДАКТИРОВАНИЯ И УДАЛЕНИЯ */}
               <button onClick={() => handleStartEdit(item)} disabled={editingId === item.id} style={{ backgroundColor: 'transparent', border: 'none', color: '#3b82f6', cursor: editingId === item.id ? 'default' : 'pointer', fontSize: '16px', padding: '4px' }} title="Редактировать товар">✏️</button>
               <button onClick={() => onDeleteMenuItem(item.id)} disabled={editingId === item.id} style={{ backgroundColor: 'transparent', border: 'none', color: '#ef4444', cursor: editingId === item.id ? 'default' : 'pointer', fontSize: '16px', padding: '4px' }} title="Удалить товар">🗑️</button>
             </div>
