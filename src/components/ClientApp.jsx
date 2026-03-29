@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 
-// 🚀 ДОБАВИЛИ menuItems = [] В СКОБКИ СЮДА:
 const ClientApp = ({ appData, clients = {}, menuItems = [], onClose }) => {
   const [showSplash, setShowSplash] = useState(true);
   const [activeTab, setActiveTab] = useState('menu'); 
@@ -54,11 +53,30 @@ const ClientApp = ({ appData, clients = {}, menuItems = [], onClose }) => {
     { id: 992, name: 'Круассан', price: 180, category: 'Выпечка', icon: '🥐', desc: 'Свежий и хрустящий' }
   ];
 
-  // 🚀 ТЕПЕРЬ МЫ БЕРЕМ ДАННЫЕ НАПРЯМУЮ ИЗ menuItems
+  // 🚀 МАГИЯ: Умный подборщик иконок
+  const getSmartIcon = (item) => {
+    if (item.icon) return item.icon; // Если иконка уже задана вручную
+    
+    const name = (item.name || '').toLowerCase();
+    const cat = (item.category || '').toLowerCase();
+    const text = name + ' ' + cat; // Ищем ключевые слова и в названии, и в категории
+
+    if (text.includes('сэндвич') || text.includes('сендвич') || text.includes('панини') || text.includes('тост')) return '🥪';
+    if (text.includes('завтрак') || text.includes('яичниц') || text.includes('омлет') || text.includes('сырник')) return '🍳';
+    if (text.includes('десерт') || text.includes('торт') || text.includes('пирож') || text.includes('чизкейк')) return '🍰';
+    if (text.includes('выпеч') || text.includes('круассан') || text.includes('булоч') || text.includes('хлеб')) return '🥐';
+    if (text.includes('печенье') || text.includes('кукис') || text.includes('макарон')) return '🍪';
+    if (text.includes('чай') || text.includes('матча')) return '🍵';
+    if (text.includes('лимонад') || text.includes('айс') || text.includes('холод') || text.includes('сок') || text.includes('фреш')) return '🥤';
+    
+    return '☕'; // Если ничего не подошло, ставим классическую кружку кофе
+  };
+
+  // Формируем меню с умными иконками
   const realMenu = (menuItems && menuItems.length > 0) 
     ? menuItems.map(item => ({
         ...item,
-        icon: item.icon || (item.category === 'Выпечка' || item.category === 'Еда' ? '🥐' : '☕'),
+        icon: getSmartIcon(item),
         desc: item.desc || 'Отличный выбор'
       }))
     : fallbackMenu;
@@ -95,11 +113,12 @@ const ClientApp = ({ appData, clients = {}, menuItems = [], onClose }) => {
     return sum + (item ? item.price * qty : 0);
   }, 0);
 
+  // Обновленные анимации: еда теперь "дышит", как выпечка
   const getAnimationForCategory = (category) => {
     if (!category) return 'none';
     const cat = category.toLowerCase();
     if (cat.includes('кофе') || cat.includes('чай') || cat.includes('напит')) return 'anim-coffee 3s ease-in-out infinite';
-    if (cat.includes('выпечка') || cat.includes('хлеб')) return 'anim-pastry 4s ease-in-out infinite';
+    if (cat.includes('выпечка') || cat.includes('еда') || cat.includes('сэндвич') || cat.includes('хлеб')) return 'anim-pastry 4s ease-in-out infinite';
     if (cat.includes('десерт') || cat.includes('сладк')) return 'anim-dessert 2s ease-in-out infinite';
     return 'none';
   };
@@ -168,7 +187,6 @@ const ClientApp = ({ appData, clients = {}, menuItems = [], onClose }) => {
         .hide-scroll { -ms-overflow-style: none; scrollbar-width: none; }
       `}</style>
 
-      {/* ЗАСТАВКА */}
       {showSplash && (
         <div id="client-splash" style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'var(--bg-main)', zIndex: 99999, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '20px', animation: 'splashFadeIn 0.5s ease-out forwards', willChange: 'opacity, transform' }}>
           <svg width="120" height="120" viewBox="0 0 80 80" fill="none" style={{ filter: 'drop-shadow(0 0 15px rgba(59, 130, 246, 0.5))', animation: 'anim-coffee 3s ease-in-out infinite' }}>
@@ -180,7 +198,6 @@ const ClientApp = ({ appData, clients = {}, menuItems = [], onClose }) => {
         </div>
       )}
 
-      {/* ОСНОВНОЙ КОНТЕНТ */}
       {!showSplash && (
         <div style={{ animation: 'cardAppearance 0.8s cubic-bezier(0.23, 1, 0.32, 1) forwards', padding: '20px', paddingBottom: '160px', display: 'flex', flexDirection: 'column', gap: '24px' }}>
           
@@ -200,7 +217,6 @@ const ClientApp = ({ appData, clients = {}, menuItems = [], onClose }) => {
             </div>
           </div>
 
-          {/* ЛОЯЛЬНОСТЬ */}
           {activeTab === 'card' && (
             <>
               <div style={{ background: 'linear-gradient(135deg, #3b82f6 0%, #a855f7 50%, #db2777 100%)', padding: '24px', borderRadius: '24px', color: 'white', boxShadow: '0 15px 30px -10px rgba(168, 85, 247, 0.3), 0 0 15px rgba(59, 130, 246, 0.2)', position: 'relative', overflow: 'hidden', border: '1px solid rgba(255,255,255,0.1)' }}>
@@ -237,7 +253,6 @@ const ClientApp = ({ appData, clients = {}, menuItems = [], onClose }) => {
             </>
           )}
 
-          {/* ПРЕДЗАКАЗ */}
           {activeTab === 'menu' && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', animation: 'fadeIn 0.4s ease' }}>
               <div className="hide-scroll" style={{ display: 'flex', gap: '10px', overflowX: 'auto', paddingBottom: '5px', margin: '0 -20px', padding: '0 20px' }}>
@@ -247,7 +262,7 @@ const ClientApp = ({ appData, clients = {}, menuItems = [], onClose }) => {
                   </button>
                 ))}
               </div>
-
+              
               {filteredMenu.length === 0 ? (
                 <div style={{ textAlign: 'center', padding: '40px 20px', color: 'var(--text-muted)' }}>В этой категории пока ничего нет 😔</div>
               ) : (
@@ -283,7 +298,6 @@ const ClientApp = ({ appData, clients = {}, menuItems = [], onClose }) => {
             </div>
           )}
 
-          {/* ПРОФИЛЬ */}
           {activeTab === 'profile' && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '24px', animation: 'fadeIn 0.4s ease' }}>
               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '30px 20px', backgroundColor: 'var(--card-bg)', borderRadius: '24px', border: '1px solid var(--border-color)', boxShadow: 'var(--shadow-sm)', position: 'relative', overflow: 'hidden' }}>
@@ -378,46 +392,29 @@ const ClientApp = ({ appData, clients = {}, menuItems = [], onClose }) => {
         </>
       )}
 
-      {/* 🚀 МОДАЛЬНОЕ ОКНО НАСТРОЕК */}
+      {/* МОДАЛЬНОЕ ОКНО НАСТРОЕК */}
       {isSettingsOpen && (
         <>
           <div onClick={() => setIsSettingsOpen(false)} style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'var(--overlay-bg)', zIndex: 1000, animation: 'fadeInOverlay 0.3s forwards', backdropFilter: 'blur(4px)' }} />
           <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, backgroundColor: 'var(--drawer-bg)', borderTopLeftRadius: '24px', borderTopRightRadius: '24px', padding: '24px', zIndex: 1001, animation: 'drawerSlideUp 0.3s cubic-bezier(0.175, 0.885, 0.32, 1) forwards', boxShadow: '0 -10px 40px rgba(0,0,0,0.2)' }}>
-            
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
               <h2 style={{ margin: 0, fontSize: '22px', color: 'var(--text-main)', fontWeight: '900' }}>Настройки</h2>
               <button onClick={() => setIsSettingsOpen(false)} style={{ background: 'var(--icon-bg)', border: 'none', width: '36px', height: '36px', borderRadius: '50%', fontSize: '18px', cursor: 'pointer', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>✕</button>
             </div>
-
             <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingBottom: '16px', borderBottom: '1px solid var(--border-color)' }}>
-                <div>
-                  <div style={{ fontSize: '16px', fontWeight: 'bold', color: 'var(--text-main)' }}>Темная тема</div>
-                  <div style={{ fontSize: '13px', color: 'var(--text-muted)' }}>Оформление приложения</div>
-                </div>
-                <div onClick={() => setIsDarkMode(!isDarkMode)} style={{ width: '50px', height: '28px', backgroundColor: isDarkMode ? '#3b82f6' : 'var(--toggle-bg)', borderRadius: '14px', position: 'relative', cursor: 'pointer', transition: '0.3s' }}>
-                  <div style={{ width: '24px', height: '24px', backgroundColor: '#fff', borderRadius: '50%', position: 'absolute', top: '2px', left: isDarkMode ? '24px' : '2px', transition: '0.3s', boxShadow: '0 2px 4px rgba(0,0,0,0.2)' }} />
-                </div>
+                <div><div style={{ fontSize: '16px', fontWeight: 'bold', color: 'var(--text-main)' }}>Темная тема</div><div style={{ fontSize: '13px', color: 'var(--text-muted)' }}>Оформление приложения</div></div>
+                <div onClick={() => setIsDarkMode(!isDarkMode)} style={{ width: '50px', height: '28px', backgroundColor: isDarkMode ? '#3b82f6' : 'var(--toggle-bg)', borderRadius: '14px', position: 'relative', cursor: 'pointer', transition: '0.3s' }}><div style={{ width: '24px', height: '24px', backgroundColor: '#fff', borderRadius: '50%', position: 'absolute', top: '2px', left: isDarkMode ? '24px' : '2px', transition: '0.3s', boxShadow: '0 2px 4px rgba(0,0,0,0.2)' }} /></div>
               </div>
-
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingBottom: '16px', borderBottom: '1px solid var(--border-color)' }}>
-                <div>
-                  <div style={{ fontSize: '16px', fontWeight: 'bold', color: 'var(--text-main)' }}>Push-уведомления</div>
-                  <div style={{ fontSize: '13px', color: 'var(--text-muted)' }}>Статусы заказов и акции</div>
-                </div>
-                <div onClick={() => setNotificationsEnabled(!notificationsEnabled)} style={{ width: '50px', height: '28px', backgroundColor: notificationsEnabled ? '#10b981' : 'var(--toggle-bg)', borderRadius: '14px', position: 'relative', cursor: 'pointer', transition: '0.3s' }}>
-                  <div style={{ width: '24px', height: '24px', backgroundColor: '#fff', borderRadius: '50%', position: 'absolute', top: '2px', left: notificationsEnabled ? '24px' : '2px', transition: '0.3s', boxShadow: '0 2px 4px rgba(0,0,0,0.2)' }} />
-                </div>
+                <div><div style={{ fontSize: '16px', fontWeight: 'bold', color: 'var(--text-main)' }}>Push-уведомления</div><div style={{ fontSize: '13px', color: 'var(--text-muted)' }}>Статусы заказов и акции</div></div>
+                <div onClick={() => setNotificationsEnabled(!notificationsEnabled)} style={{ width: '50px', height: '28px', backgroundColor: notificationsEnabled ? '#10b981' : 'var(--toggle-bg)', borderRadius: '14px', position: 'relative', cursor: 'pointer', transition: '0.3s' }}><div style={{ width: '24px', height: '24px', backgroundColor: '#fff', borderRadius: '50%', position: 'absolute', top: '2px', left: notificationsEnabled ? '24px' : '2px', transition: '0.3s', boxShadow: '0 2px 4px rgba(0,0,0,0.2)' }} /></div>
               </div>
-
               <div style={{ paddingBottom: '16px', borderBottom: '1px solid var(--border-color)' }}>
                 <div style={{ fontSize: '14px', fontWeight: 'bold', color: 'var(--text-muted)', marginBottom: '8px' }}>ВАШЕ ИМЯ</div>
                 <input type="text" defaultValue={currentGuest.name} style={{ width: '100%', padding: '12px 16px', borderRadius: '12px', border: '1px solid var(--border-color)', backgroundColor: 'var(--icon-bg)', color: 'var(--text-main)', fontSize: '16px', outline: 'none', boxSizing: 'border-box' }} />
               </div>
-
-              <button onClick={() => alert('Функция удаления аккаунта требует подтверждения по SMS.')} style={{ width: '100%', padding: '16px', backgroundColor: 'rgba(239, 68, 68, 0.1)', color: '#ef4444', border: '1px solid rgba(239, 68, 68, 0.2)', borderRadius: '16px', fontSize: '16px', fontWeight: 'bold', cursor: 'pointer', marginTop: '10px' }}>
-                Удалить профиль
-              </button>
+              <button onClick={() => alert('Функция удаления аккаунта требует подтверждения по SMS.')} style={{ width: '100%', padding: '16px', backgroundColor: 'rgba(239, 68, 68, 0.1)', color: '#ef4444', border: '1px solid rgba(239, 68, 68, 0.2)', borderRadius: '16px', fontSize: '16px', fontWeight: 'bold', cursor: 'pointer', marginTop: '10px' }}>Удалить профиль</button>
             </div>
           </div>
         </>
