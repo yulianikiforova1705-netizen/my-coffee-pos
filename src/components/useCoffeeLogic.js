@@ -1,451 +1,366 @@
-import { useState, useRef, useEffect, useMemo } from 'react';
-import { db } from './firebase'; 
-import { collection, doc, setDoc, onSnapshot, query, orderBy } from 'firebase/firestore';
+import { useState, useEffect } from 'react';
+import initialData from './data.json';
 
 export const useCoffeeLogic = () => {
-  const [appData, setAppData] = useState({ appName: 'Аналитическая платформа сети кофеен', ownerName: 'Yulia Nikiforova' });
-  const [city, setCity] = useState('Москва');
+  const [appData, setAppData] = useState(initialData);
 
-  // 🚨 ТУТ БУДУТ ТВОИ КЛЮЧИ ОТ TELEGRAM 🚨
-  const TELEGRAM_TOKEN = '8495119049:AAFXN3RPlZZmSXopOGJJCjyKk8pjufoln2M'; 
-  const TELEGRAM_CHAT_ID = '765319326'; 
-
-  const [currentRole, setCurrentRole] = useState(null); 
-  const [isDarkMode, setIsDarkMode] = useState(false);
-  const fileInputRef = useRef(null);
-  
-  const [pinModal, setPinModal] = useState({ isOpen: false, targetRole: '', targetBarista: '' });
+  // === ВСЕ СОСТОЯНИЯ ===
+  const [currentRole, setCurrentRole] = useState(null);
+  const [pinModal, setPinModal] = useState({ isOpen: false, targetRole: null, targetBarista: null });
   const [pinInput, setPinInput] = useState('');
-  const [pinError, setPinError] = useState(false);
-  const PIN_CODES = { 'Владелец': '7777', 'Управляющий': '1234' };
-  
-  const [currentTime, setCurrentTime] = useState(new Date());
-  const [lastActiveDate, setLastActiveDate] = useState(new Date().toLocaleDateString('ru-RU'));
-
-  const [stats, setStats] = useState([
-    { id: 1, label: 'Выручка за день', value: '0 ₽', rawValue: 0, change: '0%', color: '#2563eb' },
-    { id: 2, label: 'Продано товаров', value: '0 шт', rawValue: 0, change: '0%', color: '#10b981' },
-    { id: 3, label: 'Средний чек', value: '0 ₽', rawValue: 0, change: '0%', color: '#f59e0b' },
-    { id: 4, label: 'Чистая прибыль', value: '0 ₽', rawValue: 0, change: '0%', color: '#8b5cf6' },
-  ]);
-
+  const [isDarkMode, setIsDarkMode] = useState(false);
+  const [menuItems, setMenuItems] = useState([]);
   const [orders, setOrders] = useState([]);
+  const [ingredients, setIngredients] = useState([]);
   const [expenses, setExpenses] = useState([]);
-  const [expText, setExpText] = useState(''); const [expAmount, setExpAmount] = useState(''); const [expCategory, setExpCategory] = useState('Закупка');
-  
-  const [ingredients, setIngredients] = useState([
-    { id: 'beans', name: 'Кофейное зерно', stock: 2500, unit: 'гр', min: 500, orderStep: 2000, costPerStep: 2400 },
-    { id: 'milk', name: 'Молоко', stock: 5000, unit: 'мл', min: 1000, orderStep: 10000, costPerStep: 850 },
-    { id: 'cups', name: 'Стаканы', stock: 150, unit: 'шт', min: 50, orderStep: 500, costPerStep: 1500 },
-    { id: 'syrup', name: 'Сироп ванильный', stock: 700, unit: 'мл', min: 100, orderStep: 1000, costPerStep: 600 }
-  ]);
-
-  const [menuItems, setMenuItems] = useState([
-    { id: 1, name: 'Эспрессо', price: 150, costPrice: 40, color: '#f87171', category: 'Кофе', recipe: { beans: 18, cups: 1 } },
-    { id: 2, name: 'Американо', price: 180, costPrice: 45, color: '#fb923c', category: 'Кофе', recipe: { beans: 18, cups: 1 } },
-    { id: 3, name: 'Капучино (L)', price: 250, costPrice: 75, color: '#fbbf24', category: 'Кофе', recipe: { beans: 18, milk: 150, cups: 1 } },
-    { id: 4, name: 'Латте', price: 260, costPrice: 85, color: '#34d399', category: 'Кофе', recipe: { beans: 18, milk: 200, cups: 1 } },
-    { id: 5, name: 'Флэт Уайт', price: 280, costPrice: 90, color: '#60a5fa', category: 'Кофе', recipe: { beans: 36, milk: 100, cups: 1 } },
-    { id: 6, name: 'Раф Ванильный', price: 320, costPrice: 110, color: '#c084fc', category: 'Кофе', recipe: { beans: 18, milk: 150, syrup: 20, cups: 1 } },
-    { id: 7, name: 'Круассан', price: 190, costPrice: 80, color: '#a78bfa', category: 'Десерты', isDessert: true, inventory: 10 },
-    { id: 8, name: 'Сэндвич', price: 350, costPrice: 150, color: '#f472b6', category: 'Еда', inventory: 5 },
-  ]);
-  
-  const [stopList, setStopList] = useState([]);
-  const [clients, setClients] = useState({'9990000000': { points: 1850, visits: 24, totalSpent: 18500, lastVisit: '15.03.2026' }}); 
-  const [salarySettings, setSalarySettings] = useState({ base: 1500, percent: 5 });
-  
-  const [baristas, setBaristas] = useState(['Маша', 'Паша']);
-  const [baristaPins, setBaristaPins] = useState({ 'Маша': '1111', 'Паша': '2222' });
-  
-  const [baristaStats, setBaristaStats] = useState({ 
-    'Маша': { tips: 0, dessertsSold: 0, revenue: 0, ratingSum: 0, ratingCount: 0 }, 
-    'Паша': { tips: 0, dessertsSold: 0, revenue: 0, ratingSum: 0, ratingCount: 0 }
-  });
-  
-  const [loggedInBarista, setLoggedInBarista] = useState('Маша');
-
+  const [logs, setLogs] = useState([]);
   const [schedule, setSchedule] = useState({});
+  const [clients, setClients] = useState({});
+  const [baristas, setBaristas] = useState([]);
+  const [baristaPins, setBaristaPins] = useState({});
+  const [baristaStats, setBaristaStats] = useState({});
+  const [baristaEfficiency, setBaristaEfficiency] = useState([]);
+  const [salarySettings, setSalarySettings] = useState({ hourlyRate: 200, revenuePercent: 5 });
+  const [promocodes, setPromocodes] = useState([]);
+  const [cashbackPercent, setCashbackPercent] = useState(5);
+  const [stopList, setStopList] = useState([]);
   const [shiftArchive, setShiftArchive] = useState([]);
-  const [securityAlerts, setSecurityAlerts] = useState([]);
-  const [logs, setLogs] = useState([{ id: 1, time: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}), text: 'Система готова к работе.', type: 'info' }]);
-  const [isLoaded, setIsLoaded] = useState(false);
   
-  const [promocodes, setPromocodes] = useState([{ code: 'COFFEE20', type: 'percent', value: 20, label: '-20%' }, { code: 'GIFT100', type: 'fixed', value: 100, label: '-100 ₽' }]);
-  const [cashbackPercent, setCashbackPercent] = useState(10);
-
+  const [expText, setExpText] = useState('');
+  const [expCategory, setExpCategory] = useState('Закупка');
+  const [expAmount, setExpAmount] = useState('');
   const [showTelegramModal, setShowTelegramModal] = useState(false);
-  const [showProcurementModal, setShowProcurementModal] = useState(false);
   const [showArchiveModal, setShowArchiveModal] = useState(false);
+  const [showProcurementModal, setShowProcurementModal] = useState(false);
+  const [loggedInBarista, setLoggedInBarista] = useState(null);
 
-  useEffect(() => { const timer = setInterval(() => setCurrentTime(new Date()), 1000); return () => clearInterval(timer); }, []);
+  const [dateStr, setDateStr] = useState('');
+  const [timeStr, setTimeStr] = useState('');
 
-  const [weather, setWeather] = useState({ temp: '...', condition: '⏳', trend: 'Поиск спутника...' });
+  // === 🚀 МАГИЯ: Умный подборщик иконок ===
+  const getSmartIcon = (name, category, existingIcon) => {
+    if (existingIcon && existingIcon !== '☕' && existingIcon !== '🥐') return existingIcon; 
+    
+    const text = ((name || '') + ' ' + (category || '')).toLowerCase();
+
+    if (text.includes('круассан')) return '🥐';
+    if (text.includes('ролл') || text.includes('шаурма') || text.includes('wrap') || text.includes('врап')) return '🌯';
+    if (text.includes('сэндвич') || text.includes('сендвич') || text.includes('панини') || text.includes('тост')) return '🥪';
+    if (text.includes('сырник') || text.includes('блин') || text.includes('завтрак') || text.includes('омлет') || text.includes('яичниц') || text.includes('каша')) return '🍳';
+    if (text.includes('печенье') || text.includes('кукис') || text.includes('макарон')) return '🍪';
+    if (text.includes('чизкейк') || text.includes('торт') || text.includes('пирож') || text.includes('эклер') || text.includes('десерт') || text.includes('сладк')) return '🍰';
+    if (text.includes('булоч') || text.includes('хлеб') || text.includes('выпеч')) return '🥐';
+    if (text.includes('салат') || text.includes('боул')) return '🥗';
+    if (text.includes('суп')) return '🥣';
+    
+    if (text.includes('матча') || text.includes('чай')) return '🍵';
+    if (text.includes('лимонад') || text.includes('айс') || text.includes('сок') || text.includes('фреш') || text.includes('смузи') || text.includes('вода') || text.includes('колд')) return '🥤';
+    if (text.includes('какао') || text.includes('шоколад')) return '☕';
+
+    if (text.includes('еда') || text.includes('перекус')) return '🥪';
+    
+    return '☕'; 
+  };
 
   useEffect(() => {
-    if (!isLoaded) return; 
-    const fetchWeather = async () => {
+    const saved = localStorage.getItem('coffeeAppData');
+    if (saved) {
       try {
-        const geoResponse = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(city)}&count=1&language=ru`);
-        const geoData = await geoResponse.json();
-        if (!geoData.results || geoData.results.length === 0) { setWeather({ temp: '?', condition: '🌍', trend: `Город "${city}" не найден` }); return; }
-        const { latitude, longitude } = geoData.results[0];
-        const weatherResponse = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current_weather=true`);
-        const weatherData = await weatherResponse.json();
-        const current = weatherData.current_weather;
-        let conditionIcon = '🌤️'; let trendText = 'Отличная погода для кофе';
-        if (current.weathercode >= 51 && current.weathercode <= 67) { conditionIcon = '🌧️'; trendText = 'Дождь — спрос на выпечку +20%'; } else if (current.weathercode >= 71) { conditionIcon = '❄️'; trendText = 'Снег — время горячего капучино'; } else if (current.temperature > 25) { conditionIcon = '☀️'; trendText = 'Жара — предлагаем айс-латте!'; }
-        setWeather({ temp: `${current.temperature > 0 ? '+' : ''}${Math.round(current.temperature)}°C`, condition: conditionIcon, trend: trendText });
-      } catch (error) { console.error("Ошибка загрузки погоды:", error); setWeather({ temp: '+?°C', condition: '☁️', trend: 'Нет связи с метеостанцией' }); }
-    };
-    fetchWeather(); const weatherTimer = setInterval(fetchWeather, 3600000); return () => clearInterval(weatherTimer);
-  }, [city, isLoaded]);
-
-  const sendTelegramMessage = async (message) => {
-    if (TELEGRAM_TOKEN === 'ТВОЙ_ТОКЕН_ОТ_БОТА' || !TELEGRAM_CHAT_ID) { console.log('TG Имитация отправки:', message); return; }
-    try {
-      const url = `https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage`;
-      await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ chat_id: TELEGRAM_CHAT_ID, text: message, parse_mode: 'HTML' }) });
-    } catch (error) { console.error('Ошибка отправки в Telegram:', error); }
-  };
-
-  const updateStats = (updater) => {
-    setStats(prev => {
-      const next = typeof updater === 'function' ? updater(prev) : updater;
-      setDoc(doc(db, 'system', 'stats'), { items: next }).catch(e => console.error(e));
-      return next;
-    });
-  };
-
-  const updateIngredients = (updater) => {
-    setIngredients(prev => {
-      const next = typeof updater === 'function' ? updater(prev) : updater;
-      setDoc(doc(db, 'system', 'ingredients'), { items: next }).catch(e => console.error(e));
-      return next;
-    });
-  };
-
-  useEffect(() => {
-    try {
-      const qOrders = query(collection(db, 'orders'), orderBy('timestamp', 'desc'));
-      const unsubOrders = onSnapshot(qOrders, (snapshot) => {
-        const cloudOrders = []; snapshot.forEach(doc => cloudOrders.push(doc.data()));
-        if (cloudOrders.length > 0) setOrders(cloudOrders);
-      });
-      const unsubStats = onSnapshot(doc(db, 'system', 'stats'), (docSnap) => {
-        if (docSnap.exists() && docSnap.data().items) setStats(docSnap.data().items);
-      });
-      const unsubIngredients = onSnapshot(doc(db, 'system', 'ingredients'), (docSnap) => {
-        if (docSnap.exists() && docSnap.data().items) setIngredients(docSnap.data().items);
-      });
-      return () => { unsubOrders(); unsubStats(); unsubIngredients(); };
-    } catch (e) { console.log("Firebase sync waiting"); }
-  }, []);
-
-  useEffect(() => {
-    const savedData = localStorage.getItem('coffee_pos_data');
-    if (savedData) {
-      try {
-        const parsed = JSON.parse(savedData);
-        if (parsed.appData) setAppData(prev => ({ ...prev, ...parsed.appData })); 
-        if (parsed.city) setCity(parsed.city);
-        if (parsed.stopList) setStopList(parsed.stopList);
-        if (parsed.menuItems) setMenuItems(parsed.menuItems); if (parsed.clients) setClients(parsed.clients); 
-        if (parsed.salarySettings) setSalarySettings(parsed.salarySettings); 
-        if (parsed.baristaStats) {
-          const upgradedStats = {}; Object.keys(parsed.baristaStats).forEach(b => { upgradedStats[b] = { ...parsed.baristaStats[b], ratingSum: parsed.baristaStats[b].ratingSum || 0, ratingCount: parsed.baristaStats[b].ratingCount || 0 }; }); setBaristaStats(upgradedStats);
-        }
-        if (parsed.shiftArchive) setShiftArchive(parsed.shiftArchive); if (parsed.securityAlerts) setSecurityAlerts(parsed.securityAlerts);
-        if (parsed.logs) setLogs(parsed.logs); if (parsed.expenses) setExpenses(parsed.expenses); 
-        if (parsed.schedule) setSchedule(parsed.schedule); if (parsed.lastActiveDate) setLastActiveDate(parsed.lastActiveDate); 
-        if (parsed.promocodes) setPromocodes(parsed.promocodes); if (parsed.cashbackPercent) setCashbackPercent(parsed.cashbackPercent); 
-        if (parsed.baristas) setBaristas(parsed.baristas); if (parsed.baristaPins) setBaristaPins(parsed.baristaPins); 
-        if (orders.length === 0 && parsed.orders) setOrders(parsed.orders);
-        if (stats[0].rawValue === 0 && parsed.stats) setStats(parsed.stats);
-        if (parsed.ingredients && ingredients[0].stock === 2500) setIngredients(parsed.ingredients);
-      } catch (e) { console.error('Error LS', e); }
+        const parsed = JSON.parse(saved);
+        setAppData(parsed);
+      } catch (e) {
+        console.error("Ошибка загрузки данных", e);
+      }
+    } else {
+      setAppData(initialData);
     }
-    setIsLoaded(true);
   }, []);
 
   useEffect(() => {
-    if (isLoaded) localStorage.setItem('coffee_pos_data', JSON.stringify({ appData, city, stats, orders, stopList, menuItems, clients, salarySettings, baristaStats, shiftArchive, securityAlerts, logs, expenses, schedule, lastActiveDate, promocodes, cashbackPercent, ingredients, baristas, baristaPins }));
-  }, [appData, city, stats, orders, stopList, menuItems, clients, salarySettings, baristaStats, shiftArchive, securityAlerts, logs, expenses, schedule, lastActiveDate, promocodes, cashbackPercent, ingredients, baristas, baristaPins, isLoaded]);
+    setMenuItems(appData.menuItems || []);
+    setOrders(appData.orders || []);
+    setIngredients(appData.ingredients || []);
+    setExpenses(appData.expenses || []);
+    setLogs(appData.logs || []);
+    setSchedule(appData.schedule || {});
+    setClients(appData.clients || {});
+    setBaristas(appData.baristas || []);
+    setBaristaPins(appData.baristaPins || {});
+    setBaristaStats(appData.baristaStats || {});
+    setBaristaEfficiency(appData.baristaEfficiency || []);
+    setSalarySettings(appData.salarySettings || { hourlyRate: 200, revenuePercent: 5 });
+    setPromocodes(appData.promocodes || []);
+    setCashbackPercent(appData.cashbackPercent || 5);
+    setStopList(appData.stopList || []);
+    setShiftArchive(appData.shiftArchive || []);
+  }, [appData]);
 
-  const addLog = (text, type) => setLogs(prev => [{ id: Date.now(), time: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}), text, type }, ...(prev || [])]); 
-  
-  const triggerSecurityAlert = (text) => { 
-    setSecurityAlerts(prev => [{ id: Date.now(), time: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}), text }, ...(prev || [])]); 
-    addLog(`🚨 АЛЕРТ: ${text}`, 'warning'); 
-    sendTelegramMessage(`🚨 <b>АЛЕРТ БЕЗОПАСНОСТИ</b>\n\n${text}\n🕒 ${new Date().toLocaleTimeString('ru-RU')}`);
+  useEffect(() => {
+    const timer = setInterval(() => {
+      const now = new Date();
+      setDateStr(now.toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit', year: 'numeric' }));
+      setTimeStr(now.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' }));
+    }, 1000);
+    return () => clearInterval(timer);
+  }, []);
+
+  const addLog = (msg) => {
+    const newLog = { id: Date.now(), time: new Date().toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' }), msg };
+    setLogs(prev => [newLog, ...prev].slice(0, 100));
+  };
+
+  const handleBackup = () => {
+    const stateToSave = {
+      ...appData,
+      menuItems, orders, ingredients, expenses, logs, schedule, clients,
+      baristas, baristaPins, baristaStats, baristaEfficiency,
+      salarySettings, promocodes, cashbackPercent, stopList, shiftArchive
+    };
+    localStorage.setItem('coffeeAppData', JSON.stringify(stateToSave));
+    setAppData(stateToSave);
+    addLog(`Система: Создан бэкап данных`);
+    alert('Бэкап успешно сохранен!');
   };
 
   const handleHardReset = () => {
-    if (!window.confirm('💣 ВНИМАНИЕ! ВЫ УВЕРЕНЫ?')) return;
-    localStorage.removeItem('coffee_pos_data'); window.location.reload(); 
-  };
-
-  const handleWriteOff = (ingredientId, amount, reason) => {
-    const ing = ingredients.find(i => i.id === ingredientId);
-    if (!ing) return;
-    const costPerUnit = ing.costPerStep / ing.orderStep;
-    const lossAmount = Math.round(amount * costPerUnit);
-    updateIngredients(prev => prev.map(i => i.id === ingredientId ? { ...i, stock: Math.max(0, i.stock - amount) } : i));
-    setExpenses(prev => [{ id: Date.now(), time: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}), text: `Списание: ${ing.name} (${reason})`, amount: lossAmount, category: 'Прочее' }, ...prev]);
-    updateStats(prevStats => prevStats.map(stat => stat.id === 4 ? { ...stat, rawValue: stat.rawValue - lossAmount, value: `${(stat.rawValue - lossAmount).toLocaleString('ru-RU')} ₽` } : stat));
-    addLog(`🗑️ Списано ${amount}${ing.unit} ${ing.name} (${reason}). Убыток: ${lossAmount}₽`, 'warning');
-  };
-
-  const handleAddDeliveryRevenue = (price) => {
-    updateStats(prevStats => prevStats.map(stat => { 
-      if (stat.id === 1) return { ...stat, rawValue: stat.rawValue + price, value: `${(stat.rawValue + price).toLocaleString('ru-RU')} ₽` }; 
-      if (stat.id === 4) return { ...stat, rawValue: stat.rawValue + price, value: `${(stat.rawValue + price).toLocaleString('ru-RU')} ₽` }; 
-      return stat; 
-    }));
-    addLog(`🛵 Заказ доставки передан курьеру (+${price} ₽)`, 'success');
-  };
-
-  const handleRateBarista = (baristaName, stars) => {
-    setBaristaStats(prev => {
-      const current = prev[baristaName] || { tips: 0, dessertsSold: 0, revenue: 0, ratingSum: 0, ratingCount: 0 };
-      return { ...prev, [baristaName]: { ...current, ratingSum: (current.ratingSum || 0) + stars, ratingCount: (current.ratingCount || 0) + 1 } };
-    });
-    addLog(`⭐ Гость поставил ${stars} звёзд бариста ${baristaName}`, 'success');
-  };
-
-  const handleUpdateSchedule = (dateKey, newWorkers) => { setSchedule(prev => ({ ...(prev || {}), [dateKey]: newWorkers })); };
-
-  const handleAddExpense = () => { 
-    if (!expText || !expAmount) return; const amountNum = Number(expAmount);
-    setExpenses([{ id: Date.now(), time: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}), text: expText, amount: amountNum, category: expCategory }, ...(expenses || [])]);
-    updateStats(prevStats => (prevStats || []).map(stat => { if (stat.id === 4) { const newProfit = stat.rawValue - amountNum; return { ...stat, rawValue: newProfit, value: `${newProfit.toLocaleString('ru-RU')} ₽` }; } return stat; }));
-    addLog(`💸 Внесен расход: ${expText} (-${amountNum} ₽)`, 'warning'); setExpText(''); setExpAmount(''); setExpCategory('Закупка');
-  };
-
-  const handleSaveInventory = (newStockData, totalLoss) => {
-    updateIngredients(prev => prev.map(ing => newStockData[ing.id] !== undefined ? { ...ing, stock: newStockData[ing.id] } : ing));
-    if (totalLoss > 0) {
-      const lossAmount = Math.round(totalLoss);
-      setExpenses(prev => [{ id: Date.now(), time: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}), text: 'Списание (Инвентаризация)', amount: lossAmount, category: 'Прочее' }, ...prev]);
-      updateStats(prevStats => prevStats.map(stat => stat.id === 4 ? { ...stat, rawValue: stat.rawValue - lossAmount, value: `${(stat.rawValue - lossAmount).toLocaleString('ru-RU')} ₽` } : stat));
-    }
-    addLog(`📦 Проведена инвентаризация. Списано: ${Math.round(totalLoss)} ₽`, 'warning');
-  };
-
-  // 🚀 НОВАЯ ФУНКЦИЯ: УМНАЯ АВТО-ЗАКУПКА
-  const handleApproveProcurement = () => {
-    let totalCost = 0;
-    let orderedItems = [];
-
-    // 1. Пополняем ингредиенты (молоко, зерно)
-    updateIngredients(prevIngs => {
-      return prevIngs.map(i => {
-        if (i.stock <= i.min) {
-          totalCost += i.costPerStep;
-          orderedItems.push(i.name);
-          return { ...i, stock: i.stock + i.orderStep };
-        }
-        return i;
-      });
-    });
-
-    // 2. Пополняем штучные товары (десерты, еда)
-    setMenuItems(prevMenu => {
-      return prevMenu.map(m => {
-        if (m.inventory !== undefined && m.inventory <= 5) {
-          const cost = 20 * (m.costPrice || 0);
-          totalCost += cost;
-          orderedItems.push(m.name);
-          return { ...m, inventory: m.inventory + 20 };
-        }
-        return m;
-      });
-    });
-
-    if (totalCost > 0) {
-      // 3. Записываем в расходы
-      setExpenses(prev => [{ id: Date.now(), time: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}), text: `Авто-закупка склада (${orderedItems.length} поз.)`, amount: totalCost, category: 'Закупка' }, ...(prev || [])]);
-      
-      // 4. Вычитаем из чистой прибыли P&L
-      updateStats(prevStats => (prevStats || []).map(stat => { 
-        if (stat.id === 4) { 
-          const newProfit = stat.rawValue - totalCost; 
-          return { ...stat, rawValue: newProfit, value: `${newProfit.toLocaleString('ru-RU')} ₽` }; 
-        } 
-        return stat; 
-      }));
-
-      addLog(`🛒 Авто-закупка проведена. Списано: ${totalCost}₽. Пополнено: ${orderedItems.join(', ')}`, 'success');
-      sendTelegramMessage(`📦 <b>АВТО-ЗАКУПКА</b>\n\nСклад пополнен.\nПотрачено: ${totalCost} ₽\nЗакуплено: ${orderedItems.join(', ')}\n🕒 ${new Date().toLocaleTimeString('ru-RU')}`);
-    }
-    
-    setShowProcurementModal(false);
-    alert(`Склад успешно пополнен! Сумма ${totalCost} ₽ списана из бюджета.`);
-  };
-
-  const handleRoleRequest = (role) => { if (role === currentRole) return; setPinModal({ isOpen: true, targetRole: role, targetBarista: '' }); setPinInput(''); setPinError(false); };
-  
-  const handlePinSubmit = () => { 
-    if (pinModal.targetRole === 'Владелец' || pinModal.targetRole === 'Управляющий') {
-      if (pinInput === PIN_CODES[pinModal.targetRole]) { setCurrentRole(pinModal.targetRole); setPinModal({ isOpen: false, targetRole: '', targetBarista: '' }); addLog(`Успешный вход: ${pinModal.targetRole}`, 'success'); } 
-      else { setPinError(true); setPinInput(''); addLog(`⚠️ Неудачный вход: "${pinModal.targetRole}"`, 'warning'); }
-    } else if (pinModal.targetRole === 'Бариста') {
-      const foundBarista = Object.keys(baristaPins).find(name => baristaPins[name] === pinInput);
-      if (foundBarista) { setCurrentRole('Бариста'); setLoggedInBarista(foundBarista); setPinModal({ isOpen: false, targetRole: '', targetBarista: '' }); addLog(`Вход на кассу: ${foundBarista}`, 'success'); } 
-      else { setPinError(true); setPinInput(''); addLog(`⚠️ Неверный ПИН бариста`, 'warning'); }
-    } else if (pinModal.targetRole === 'Смена Бариста') {
-      if (pinInput === baristaPins[pinModal.targetBarista]) { setLoggedInBarista(pinModal.targetBarista); setPinModal({ isOpen: false, targetRole: '', targetBarista: '' }); addLog(`Смена бариста на кассе: ${pinModal.targetBarista}`, 'info'); } 
-      else { setPinError(true); setPinInput(''); addLog(`⚠️ Неверный ПИН бариста`, 'warning'); }
+    if (window.confirm("ВНИМАНИЕ! Это удалит ВСЕ данные (кроме заводских) из браузера. Вы уверены?")) {
+      if (window.prompt("Введите 0000 для подтверждения сброса") === "0000") {
+        localStorage.removeItem('coffeeAppData');
+        setAppData(initialData);
+        window.location.reload();
+      }
     }
   };
-  const cancelPin = () => setPinModal({ isOpen: false, targetRole: '', targetBarista: '' });
 
-  const handleAddMenuItem = (newItem) => { const newId = menuItems.length > 0 ? Math.max(...menuItems.map(i => i.id)) + 1 : 1; setMenuItems([...menuItems, { ...newItem, id: newId }]); addLog(`Добавлена позиция: ${newItem.name}`, 'info'); };
-  const handleEditMenuItem = (updatedItem) => { setMenuItems(prev => prev.map(item => item.id === updatedItem.id ? updatedItem : item)); addLog(`Позиция меню обновлена: ${updatedItem.name}`, 'info'); };
-  const handleDeleteMenuItem = (id) => { setMenuItems(menuItems.filter(i => i.id !== id)); setStopList(stopList.filter(i => i !== id)); };
-  const handleUpdateInventory = (itemId, newAmount) => { setMenuItems(prev => prev.map(i => i.id === itemId ? { ...i, inventory: newAmount } : i)); };
-  const handleToggleStopList = (itemId) => setStopList(prev => prev.includes(itemId) ? prev.filter(id => id !== itemId) : [...prev, itemId]);
+  const handleRoleRequest = (role) => {
+    if (role === 'Владелец') { setPinModal({ isOpen: true, targetRole: role, targetBarista: null }); setPinInput(''); }
+    else if (role === 'Управляющий') { setPinModal({ isOpen: true, targetRole: role, targetBarista: null }); setPinInput(''); }
+    else if (role === 'Бариста') {
+      if (!baristas || baristas.length === 0) { alert('Нет активных бариста. Создайте их в панели Владельца.'); return; }
+      setPinModal({ isOpen: true, targetRole: 'Выбор Бариста', targetBarista: null }); 
+      setPinInput('');
+    }
+  };
 
-  const handleCreateOrder = (orderDescription, totalSum, phone = '', pointsSpent = 0, tips = 0, activeBarista = 'Маша', orderType = 'В зале') => {
-    const newId = `#${1044 + orders.length}`; 
-    const moneyPaid = totalSum - pointsSpent; 
-    const pointsEarned = Math.floor(moneyPaid * (cashbackPercent / 100)); 
-    let orderCost = 0; let dessertsInOrder = 0; 
-    
-    updateIngredients(prevIngs => {
-      let newIngs = [...prevIngs];
-      orderDescription.split(' + ').forEach(name => { 
-        const item = menuItems.find(i => i.name === name); 
-        if (item) {
-          if (item.costPrice) orderCost += item.costPrice; if (item.category === 'Десерты' || item.isDessert) dessertsInOrder += 1;
-          if (item.recipe) { Object.keys(item.recipe).forEach(ingId => { const idx = newIngs.findIndex(ing => ing.id === ingId); if (idx !== -1) { newIngs[idx] = { ...newIngs[idx], stock: Math.max(0, newIngs[idx].stock - item.recipe[ingId]) }; } }); }
-        }
-      });
-      return newIngs;
-    });
+  const handlePinSubmit = () => {
+    if (pinModal.targetRole === 'Владелец' && pinInput === '0000') {
+      setCurrentRole('Владелец'); setPinModal({ isOpen: false }); addLog(`Вход: Владелец`);
+    } else if (pinModal.targetRole === 'Управляющий' && pinInput === '1111') {
+      setCurrentRole('Управляющий'); setPinModal({ isOpen: false }); addLog(`Вход: Управляющий`);
+    } else if (pinModal.targetRole === 'Смена Бариста' || pinModal.targetRole === 'Выбор Бариста') {
+      const bName = pinModal.targetBarista || (baristas.length > 0 ? baristas[0] : null);
+      if (bName && baristaPins[bName] && baristaPins[bName] === pinInput) {
+        setCurrentRole('Бариста'); setLoggedInBarista(bName); setPinModal({ isOpen: false }); addLog(`Вход: Бариста ${bName}`);
+      } else {
+        alert('Неверный PIN для бариста!'); setPinInput('');
+      }
+    } else {
+      alert('Неверный PIN!'); setPinInput('');
+    }
+  };
 
-    setBaristaStats(prev => { const current = prev[activeBarista] || { tips: 0, dessertsSold: 0, revenue: 0, ratingSum: 0, ratingCount: 0 }; return { ...prev, [activeBarista]: { ...current, tips: current.tips + tips, dessertsSold: current.dessertsSold + dessertsInOrder, revenue: current.revenue + moneyPaid }}; });
-    
-    const orderProfit = moneyPaid - orderCost; const now = new Date(); 
-    
-    const newOrder = { 
-      id: newId, time: now.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}), 
-      item: orderDescription, total: moneyPaid, status: 'В процессе', 
-      color: '#f59e0b', barista: activeBarista, timestamp: Date.now(), orderType 
+  const cancelPin = () => { setPinModal({ isOpen: false, targetRole: null, targetBarista: null }); setPinInput(''); };
+
+  // === 🚀 ИСПОЛЬЗУЕМ УМНЫЕ ИКОНКИ ПРИ СОЗДАНИИ/РЕДАКТИРОВАНИИ ТОВАРОВ ===
+  const handleAddMenuItem = (newItem) => {
+    const itemWithIcon = {
+      ...newItem,
+      icon: getSmartIcon(newItem.name, newItem.category, newItem.icon)
     };
-
-    try { setDoc(doc(db, 'orders', newId.toString()), newOrder); } catch (err) { console.error("Ошибка:", err); }
-
-    setOrders([newOrder, ...orders]); 
-
-    updateStats(prevStats => prevStats.map(stat => { 
-      if (stat.id === 1) return { ...stat, rawValue: stat.rawValue + moneyPaid, value: `${(stat.rawValue + moneyPaid).toLocaleString('ru-RU')} ₽` }; 
-      if (stat.id === 2) return { ...stat, rawValue: stat.rawValue + orderDescription.split(' + ').length, value: `${stat.rawValue + orderDescription.split(' + ').length} шт` }; 
-      if (stat.id === 4) return { ...stat, rawValue: stat.rawValue + orderProfit, value: `${(stat.rawValue + orderProfit).toLocaleString('ru-RU')} ₽` }; 
-      return stat; 
-    }));
-    if (phone) { setClients(prev => { const oldData = typeof prev[phone] === 'object' ? prev[phone] : { points: prev[phone] || 0, visits: 0, totalSpent: 0 }; return { ...prev, [phone]: { points: oldData.points - pointsSpent + pointsEarned, visits: oldData.visits + 1, totalSpent: oldData.totalSpent + moneyPaid, lastVisit: now.toLocaleDateString('ru-RU') } }; }); }
+    setMenuItems([...menuItems, itemWithIcon]);
+    addLog(`Меню: Добавлен ${itemWithIcon.name}`);
   };
 
-  const handleCompleteOrder = (orderId) => { 
-    const updatedOrders = orders.map(o => o.id === orderId ? { ...o, status: 'Готово', color: '#10b981', duration: Math.floor((Date.now() - o.timestamp) / 1000) } : o);
-    setOrders(updatedOrders);
-    const finishedOrder = updatedOrders.find(o => o.id === orderId);
-    if(finishedOrder) { setDoc(doc(db, 'orders', orderId.toString()), finishedOrder).catch(e => console.error(e)); }
+  const handleEditMenuItem = (updatedItem) => {
+    const itemWithIcon = {
+      ...updatedItem,
+      icon: getSmartIcon(updatedItem.name, updatedItem.category, updatedItem.icon)
+    };
+    setMenuItems(menuItems.map(item => item.id === itemWithIcon.id ? itemWithIcon : item));
+    addLog(`Меню: Обновлен ${itemWithIcon.name}`);
   };
 
-  const handleCancelOrder = (orderId) => { 
-    const updatedOrders = orders.map(o => o.id === orderId ? { ...o, status: 'Отменен', color: '#ef4444' } : o);
-    setOrders(updatedOrders);
-    const canceledOrder = updatedOrders.find(o => o.id === orderId);
-    if(canceledOrder) { setDoc(doc(db, 'orders', orderId.toString()), canceledOrder).catch(e => console.error(e)); }
+  const handleDeleteMenuItem = (id) => {
+    setMenuItems(menuItems.filter(item => item.id !== id));
+    addLog(`Меню: Удален товар`);
+  };
+
+  const handleUpdateInventory = (id, newRecipe) => {
+    setMenuItems(menuItems.map(item => item.id === id ? { ...item, recipe: newRecipe } : item));
+  };
+
+  const handleToggleStopList = (id) => {
+    setStopList(prev => prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]);
+  };
+
+  const handleSaveInventory = (newInv) => {
+    setIngredients(newInv); addLog(`Склад: Инвентаризация сохранена`);
+  };
+
+  const handleWriteOff = (writeOffList) => {
+    let updatedInv = [...ingredients];
+    let totalCost = 0;
+    writeOffList.forEach(w => {
+      const idx = updatedInv.findIndex(i => i.id === w.ingredientId);
+      if (idx > -1) {
+        updatedInv[idx] = { ...updatedInv[idx], qty: Math.max(0, updatedInv[idx].qty - w.amount) };
+        const costPerUnit = updatedInv[idx].price / updatedInv[idx].qty; 
+        totalCost += (costPerUnit * w.amount) || 0;
+      }
+    });
+    setIngredients(updatedInv);
+    if (totalCost > 0) {
+      setExpenses(prev => [{ id: Date.now(), text: 'Списание сырья', category: 'Списание', amount: totalCost, date: new Date().toISOString() }, ...prev]);
+    }
+    addLog(`Склад: Списание проведено`);
+  };
+
+  const handleCreateOrder = (order) => {
+    setOrders([{ ...order, id: Date.now(), time: new Date().toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' }), barista: loggedInBarista }, ...orders]);
     
-    sendTelegramMessage(`❌ <b>ОТМЕНА ЗАКАЗА</b>\n\nБыл отменен заказ: ${orderId}\nБариста: ${loggedInBarista}\n🕒 ${new Date().toLocaleTimeString('ru-RU')}`);
+    let updatedInv = [...ingredients];
+    order.items.forEach(item => {
+      if (item.recipe) {
+        item.recipe.forEach(req => {
+          const idx = updatedInv.findIndex(ing => String(ing.id) === String(req.ingredientId));
+          if (idx > -1) {
+            updatedInv[idx] = { ...updatedInv[idx], qty: Math.max(0, updatedInv[idx].qty - (req.amount * item.qty)) };
+          }
+        });
+      }
+    });
+    setIngredients(updatedInv);
+
+    const bStats = { ...baristaStats };
+    if (!bStats[loggedInBarista]) bStats[loggedInBarista] = { orders: 0, revenue: 0, rating: 5, reviews: 0 };
+    bStats[loggedInBarista].orders += 1;
+    bStats[loggedInBarista].revenue += order.total;
+    setBaristaStats(bStats);
+
+    const phone = order.clientPhone;
+    if (phone) {
+      const currentClients = { ...clients };
+      if (!currentClients[phone]) {
+        currentClients[phone] = { name: order.clientName || 'Гость', points: 0, orders: 0, totalSpent: 0 };
+      }
+      currentClients[phone].orders += 1;
+      currentClients[phone].totalSpent += order.total;
+      if (order.pointsEarned) currentClients[phone].points += order.pointsEarned;
+      if (order.pointsSpent) currentClients[phone].points = Math.max(0, currentClients[phone].points - order.pointsSpent);
+      setClients(currentClients);
+    }
+    addLog(`Касса: Заказ на ${order.total}₽ (${loggedInBarista})`);
   };
 
-  const handleOpenDrawer = (baristaName) => triggerSecurityAlert(`Касса открыта без продажи (${baristaName})`); 
-  const handleCloseShift = (shiftData) => { setShiftArchive([{ id: Date.now(), date: new Date().toLocaleString(), revenue: shiftData.revenue, ordersCount: shiftData.ordersCount, salary: shiftData.salary, tips: shiftData.tips }, ...shiftArchive]); addLog(`🗄️ Смена закрыта. Выручка: ${shiftData.revenue} ₽`, 'success'); };
+  const handleCompleteOrder = (id) => { setOrders(orders.map(o => o.id === id ? { ...o, status: 'Готов' } : o)); };
+  const handleCancelOrder = (id) => { setOrders(orders.map(o => o.id === id ? { ...o, status: 'Отменен' } : o)); };
 
-  const handleBackup = () => {
-    const dataStr = JSON.stringify({ appData, city, stats, orders, stopList, menuItems, clients, salarySettings, baristaStats, shiftArchive, securityAlerts, logs, expenses, schedule, lastActiveDate, promocodes, cashbackPercent, ingredients, baristas, baristaPins }, null, 2);
-    const blob = new Blob([dataStr], { type: 'application/json' }); const url = URL.createObjectURL(blob);
-    const link = document.createElement('a'); link.href = url; link.download = `coffee_backup_${new Date().toISOString().slice(0, 10)}.json`; link.click();
-  };
-
-  const handleImport = (e) => {
-    const file = e.target.files[0]; if (!file) return; const reader = new FileReader();
-    reader.onload = (event) => {
-      try { const parsed = JSON.parse(event.target.result); if (parsed.baristas) setBaristas(parsed.baristas); if (parsed.baristaPins) setBaristaPins(parsed.baristaPins); if (parsed.baristaStats) setBaristaStats(parsed.baristaStats); alert('Данные импортированы!'); } catch (error) { alert('Ошибка импорта'); }
-    }; reader.readAsText(file);
-  };
-
-  const currentRevenue = (stats.find(s => s.id === 1) || { rawValue: 0 }).rawValue; 
-  const currentNetProfit = (stats.find(s => s.id === 4) || { rawValue: 0 }).rawValue; 
-  const totalManualExpenses = expenses.reduce((sum, exp) => sum + exp.amount, 0); 
-  const costOfGoods = Math.max(0, currentRevenue - currentNetProfit - totalManualExpenses); 
-  const activeOrdersCount = orders.filter(o => o.status === 'В процессе').length; 
-  const allLowStock = ingredients.filter(i => i.stock <= i.min).map(i => ({ name: i.name, inventory: i.stock, unit: i.unit }));
-  const sendSmsToClient = (phone) => { alert(`📱 Имитация отправки SMS на номер +7 ${phone}`); addLog(`Отправлен промокод клиенту ${phone}`, 'success'); };
-
-  const dateStr = currentTime.toLocaleDateString('ru-RU', { weekday: 'long', day: 'numeric', month: 'short' });
-  const timeStr = currentTime.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
-
-  const topSales = useMemo(() => { const counts = {}; (orders || []).forEach(order => { if (order.status === 'Отменен') return; (order.item || '').split(' + ').forEach(itemName => counts[itemName] = (counts[itemName] || 0) + 1); }); return Object.entries(counts).sort((a, b) => b[1] - a[1]).slice(0, 3); }, [orders]); 
-  const categoryStats = useMemo(() => { const statsObj = { 'Кофе': 0, 'Еда': 0, 'Десерты': 0, 'Зерно': 0 }; let totalRevenue = 0; if (!(orders || []).filter(o => o.status !== 'Отменен').length) return { stats: { 'Кофе': 0, 'Десерты': 0, 'Еда': 0, 'Зерно': 0 }, total: 0 }; (orders || []).forEach(order => { if (order.status === 'Отменен') return; (order.item || '').split(' + ').forEach(itemName => { const menuItem = (menuItems || []).find(m => m.name === itemName); const cat = menuItem?.category || (menuItem?.isDessert ? 'Десерты' : 'Кофе'); const price = menuItem?.price || 0; if (statsObj[cat] !== undefined) statsObj[cat] += price; else statsObj['Кофе'] += price; totalRevenue += price; }); }); return { stats: statsObj, total: totalRevenue }; }, [orders, menuItems]);
-  const catColors = { 'Кофе': '#3b82f6', 'Еда': '#10b981', 'Десерты': '#8b5cf6', 'Зерно': '#f59e0b' };
+  const handleOpenDrawer = () => { addLog(`Касса: Денежный ящик открыт (${loggedInBarista})`); };
+  const handleAddExpense = (e) => { e.preventDefault(); if (expText && expAmount) { setExpenses([{ id: Date.now(), text: expText, category: expCategory, amount: Number(expAmount), date: new Date().toISOString() }, ...expenses]); setExpText(''); setExpAmount(''); addLog(`Финансы: Расход ${expAmount}₽ (${expCategory})`); } };
   
-  const baristaEfficiency = useMemo(() => { 
-    const bStats = {}; (orders || []).forEach(order => { if (order.status === 'Отменен') return; const b = order.barista || 'Неизвестно'; if (!bStats[b]) bStats[b] = { count: 0, revenue: 0 }; bStats[b].count += 1; bStats[b].revenue += (order.total || 0); }); 
-    return Object.entries(bStats).map(([name, data]) => ({ name, ...data, avg: data.count > 0 ? Math.round(data.revenue / data.count) : 0 })).sort((a, b) => b.revenue - a.revenue); 
-  }, [orders]);
+  const handleAddDeliveryRevenue = (amount, service) => {
+    setOrders([{ id: Date.now(), items: [{ name: `Заказ ${service}`, price: amount, qty: 1 }], total: amount, status: 'Готов', time: new Date().toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' }), barista: loggedInBarista || 'Система', source: service }, ...orders]);
+    addLog(`Доставка: Принят заказ ${service} на ${amount}₽`);
+  };
+
+  const handleUpdateSchedule = (newSched) => { setSchedule(newSched); addLog(`Команда: Обновлен график`); };
+
+  const handleCloseShift = (data) => {
+    if (window.confirm('Закрыть смену? Это обнулит текущие заказы и сохранит выручку в архив.')) {
+      const shiftData = { id: Date.now(), date: new Date().toLocaleDateString(), barista: loggedInBarista, cash: data.cash, card: data.card, total: data.total, discrepancy: data.diff };
+      setShiftArchive([shiftData, ...shiftArchive]);
+      setOrders([]);
+      setCurrentRole(null);
+      setLoggedInBarista(null);
+      addLog(`Смена: Закрыта (${shiftData.total}₽)`);
+      alert(`Смена закрыта. Выручка: ${shiftData.total}₽. Расхождение: ${shiftData.discrepancy}₽`);
+    }
+  };
+
+  const sendSmsToClient = (phone, msg) => {
+    alert(`SMS отправлено на ${phone}:\n"${msg}"`);
+    addLog(`CRM: SMS для ${phone}`);
+  };
+
+  const handleRateBarista = (baristaName, rating) => {
+    const bStats = { ...baristaStats };
+    if (!bStats[baristaName]) bStats[baristaName] = { orders: 0, revenue: 0, rating: 5, reviews: 0 };
+    const currentTotal = bStats[baristaName].rating * bStats[baristaName].reviews;
+    bStats[baristaName].reviews += 1;
+    bStats[baristaName].rating = ((currentTotal + rating) / bStats[baristaName].reviews).toFixed(1);
+    setBaristaStats(bStats);
+  };
+
+  const handleApproveProcurement = (item, orderQty, cost) => {
+    let updatedInv = [...ingredients];
+    const idx = updatedInv.findIndex(i => i.id === item.id);
+    if (idx > -1) {
+      updatedInv[idx] = { ...updatedInv[idx], qty: updatedInv[idx].qty + orderQty };
+    }
+    setIngredients(updatedInv);
+    setExpenses([{ id: Date.now(), text: `Закупка: ${item.name}`, category: 'Закупка', amount: cost, date: new Date().toISOString() }, ...expenses]);
+    addLog(`Склад: Авто-закупка ${item.name}`);
+  };
+
+  const validOrders = orders.filter(o => o.status !== 'Отменен');
+  const currentRevenue = validOrders.reduce((sum, o) => sum + o.total, 0);
+  const totalManualExpenses = expenses.reduce((sum, e) => sum + e.amount, 0);
   
-  const hourlyHeatmap = useMemo(() => { 
-    // Расширяем сетку графика до 23:00 (теперь 16 столбцов)
-    const hours = Array.from({length: 16}, (_, i) => i + 8); 
-    const counts = {}; hours.forEach(h => counts[h] = 0); 
-    
-    (orders || []).forEach(o => { 
-      if (o.status !== 'Отменен' && o.time) { 
-        let h = parseInt(o.time.split(':')[0]); 
-        
-        // Если тестируем глубокой ночью (с 00:00 до 07:00), 
-        // временно записываем этот заказ в крайний правый столбец (23:00), 
-        // чтобы он не потерялся на графике
-        if (h < 8) h = 23; 
-        
-        if (!isNaN(h) && counts[h] !== undefined) counts[h]++; 
-      } 
-    }); 
-    
-    const maxOrders = Math.max(...Object.values(counts), 1); 
-    return hours.map(h => ({ hour: `${h}:00`, count: counts[h], intensity: counts[h] / maxOrders })); 
-  }, [orders]);
+  let costOfGoods = 0;
+  validOrders.forEach(o => {
+    o.items.forEach(item => {
+      if (item.recipe) {
+        item.recipe.forEach(req => {
+          const ing = ingredients.find(i => String(i.id) === String(req.ingredientId));
+          if (ing && ing.qty > 0) { costOfGoods += (ing.price / ing.qty) * req.amount * item.qty; }
+        });
+      }
+    });
+  });
+  
+  const currentNetProfit = currentRevenue - costOfGoods - totalManualExpenses;
 
-  const avgSpeedText = useMemo(() => { 
-    const completed = (orders || []).filter(o => o.status === 'Готово' && o.duration !== undefined); if (completed.length === 0) return 'Нет данных'; 
-    const avgSec = Math.floor(completed.reduce((sum, o) => sum + (o.duration || 0), 0) / completed.length); const m = Math.floor(avgSec / 60); const s = avgSec % 60; return `${m > 0 ? m + ' мин ' : ''}${s} сек`; 
-  }, [orders]);
+  const categoryStats = validOrders.reduce((acc, o) => {
+    o.items.forEach(item => { const cat = item.category || 'Другое'; acc[cat] = (acc[cat] || 0) + (item.price * item.qty); });
+    return acc;
+  }, {});
 
-  const aiTips = useMemo(() => {
-    const tips = [];
-    tips.push({ icon: weather.condition, text: `🏙️ Погода в г. ${city}: ${weather.temp}. ${weather.trend}` });
-    if (allLowStock.length > 0) { tips.push({ icon: '📦', text: `Критичные остатки: ${allLowStock.map(i=>i.name).join(', ')}. Авто-закупка в панели Управляющего поможет быстро пополнить склад.` }); } else { tips.push({ icon: '✅', text: `Склад в норме. Все ключевые ингредиенты в наличии.` }); }
-    if (baristaEfficiency.length > 1 && baristaEfficiency[0] && baristaEfficiency[0].avg > 0) { const top = baristaEfficiency[0]; const second = baristaEfficiency[1]; if (top.avg - second.avg > 30) { tips.push({ icon: '👨‍🍳', text: `${top.name} продает лучше (${top.avg}₽ средний чек против ${second.avg}₽ у ${second.name}). Попросите ${second.name} активнее предлагать десерты!` }); } else { tips.push({ icon: '🤝', text: `Команда работает отлично. Средний чек у бариста почти одинаковый.` }); } }
-    if (hourlyHeatmap && hourlyHeatmap.length > 0) { const peak = [...hourlyHeatmap].sort((a,b)=>b.count - a.count)[0]; if (peak && peak.count > 0) { tips.push({ icon: '🔥', text: `Самый загруженный час: ${peak.hour}. Убедитесь, что в это время на смене работает опытный бариста.` }); } }
-    return tips;
-  }, [allLowStock, baristaEfficiency, hourlyHeatmap, weather, city]);
+  const catColors = { 'Кофе': '#3b82f6', 'Чай': '#10b981', 'Еда': '#f59e0b', 'Десерты': '#ec4899', 'Другое': '#94a3b8' };
+
+  const topSales = Object.entries(validOrders.reduce((acc, o) => {
+    o.items.forEach(item => { acc[item.name] = (acc[item.name] || 0) + item.qty; });
+    return acc;
+  }, {})).sort((a, b) => b[1] - a[1]).slice(0, 5);
+
+  const allLowStock = ingredients.filter(item => item.qty <= item.minQty);
+
+  const hourlyHeatmap = Array(12).fill(0);
+  validOrders.forEach(o => {
+    const hour = parseInt(o.time.split(':')[0]);
+    if (hour >= 8 && hour <= 19) hourlyHeatmap[hour - 8]++;
+  });
+
+  const stats = [
+    { label: 'Выручка сегодня', value: `${currentRevenue} ₽`, trend: '+12%', color: '#10b981' },
+    { label: 'Заказов', value: validOrders.length, trend: '+5%', color: '#3b82f6' },
+    { label: 'Средний чек', value: validOrders.length ? `${Math.round(currentRevenue / validOrders.length)} ₽` : '0 ₽', trend: '+2%', color: '#f59e0b' },
+    { label: 'Гостей в базе', value: Object.keys(clients).length, trend: '+1', color: '#ec4899' }
+  ];
 
   return {
-    appData, currentRole, setCurrentRole, isDarkMode, setIsDarkMode, fileInputRef,
-    pinModal, setPinModal, pinInput, setPinInput, pinError, PIN_CODES,
-    currentTime, lastActiveDate, stats, orders, expenses, expText, setExpText, expAmount, setExpAmount, expCategory, setExpCategory,
-    ingredients, menuItems, stopList, clients, salarySettings, baristas, setBaristas, baristaPins, setBaristaPins, baristaStats, setBaristaStats, loggedInBarista,
-    schedule, shiftArchive, securityAlerts, logs, isLoaded, promocodes, setPromocodes, cashbackPercent, setCashbackPercent, weather,
-    showTelegramModal, setShowTelegramModal, showProcurementModal, setShowProcurementModal, showArchiveModal, setShowArchiveModal,
-    handleHardReset, handleUpdateSchedule, handleAddExpense, topSales, categoryStats, catColors, baristaEfficiency, hourlyHeatmap, avgSpeedText,
-    addLog, triggerSecurityAlert, handleRoleRequest, handlePinSubmit, cancelPin, handleAddMenuItem, handleEditMenuItem, handleDeleteMenuItem, handleUpdateInventory, handleToggleStopList,
-    handleCreateOrder, handleCompleteOrder, handleCancelOrder, handleOpenDrawer, handleCloseShift, handleBackup, handleImport,
-    currentRevenue, currentNetProfit, totalManualExpenses, costOfGoods, activeOrdersCount, allLowStock, sendSmsToClient, dateStr, timeStr, aiTips,
-    handleRateBarista, handleSaveInventory, handleWriteOff, handleAddDeliveryRevenue, handleApproveProcurement
+    appData, isDarkMode, setIsDarkMode, currentRole, setCurrentRole,
+    pinModal, setPinModal, pinInput, setPinInput,
+    menuItems, orders, ingredients, expenses, logs, schedule, clients, baristas, setBaristas,
+    baristaPins, setBaristaPins, baristaStats, setBaristaStats, baristaEfficiency,
+    salarySettings, promocodes, setPromocodes, cashbackPercent, setCashbackPercent, stopList, shiftArchive,
+    expText, setExpText, expCategory, setExpCategory, expAmount, setExpAmount,
+    showTelegramModal, setShowTelegramModal, showArchiveModal, setShowArchiveModal, showProcurementModal, setShowProcurementModal,
+    loggedInBarista, dateStr, timeStr,
+    handleBackup, handleHardReset, handleRoleRequest, handlePinSubmit, cancelPin,
+    handleAddMenuItem, handleEditMenuItem, handleDeleteMenuItem, handleUpdateInventory, handleToggleStopList,
+    handleSaveInventory, handleWriteOff, handleCreateOrder, handleCompleteOrder, handleCancelOrder,
+    handleOpenDrawer, handleAddExpense, handleAddDeliveryRevenue, handleUpdateSchedule, handleCloseShift,
+    sendSmsToClient, handleRateBarista, handleApproveProcurement,
+    currentRevenue, totalManualExpenses, costOfGoods, currentNetProfit, categoryStats, catColors, topSales, allLowStock, hourlyHeatmap, stats
   };
 };
