@@ -57,12 +57,10 @@ const MenuSettingsModule = ({ menuItems, onAddMenuItem, onEditMenuItem, onDelete
     }
   };
 
-  // 🚀 МАГИЯ: Учим админку понимать те же умные иконки, что и клиенты
+  // 🚀 УМНЫЙ ПОДБОРЩИК ИКОНОК (Диктаторский режим - игнорирует старую базу)
   const getSmartIconDisplay = (item) => {
-    if (item.icon) return item.icon; // Если иконка сохранена в базе, используем её
-    
-    // Если по какой-то причине её нет в базе (старые товары), подбираем на лету
     const text = ((item.name || '') + ' ' + (item.category || '')).toLowerCase();
+    
     if (text.includes('круассан')) return '🥐';
     if (text.includes('ролл') || text.includes('рол ') || text.includes('шаурма') || text.includes('wrap') || text.includes('врап')) return '🌯';
     if (text.includes('сэндвич') || text.includes('сендвич') || text.includes('панини') || text.includes('тост')) return '🥪';
@@ -121,7 +119,7 @@ const MenuSettingsModule = ({ menuItems, onAddMenuItem, onEditMenuItem, onDelete
             <div>
               <div style={{ color: 'var(--text-main)', fontWeight: '600', fontSize: '14px', display: 'flex', alignItems: 'center', gap: '6px' }}>
                 {item.name} 
-                {/* 🚀 ВЫВОДИМ УМНУЮ ИКОНКУ ВМЕСТО СТАРОЙ ЛОГИКИ */}
+                {/* 🚀 ВЫВОДИМ УМНУЮ ИКОНКУ */}
                 <span title={item.category || 'Неизвестно'}>{getSmartIconDisplay(item)}</span>
               </div>
               <div style={{ color: 'var(--text-muted)', fontSize: '13px', display: 'flex', flexDirection: 'column', gap: '4px', marginTop: '6px' }}>

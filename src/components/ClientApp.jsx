@@ -55,10 +55,10 @@ const ClientApp = ({ appData, clients = {}, menuItems = [], onClose }) => {
 
   // 🚀 ОБНОВЛЕННАЯ МАГИЯ: Умный подборщик иконок v2.0
   const getSmartIcon = (item) => {
-    if (item.icon) return item.icon; 
-    
-    // Склеиваем название и категорию, чтобы искать везде
-    const text = ((item.name || '') + ' ' + (item.category || '')).toLowerCase();
+    // Убрали проверку старой иконки
+    const name = (item.name || '').toLowerCase();
+    const cat = (item.category || '').toLowerCase();
+    const text = name + ' ' + cat;
 
     // Сначала ищем конкретные названия продуктов (чтобы категория не перебивала)
     if (text.includes('круассан')) return '🥐';
