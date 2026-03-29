@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 
 const ClientApp = ({ appData, clients = {}, onClose }) => {
   const [showSplash, setShowSplash] = useState(true);
-  const [activeTab, setActiveTab] = useState('card'); // Вернул фокус на карту лояльности при старте
+  const [activeTab, setActiveTab] = useState('card');
   
   const [isDarkMode, setIsDarkMode] = useState(false);
   
@@ -211,7 +211,6 @@ const ClientApp = ({ appData, clients = {}, onClose }) => {
             </div>
           </div>
 
-          {/* 🚀 ВОТ ОНА — НАША ВЕРНУВШАЯСЯ КАРТА ЛОЯЛЬНОСТИ! */}
           {activeTab === 'card' && (
             <>
               {/* 💳 КАРТА ЛОЯЛЬНОСТИ */}
@@ -355,12 +354,12 @@ const ClientApp = ({ appData, clients = {}, onClose }) => {
         </div>
       )}
 
-      {/* 🛒 ПЛАВАЮЩАЯ КНОПКА КОРЗИНЫ (Открывает шторку) */}
+      {/* 🛒 ПЛАВАЮЩАЯ КНОПКА КОРЗИНЫ */}
       {!showSplash && cartItemsCount > 0 && activeTab === 'menu' && !isCartOpen && (
         <div 
           onClick={() => setIsCartOpen(true)}
           style={{ 
-            position: 'fixed', bottom: '75px', left: '20px', right: '20px', 
+            position: 'fixed', bottom: '70px', left: '20px', right: '20px', 
             backgroundColor: '#10b981', 
             borderRadius: '16px', 
             padding: '16px 20px', 
@@ -387,16 +386,14 @@ const ClientApp = ({ appData, clients = {}, onClose }) => {
         </div>
       )}
 
-      {/* 🚀 МОДАЛЬНОЕ ОКНО ОФОРМЛЕНИЯ ЗАКАЗА (ШТОРКА) */}
+      {/* 🚀 МОДАЛЬНОЕ ОКНО ОФОРМЛЕНИЯ ЗАКАЗА */}
       {isCartOpen && (
         <>
-          {/* Темный фон-оверлей */}
           <div 
             onClick={() => setIsCartOpen(false)}
             style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'var(--overlay-bg)', zIndex: 1000, animation: 'fadeInOverlay 0.3s forwards', backdropFilter: 'blur(4px)' }} 
           />
           
-          {/* Сама шторка */}
           <div style={{ 
             position: 'fixed', bottom: 0, left: 0, right: 0, 
             backgroundColor: 'var(--drawer-bg)', 
@@ -412,7 +409,6 @@ const ClientApp = ({ appData, clients = {}, onClose }) => {
               <button onClick={() => setIsCartOpen(false)} style={{ background: 'var(--icon-bg)', border: 'none', width: '36px', height: '36px', borderRadius: '50%', fontSize: '18px', cursor: 'pointer', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>✕</button>
             </div>
 
-            {/* Список выбранных товаров */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '24px' }}>
               {Object.entries(cart).map(([id, qty]) => {
                 const item = mockMenu.find(m => m.id === parseInt(id));
@@ -436,7 +432,6 @@ const ClientApp = ({ appData, clients = {}, onClose }) => {
               })}
             </div>
 
-            {/* Выбор времени */}
             <div style={{ marginBottom: '32px' }}>
               <div style={{ fontSize: '14px', fontWeight: 'bold', color: 'var(--text-muted)', marginBottom: '12px', textTransform: 'uppercase', letterSpacing: '1px' }}>Время готовности</div>
               <div style={{ display: 'flex', gap: '12px' }}>
@@ -455,7 +450,6 @@ const ClientApp = ({ appData, clients = {}, onClose }) => {
               </div>
             </div>
 
-            {/* Итого и кнопка заказа */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
               <span style={{ fontSize: '16px', color: 'var(--text-muted)', fontWeight: '600' }}>Итого к оплате:</span>
               <span style={{ fontSize: '28px', fontWeight: '900', color: 'var(--text-main)' }}>{cartTotal} ₽</span>
@@ -471,14 +465,18 @@ const ClientApp = ({ appData, clients = {}, onClose }) => {
         </>
       )}
 
-      {/* 🚀 📱 НИЖНЯЯ ПАНЕЛЬ С ЖЕСТКОЙ ВЫСОТОЙ (55px) */}
+      {/* 🚀 БРОНЕБОЙНО-ТОНКАЯ НИЖНЯЯ ПАНЕЛЬ */}
       {!showSplash && (
         <div style={{ 
           position: 'fixed', 
           bottom: 0, 
           left: 0, 
           right: 0, 
-          height: '55px', 
+          height: '50px', 
+          minHeight: '50px',
+          maxHeight: '50px',
+          boxSizing: 'border-box',
+          overflow: 'hidden',
           backgroundColor: 'var(--nav-bg)', 
           backdropFilter: 'blur(20px)', 
           WebkitBackdropFilter: 'blur(20px)', 
@@ -488,8 +486,8 @@ const ClientApp = ({ appData, clients = {}, onClose }) => {
           boxShadow: '0 -4px 20px rgba(0,0,0,0.1)', 
           zIndex: 100, 
           borderTop: '1px solid var(--border-color)',
-          padding: '0', 
-          margin: '0'
+          padding: 0, 
+          margin: 0
         }}>
           {[
             { id: 'card', label: 'Лояльность', icon: '💳' },
@@ -503,7 +501,7 @@ const ClientApp = ({ appData, clients = {}, onClose }) => {
                 onClick={() => setActiveTab(tab.id)} 
                 style={{ 
                   flex: 1, 
-                  height: '55px', 
+                  height: '100%', 
                   backgroundColor: 'transparent', 
                   color: isActive ? '#3b82f6' : 'var(--text-muted)', 
                   border: 'none', 
@@ -514,18 +512,20 @@ const ClientApp = ({ appData, clients = {}, onClose }) => {
                   gap: '2px', 
                   cursor: 'pointer',
                   padding: 0,
-                  margin: 0
+                  margin: 0,
+                  boxSizing: 'border-box'
                 }}
               >
                 <span style={{ 
                   fontSize: '20px', 
                   transform: isActive ? 'scale(1.1)' : 'scale(1)', 
                   transition: '0.2s',
-                  textShadow: isActive ? '0 0 10px rgba(59, 130, 246, 0.5)' : 'none'
+                  textShadow: isActive ? '0 0 10px rgba(59, 130, 246, 0.5)' : 'none',
+                  lineHeight: '1'
                 }}>
                   {tab.icon}
                 </span>
-                <span style={{ fontSize: '9px', fontWeight: isActive ? '700' : '500', letterSpacing: '0.5px' }}>
+                <span style={{ fontSize: '9px', fontWeight: isActive ? '700' : '500', letterSpacing: '0.5px', lineHeight: '1' }}>
                   {tab.label}
                 </span>
               </button>
