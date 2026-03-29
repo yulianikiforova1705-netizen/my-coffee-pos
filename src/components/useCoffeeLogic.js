@@ -37,14 +37,13 @@ export const useCoffeeLogic = () => {
   const [dateStr, setDateStr] = useState('');
   const [timeStr, setTimeStr] = useState('');
 
-  // === 🚀 МАГИЯ: Умный подборщик иконок ===
-  const getSmartIcon = (name, category, existingIcon) => {
-    if (existingIcon && existingIcon !== '☕' && existingIcon !== '🥐') return existingIcon; 
-    
+// === 🚀 МАГИЯ: Умный подборщик иконок (Диктаторский режим) ===
+  const getSmartIcon = (name, category) => {
     const text = ((name || '') + ' ' + (category || '')).toLowerCase();
 
+    // Сначала ищем конкретные названия продуктов
     if (text.includes('круассан')) return '🥐';
-    if (text.includes('ролл') || text.includes('шаурма') || text.includes('wrap') || text.includes('врап')) return '🌯';
+    if (text.includes('ролл') || text.includes('рол ') || text.includes('шаурма') || text.includes('wrap') || text.includes('врап')) return '🌯';
     if (text.includes('сэндвич') || text.includes('сендвич') || text.includes('панини') || text.includes('тост')) return '🥪';
     if (text.includes('сырник') || text.includes('блин') || text.includes('завтрак') || text.includes('омлет') || text.includes('яичниц') || text.includes('каша')) return '🍳';
     if (text.includes('печенье') || text.includes('кукис') || text.includes('макарон')) return '🍪';
@@ -53,10 +52,12 @@ export const useCoffeeLogic = () => {
     if (text.includes('салат') || text.includes('боул')) return '🥗';
     if (text.includes('суп')) return '🥣';
     
+    // Затем напитки
     if (text.includes('матча') || text.includes('чай')) return '🍵';
     if (text.includes('лимонад') || text.includes('айс') || text.includes('сок') || text.includes('фреш') || text.includes('смузи') || text.includes('вода') || text.includes('колд')) return '🥤';
     if (text.includes('какао') || text.includes('шоколад')) return '☕';
 
+    // Общие категории, если ничего не подошло
     if (text.includes('еда') || text.includes('перекус')) return '🥪';
     
     return '☕'; 
