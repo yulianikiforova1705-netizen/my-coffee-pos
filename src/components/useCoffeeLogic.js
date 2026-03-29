@@ -143,7 +143,6 @@ export const useCoffeeLogic = () => {
     });
   };
 
-  // 🚀 НОВАЯ ФУНКЦИЯ ДЛЯ СИНХРОНИЗАЦИИ МЕНЮ С FIREBASE
   const updateMenu = (updater) => {
     setMenuItems(prev => {
       const next = typeof updater === 'function' ? updater(prev) : updater;
@@ -165,7 +164,6 @@ export const useCoffeeLogic = () => {
       const unsubIngredients = onSnapshot(doc(db, 'system', 'ingredients'), (docSnap) => {
         if (docSnap.exists() && docSnap.data().items) setIngredients(docSnap.data().items);
       });
-      // 🚀 СЛУШАЕМ МЕНЮ ИЗ FIREBASE ДЛЯ СИНХРОНИЗАЦИИ НА ТЕЛЕФОНЕ
       const unsubMenu = onSnapshot(doc(db, 'system', 'menu'), (docSnap) => {
         if (docSnap.exists() && docSnap.data().items) setMenuItems(docSnap.data().items);
       });
@@ -278,7 +276,6 @@ export const useCoffeeLogic = () => {
         return i;
       });
     });
-    // 🚀 ТЕПЕРЬ СОХРАНЯЕТСЯ И В ОБЛАКО ТОЖЕ
     updateMenu(prevMenu => {
       return prevMenu.map(m => {
         if (m.inventory !== undefined && m.inventory <= 5) {
@@ -324,7 +321,6 @@ export const useCoffeeLogic = () => {
   };
   const cancelPin = () => setPinModal({ isOpen: false, targetRole: '', targetBarista: '' });
 
-  // 🚀 ТЕПЕРЬ СОХРАНЯЕТСЯ И В ОБЛАКО ТОЖЕ
   const handleAddMenuItem = (newItem) => { 
     const newId = menuItems.length > 0 ? Math.max(...menuItems.map(i => i.id)) + 1 : 1; 
     const itemWithIcon = { ...newItem, id: newId, icon: getSmartIcon(newItem.name, newItem.category) };
@@ -338,7 +334,6 @@ export const useCoffeeLogic = () => {
   };
   const handleDeleteMenuItem = (id) => { updateMenu(menuItems.filter(i => i.id !== id)); setStopList(stopList.filter(i => i !== id)); };
   const handleUpdateInventory = (itemId, newAmount) => { updateMenu(menuItems.map(i => i.id === itemId ? { ...i, inventory: newAmount } : i)); };
-  
   const handleToggleStopList = (itemId) => setStopList(prev => prev.includes(itemId) ? prev.filter(id => id !== itemId) : [...prev, itemId]);
 
   const handleCreateOrder = (orderDescription, totalSum, phone = '', pointsSpent = 0, tips = 0, activeBarista = 'Маша', orderType = 'В зале') => {
@@ -394,12 +389,34 @@ export const useCoffeeLogic = () => {
     setOrders(updatedOrders);
     const canceledOrder = updatedOrders.find(o => o.id === orderId);
     if(canceledOrder) { setDoc(doc(db, 'orders', orderId.toString()), canceledOrder).catch(e => console.error(e)); }
-    
     sendTelegramMessage(`❌ <b>ОТМЕНА ЗАКАЗА</b>\n\nБыл отменен заказ: ${orderId}\nБариста: ${loggedInBarista}\n🕒 ${new Date().toLocaleTimeString('ru-RU')}`);
   };
 
   const handleOpenDrawer = (baristaName) => triggerSecurityAlert(`Касса открыта без продажи (${baristaName})`); 
-  const handleCloseShift = (shiftData) => { setShiftArchive([{ id: Date.now(), date: new Date().toLocaleString(), revenue: shiftData.revenue, ordersCount: shiftData.ordersCount, salary: shiftData.salary, tips: shiftData.tips }, ...shiftArchive]); addLog(`🗄️ Смена закрыта. Выручка: ${shiftData.revenue} ₽`, 'success'); };
+
+  // 🚀 ИСПРАВЛЕНИЕ: ПРАВИЛЬНОЕ ЗАКРЫТИЕ СМЕНЫ С ОБНУЛЕНИЕМ СТАТИСТИКИ
+  const handleCloseShift = (shiftData) => { 
+    const currentOrdersCount = orders.filter(o => o.status !== 'Отменен').length;
+    setShiftArchive([{ 
+      id: Date.now(), 
+      date: new Date().toLocaleString(), 
+      revenue: shiftData.revenue, 
+      ordersCount: currentOrdersCount, 
+      salary: shiftData.salary, 
+      tips: shiftData.tips 
+    }, ...shiftArchive]); 
+    
+    setOrders([]);
+    setStats([
+      { id: 1, label: 'Выручка за день', value: '0 ₽', rawValue: 0, change: '0%', color: '#2563eb' },
+      { id: 2, label: 'Продано товаров', value: '0 шт', rawValue: 0, change: '0%', color: '#10b981' },
+      { id: 3, label: 'Средний чек', value: '0 ₽', rawValue: 0, change: '0%', color: '#f59e0b' },
+      { id: 4, label: 'Чистая прибыль', value: '0 ₽', rawValue: 0, change: '0%', color: '#8b5cf6' },
+    ]);
+    setExpenses([]);
+    
+    addLog(`🗄️ Смена закрыта. Выручка сохранена в архив.`, 'success'); 
+  };
 
   const handleBackup = () => {
     const dataStr = JSON.stringify({ appData, city, stats, orders, stopList, menuItems, clients, salarySettings, baristaStats, shiftArchive, securityAlerts, logs, expenses, schedule, lastActiveDate, promocodes, cashbackPercent, ingredients, baristas, baristaPins }, null, 2);
@@ -424,6 +441,49 @@ export const useCoffeeLogic = () => {
 
   const dateStr = currentTime.toLocaleDateString('ru-RU', { weekday: 'long', day: 'numeric', month: 'short' });
   const timeStr = currentTime.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
+
+  // 🚀 УМНАЯ СТАТИСТИКА: Считаем средний чек и проценты к прошлой смене
+  const displayStats = useMemo(() => {
+    const lastShift = shiftArchive.length > 0 ? shiftArchive[0] : null;
+
+    return stats.map(stat => {
+      let updatedStat = { ...stat };
+      
+      // Считаем динамический средний чек
+      if (stat.id === 3) {
+        const rev = stats.find(s => s.id === 1)?.rawValue || 0;
+        const validOrders = orders.filter(o => o.status !== 'Отменен');
+        const avg = validOrders.length > 0 ? Math.round(rev / validOrders.length) : 0;
+        updatedStat.rawValue = avg;
+        updatedStat.value = `${avg.toLocaleString('ru-RU')} ₽`;
+      }
+
+      // Считаем проценты роста к прошлой смене
+      if (lastShift) {
+        let percent = 0;
+        if (stat.id === 1) { 
+          const lastRev = lastShift.revenue || 1; 
+          percent = Math.round(((updatedStat.rawValue - lastRev) / lastRev) * 100);
+        } else if (stat.id === 2) { 
+          const lastItems = (lastShift.ordersCount || 1) * 1.5; 
+          percent = Math.round(((updatedStat.rawValue - lastItems) / lastItems) * 100);
+        } else if (stat.id === 3) { 
+          const lastAvg = lastShift.ordersCount > 0 ? Math.round((lastShift.revenue || 0) / lastShift.ordersCount) : 1;
+          percent = Math.round(((updatedStat.rawValue - lastAvg) / lastAvg) * 100);
+        } else if (stat.id === 4) { 
+          const lastProfit = (lastShift.revenue || 1) * 0.6;
+          percent = Math.round(((updatedStat.rawValue - lastProfit) / lastProfit) * 100);
+        }
+        
+        if (percent > 999) percent = 999; // Защита от гигантских цифр
+        updatedStat.change = `${percent > 0 ? '+' : ''}${percent}%`;
+      } else {
+        updatedStat.change = updatedStat.rawValue > 0 ? '+100%' : '0%';
+      }
+
+      return updatedStat;
+    });
+  }, [stats, orders, shiftArchive]);
 
   const topSales = useMemo(() => { const counts = {}; (orders || []).forEach(order => { if (order.status === 'Отменен') return; (order.item || '').split(' + ').forEach(itemName => counts[itemName] = (counts[itemName] || 0) + 1); }); return Object.entries(counts).sort((a, b) => b[1] - a[1]).slice(0, 3); }, [orders]); 
   const categoryStats = useMemo(() => { const statsObj = {}; let totalRevenue = 0; if (!(orders || []).filter(o => o.status !== 'Отменен').length) return { stats: { 'Нет продаж': 0 }, total: 0 }; (orders || []).forEach(order => { if (order.status === 'Отменен') return; (order.item || '').split(' + ').forEach(itemName => { const menuItem = (menuItems || []).find(m => m.name === itemName); const cat = menuItem?.category || (menuItem?.isDessert ? 'Десерты' : 'Кофе'); const price = menuItem?.price || 0; if (statsObj[cat] !== undefined) statsObj[cat] += price; else statsObj[cat] = price; totalRevenue += price; }); }); return { stats: statsObj, total: totalRevenue }; }, [orders, menuItems]);
@@ -465,7 +525,7 @@ export const useCoffeeLogic = () => {
   return {
     appData, currentRole, setCurrentRole, isDarkMode, setIsDarkMode, fileInputRef,
     pinModal, setPinModal, pinInput, setPinInput, pinError, PIN_CODES,
-    currentTime, lastActiveDate, stats, orders, expenses, expText, setExpText, expAmount, setExpAmount, expCategory, setExpCategory,
+    currentTime, lastActiveDate, stats: displayStats, orders, expenses, expText, setExpText, expAmount, setExpAmount, expCategory, setExpCategory,
     ingredients, menuItems, stopList, clients, salarySettings, baristas, setBaristas, baristaPins, setBaristaPins, baristaStats, setBaristaStats, loggedInBarista,
     schedule, shiftArchive, securityAlerts, logs, isLoaded, promocodes, setPromocodes, cashbackPercent, setCashbackPercent, weather,
     showTelegramModal, setShowTelegramModal, showProcurementModal, setShowProcurementModal, showArchiveModal, setShowArchiveModal,
