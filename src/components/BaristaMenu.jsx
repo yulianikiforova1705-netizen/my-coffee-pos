@@ -30,6 +30,7 @@ const BaristaMenu = ({
     
     if (text.includes('матча') || text.includes('чай')) return '🍵';
     if (text.includes('лимонад') || text.includes('айс') || text.includes('сок') || text.includes('фреш') || text.includes('смузи') || text.includes('вода') || text.includes('колд') || text.includes('раф')) return '🥤';
+  // 🚀 Добавили раф, латте, капучино в горячие напитки:
     if (text.includes('какао') || text.includes('шоколад') || text.includes('латте') || text.includes('капучино') || text.includes('эспрессо')) return '☕';
 
     if (text.includes('еда') || text.includes('перекус')) return '🥪';

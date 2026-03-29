@@ -94,6 +94,7 @@ export const useCoffeeLogic = () => {
     
     if (text.includes('матча') || text.includes('чай')) return '🍵';
     if (text.includes('лимонад') || text.includes('айс') || text.includes('сок') || text.includes('фреш') || text.includes('смузи') || text.includes('вода') || text.includes('колд')) return '🥤';
+   // 🚀 Добавили раф, латте, капучино в горячие напитки:
     if (text.includes('какао') || text.includes('шоколад')) return '☕';
 
     if (text.includes('еда') || text.includes('перекус')) return '🥪';
