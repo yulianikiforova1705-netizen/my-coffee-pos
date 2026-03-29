@@ -54,7 +54,12 @@ const BaristaMenu = ({
               onMouseLeave={(e) => { if(!isStopped) e.currentTarget.style.transform = 'scale(1)'; }}
             >
               {isStopped && <div style={{ position: 'absolute', top: '-10px', right: '-10px', backgroundColor: '#ef4444', color: 'white', fontSize: '10px', fontWeight: 'bold', padding: '4px 8px', borderRadius: '8px', zIndex: 10 }}>СТОП</div>}
-              <div style={{ fontSize: isMobile ? '40px' : '36px', textAlign: 'center', margin: '4px 0' }}>{getProductIcon(item.name)}</div>
+              
+              {/* 🚀 ИСПРАВЛЕНИЕ: Берем иконку напрямую из товара (которую мы сохранили в базу) */}
+              <div style={{ fontSize: isMobile ? '40px' : '36px', textAlign: 'center', margin: '4px 0' }}>
+                {item.icon || getProductIcon(item.name, item.category)}
+              </div>
+              
               <div style={{ textAlign: 'center' }}>
                 <div style={{ fontWeight: 'bold', color: 'var(--text-main)', fontSize: '14px', lineHeight: '1.2', marginBottom: '6px' }}>{item.name}</div>
                 <div style={{ color: '#10b981', fontWeight: '900', fontSize: '16px' }}>{item.price} ₽</div>
