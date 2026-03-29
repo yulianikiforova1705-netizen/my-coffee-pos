@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 
-const ClientApp = ({ appData, clients = {}, onClose }) => {
+// 🚀 ДОБАВИЛИ menuItems = [] В СКОБКИ СЮДА:
+const ClientApp = ({ appData, clients = {}, menuItems = [], onClose }) => {
   const [showSplash, setShowSplash] = useState(true);
   const [activeTab, setActiveTab] = useState('menu'); 
   
@@ -48,23 +49,20 @@ const ClientApp = ({ appData, clients = {}, onClose }) => {
   const nextLevelPoints = 5000;
   const progressToNextLevel = Math.min(((currentGuest.points % nextLevelPoints) / nextLevelPoints) * 100, 100);
 
-  // 🚀 МАГИЯ СИНХРОНИЗАЦИИ: Берем реальное меню из базы данных
-  // Если база вдруг пустая (например, при первом запуске), показываем тестовое меню
   const fallbackMenu = [
     { id: 991, name: 'Капучино', price: 250, category: 'Кофе', icon: '☕', desc: 'Классика с густой пенкой' },
     { id: 992, name: 'Круассан', price: 180, category: 'Выпечка', icon: '🥐', desc: 'Свежий и хрустящий' }
   ];
 
-  // Формируем финальное меню, добавляя иконки по умолчанию, если их нет в базе
-  const realMenu = (appData?.menuItems && appData.menuItems.length > 0) 
-    ? appData.menuItems.map(item => ({
+  // 🚀 ТЕПЕРЬ МЫ БЕРЕМ ДАННЫЕ НАПРЯМУЮ ИЗ menuItems
+  const realMenu = (menuItems && menuItems.length > 0) 
+    ? menuItems.map(item => ({
         ...item,
         icon: item.icon || (item.category === 'Выпечка' || item.category === 'Еда' ? '🥐' : '☕'),
         desc: item.desc || 'Отличный выбор'
       }))
     : fallbackMenu;
 
-  // 🚀 АВТОМАТИЧЕСКИЕ КАТЕГОРИИ: Собираем уникальные категории из реального меню
   const categories = ['Все', ...new Set(realMenu.map(item => item.category).filter(Boolean))];
   
   const filteredMenu = activeCategory === 'Все' 
@@ -239,7 +237,7 @@ const ClientApp = ({ appData, clients = {}, onClose }) => {
             </>
           )}
 
-          {/* 🚀 ДИНАМИЧЕСКИЙ ПРЕДЗАКАЗ */}
+          {/* ПРЕДЗАКАЗ */}
           {activeTab === 'menu' && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', animation: 'fadeIn 0.4s ease' }}>
               <div className="hide-scroll" style={{ display: 'flex', gap: '10px', overflowX: 'auto', paddingBottom: '5px', margin: '0 -20px', padding: '0 20px' }}>
@@ -249,11 +247,9 @@ const ClientApp = ({ appData, clients = {}, onClose }) => {
                   </button>
                 ))}
               </div>
-              
+
               {filteredMenu.length === 0 ? (
-                <div style={{ textAlign: 'center', padding: '40px 20px', color: 'var(--text-muted)' }}>
-                  В этой категории пока ничего нет 😔
-                </div>
+                <div style={{ textAlign: 'center', padding: '40px 20px', color: 'var(--text-muted)' }}>В этой категории пока ничего нет 😔</div>
               ) : (
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))', gap: '16px' }}>
                   {filteredMenu.map(item => {
@@ -394,7 +390,6 @@ const ClientApp = ({ appData, clients = {}, onClose }) => {
             </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-              
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingBottom: '16px', borderBottom: '1px solid var(--border-color)' }}>
                 <div>
                   <div style={{ fontSize: '16px', fontWeight: 'bold', color: 'var(--text-main)' }}>Темная тема</div>
@@ -423,7 +418,6 @@ const ClientApp = ({ appData, clients = {}, onClose }) => {
               <button onClick={() => alert('Функция удаления аккаунта требует подтверждения по SMS.')} style={{ width: '100%', padding: '16px', backgroundColor: 'rgba(239, 68, 68, 0.1)', color: '#ef4444', border: '1px solid rgba(239, 68, 68, 0.2)', borderRadius: '16px', fontSize: '16px', fontWeight: 'bold', cursor: 'pointer', marginTop: '10px' }}>
                 Удалить профиль
               </button>
-
             </div>
           </div>
         </>

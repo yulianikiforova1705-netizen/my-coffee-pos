@@ -106,6 +106,7 @@ const CoreModule = () => {
         <ClientApp 
           appData={logic.appData} 
           clients={logic.clients} 
+          menuItems={logic.menuItems} 
           onClose={() => logic.setCurrentRole(null)} 
         />
       ) : (
