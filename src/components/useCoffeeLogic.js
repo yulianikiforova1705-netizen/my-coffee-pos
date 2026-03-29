@@ -1,10 +1,21 @@
 import { useState, useEffect } from 'react';
-import initialData from './data.json';
+
+// 🚀 ЗАШИЛИ СТАРТОВЫЕ ДАННЫЕ ПРЯМО СЮДА (Vercel больше не будет ругаться)
+const initialData = {
+  menuItems: [
+    { id: 1, name: 'Капучино', price: 250, costPrice: 40, category: 'Кофе', inventory: 100, color: '#3b82f6', isCoffee: true },
+    { id: 2, name: 'Латте', price: 280, costPrice: 45, category: 'Кофе', inventory: 80, color: '#60a5fa', isCoffee: true },
+    { id: 3, name: 'Круассан', price: 180, costPrice: 50, category: 'Выпечка', inventory: 20, color: '#f59e0b', isDessert: true }
+  ],
+  ingredients: [
+    { id: 1, name: 'Кофе (зерно)', qty: 5, unit: 'кг', minQty: 2, price: 1200 },
+    { id: 2, name: 'Молоко', qty: 20, unit: 'л', minQty: 5, price: 80 }
+  ]
+};
 
 export const useCoffeeLogic = () => {
   const [appData, setAppData] = useState(initialData);
 
-  // === ВСЕ СОСТОЯНИЯ ===
   const [currentRole, setCurrentRole] = useState(null);
   const [pinModal, setPinModal] = useState({ isOpen: false, targetRole: null, targetBarista: null });
   const [pinInput, setPinInput] = useState('');
@@ -37,11 +48,10 @@ export const useCoffeeLogic = () => {
   const [dateStr, setDateStr] = useState('');
   const [timeStr, setTimeStr] = useState('');
 
-// === 🚀 МАГИЯ: Умный подборщик иконок (Диктаторский режим) ===
+  // 🚀 МАГИЯ ИКОНОК
   const getSmartIcon = (name, category) => {
     const text = ((name || '') + ' ' + (category || '')).toLowerCase();
 
-    // Сначала ищем конкретные названия продуктов
     if (text.includes('круассан')) return '🥐';
     if (text.includes('ролл') || text.includes('рол ') || text.includes('шаурма') || text.includes('wrap') || text.includes('врап')) return '🌯';
     if (text.includes('сэндвич') || text.includes('сендвич') || text.includes('панини') || text.includes('тост')) return '🥪';
@@ -52,12 +62,10 @@ export const useCoffeeLogic = () => {
     if (text.includes('салат') || text.includes('боул')) return '🥗';
     if (text.includes('суп')) return '🥣';
     
-    // Затем напитки
     if (text.includes('матча') || text.includes('чай')) return '🍵';
     if (text.includes('лимонад') || text.includes('айс') || text.includes('сок') || text.includes('фреш') || text.includes('смузи') || text.includes('вода') || text.includes('колд')) return '🥤';
     if (text.includes('какао') || text.includes('шоколад')) return '☕';
 
-    // Общие категории, если ничего не подошло
     if (text.includes('еда') || text.includes('перекус')) return '🥪';
     
     return '☕'; 
@@ -162,11 +170,11 @@ export const useCoffeeLogic = () => {
 
   const cancelPin = () => { setPinModal({ isOpen: false, targetRole: null, targetBarista: null }); setPinInput(''); };
 
-  // === 🚀 ИСПОЛЬЗУЕМ УМНЫЕ ИКОНКИ ПРИ СОЗДАНИИ/РЕДАКТИРОВАНИИ ТОВАРОВ ===
   const handleAddMenuItem = (newItem) => {
     const itemWithIcon = {
       ...newItem,
-      icon: getSmartIcon(newItem.name, newItem.category, newItem.icon)
+      id: Date.now(), // Убеждаемся, что ID уникальный
+      icon: getSmartIcon(newItem.name, newItem.category)
     };
     setMenuItems([...menuItems, itemWithIcon]);
     addLog(`Меню: Добавлен ${itemWithIcon.name}`);
@@ -175,7 +183,7 @@ export const useCoffeeLogic = () => {
   const handleEditMenuItem = (updatedItem) => {
     const itemWithIcon = {
       ...updatedItem,
-      icon: getSmartIcon(updatedItem.name, updatedItem.category, updatedItem.icon)
+      icon: getSmartIcon(updatedItem.name, updatedItem.category)
     };
     setMenuItems(menuItems.map(item => item.id === itemWithIcon.id ? itemWithIcon : item));
     addLog(`Меню: Обновлен ${itemWithIcon.name}`);
