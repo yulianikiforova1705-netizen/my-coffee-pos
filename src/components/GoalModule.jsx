@@ -5,7 +5,8 @@ const GoalModule = ({ currentRevenue, targetRevenue }) => {
   const isGoalReached = currentRevenue >= targetRevenue;
 
   const successColor = '#20c997'; 
-  const progressColor = '#a78bfa'; 
+  // 🚀 ИСПРАВЛЕНИЕ: Заменили бледный сиреневый на ваш фирменный ярко-синий!
+  const progressColor = '#3b82f6'; 
   
   const barColor = isGoalReached ? successColor : progressColor;
 
@@ -65,7 +66,6 @@ const GoalModule = ({ currentRevenue, targetRevenue }) => {
             boxShadow: '0 4px 6px var(--shadow-color)',
             transition: 'all 0.3s'
           }}>
-            {/* ИСПРАВЛЕНИЕ ЗДЕСЬ: Кофе теперь всегда кофейного цвета! */}
             <div style={{
               position: 'absolute',
               bottom: 0,
