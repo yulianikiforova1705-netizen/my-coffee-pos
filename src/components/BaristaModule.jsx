@@ -7,7 +7,7 @@ import { CustomerDisplayModal, ZReportModal } from './BaristaModals';
 import BaristaMenu from './BaristaMenu';
 import BaristaCart from './BaristaCart';
 import BaristaQueue from './BaristaQueue';
-import BaristaCabinet from './BaristaCabinet'; // 🚀 Вернули импорт кабинета
+import BaristaCabinet from './BaristaCabinet'; 
 
 const BaristaModule = ({
   onCloseShift, onNewOrder, onOpenDrawer, menuItems = [], stopList = [],
@@ -24,7 +24,6 @@ const BaristaModule = ({
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
   const [mobileView, setMobileView] = useState('menu'); 
 
-  // 🚀 Состояние для открытия кабинета
   const [showBaristaCabinet, setShowBaristaCabinet] = useState(false);
 
   useEffect(() => {
@@ -52,15 +51,27 @@ const BaristaModule = ({
 
   const activeOrders = orders.filter(o => o.status === 'В процессе');
 
-  const getProductIcon = (name) => {
-    if (name.includes('Капучино')) return '☕';
-    if (name.includes('Латте')) return '🥛';
-    if (name.includes('Эспрессо') || name.includes('Американо')) return '☕️';
-    if (name.includes('Флэт')) return '☕';
-    if (name.includes('Раф')) return '🥤';
-    if (name.includes('Круассан')) return '🥐';
-    if (name.includes('Сэндвич')) return '🥪';
-    return '🍽️';
+  // 🚀 ЗАМЕНЯЕМ СТАРУЮ ФУНКЦИЮ НА УМНОГО ПОДБОРЩИКА
+  const getProductIcon = (name, category) => {
+    const text = ((name || '') + ' ' + (category || '')).toLowerCase();
+    
+    if (text.includes('круассан')) return '🥐';
+    if (text.includes('ролл') || text.includes('рол ') || text.includes('шаурма') || text.includes('wrap') || text.includes('врап')) return '🌯';
+    if (text.includes('сэндвич') || text.includes('сендвич') || text.includes('панини') || text.includes('тост')) return '🥪';
+    if (text.includes('сырник') || text.includes('блин') || text.includes('завтрак') || text.includes('омлет') || text.includes('яичниц') || text.includes('каша')) return '🍳';
+    if (text.includes('печенье') || text.includes('кукис') || text.includes('макарон')) return '🍪';
+    if (text.includes('чизкейк') || text.includes('торт') || text.includes('пирож') || text.includes('эклер') || text.includes('десерт') || text.includes('сладк')) return '🍰';
+    if (text.includes('булоч') || text.includes('хлеб') || text.includes('выпеч')) return '🥐';
+    if (text.includes('салат') || text.includes('боул')) return '🥗';
+    if (text.includes('суп')) return '🥣';
+    
+    if (text.includes('матча') || text.includes('чай')) return '🍵';
+    if (text.includes('лимонад') || text.includes('айс') || text.includes('сок') || text.includes('фреш') || text.includes('смузи') || text.includes('вода') || text.includes('колд') || text.includes('раф')) return '🥤';
+    if (text.includes('какао') || text.includes('шоколад') || text.includes('латте') || text.includes('капучино') || text.includes('эспрессо')) return '☕';
+
+    if (text.includes('еда') || text.includes('перекус')) return '🥪';
+    
+    return '☕'; // По умолчанию кофе
   };
 
   const handleAddToCart = (item) => {
@@ -183,7 +194,6 @@ const BaristaModule = ({
         
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '20px' }}>
           
-          {/* 🚀 Теперь блок с именем кликабельный и открывает кабинет */}
           <div 
             onClick={() => setShowBaristaCabinet(true)}
             className="barista-profile-hover"
@@ -334,7 +344,6 @@ const BaristaModule = ({
         baristas={baristas} baristaStats={baristaStats} salarySettings={salarySettings} finishZReport={finishZReport}
       />
 
-      {/* 🚀 ВЕРНУЛИ КОМПОНЕНТ КАБИНЕТА В САМЫЙ НИЗ */}
       <BaristaCabinet 
         isOpen={showBaristaCabinet} 
         onClose={() => setShowBaristaCabinet(false)} 
