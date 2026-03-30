@@ -153,17 +153,33 @@ export const BaristaEfficiencyTableWidget = ({ baristaEfficiency = [], baristaSt
   </div>
 );
 
+// 🚀 ЗДЕСЬ ДОБАВЛЕН ABC-АНАЛИЗ
 export const SalesAnalyticsWidget = ({ categoryStats = { stats: {}, total: 0 }, catColors = {}, topSales = [] }) => {
   let currentOffset = 0;
+  
+  // Логика ABC-анализа
+  const sortedCategories = Object.entries(categoryStats.stats || {}).sort((a,b) => b[1] - a[1]);
+  let cumulativePercent = 0;
+  const abcAnalysis = sortedCategories.map(([cat, val]) => {
+    const percent = categoryStats.total === 0 ? 0 : (val / categoryStats.total) * 100;
+    cumulativePercent += percent;
+    let group = 'C'; let groupColor = '#ef4444'; let hint = 'Кандидат на вылет';
+    if (cumulativePercent <= 80) { group = 'A'; groupColor = '#10b981'; hint = 'Основа бизнеса'; }
+    else if (cumulativePercent <= 95) { group = 'B'; groupColor = '#f59e0b'; hint = 'Середнячок'; }
+    return { cat, val, percent: Math.round(percent), group, groupColor, hint };
+  });
+
   return (
     <div style={{ display: 'flex', gap: '24px', marginBottom: '24px', flexWrap: 'wrap', alignItems: 'stretch' }}>
-      <div style={{ flex: 1.5, minWidth: '300px', backgroundColor: 'var(--bg-card)', padding: '24px', borderRadius: '16px', boxShadow: '0 4px 6px -1px var(--shadow-color)', display: 'flex', flexDirection: 'column' }}>
-        <h2 style={{ margin: '0 0 16px 0', fontSize: '18px', color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '8px' }}>🍩 Доли продаж (ABC-анализ)</h2>
+      
+      {/* КЛАССИЧЕСКИЙ КРУГОВОЙ ГРАФИК */}
+      <div style={{ flex: 1, minWidth: '300px', backgroundColor: 'var(--bg-card)', padding: '24px', borderRadius: '16px', boxShadow: '0 4px 6px -1px var(--shadow-color)', display: 'flex', flexDirection: 'column' }}>
+        <h2 style={{ margin: '0 0 16px 0', fontSize: '18px', color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '8px' }}>🍩 Доли продаж</h2>
         <div style={{ display: 'flex', alignItems: 'center', gap: '24px', flexGrow: 1 }}>
           <div style={{ width: '120px', height: '120px', position: 'relative' }}>
             <svg viewBox="0 0 42 42" style={{ width: '100%', height: '100%', transform: 'rotate(-90deg)' }}>
               <circle cx="21" cy="21" r="15.9155" fill="transparent" stroke="var(--btn-bg)" strokeWidth="6" />
-              {Object.entries(categoryStats.stats || {}).map(([cat, val]) => {
+              {sortedCategories.map(([cat, val]) => {
                 const percent = categoryStats.total === 0 ? 0 : ((val || 0) / categoryStats.total) * 100;
                 if (percent === 0) return null; const dashArray = `${percent} ${100 - percent}`; const offset = 100 - currentOffset; currentOffset += percent;
                 return (<circle key={cat} cx="21" cy="21" r="15.9155" fill="transparent" stroke={catColors[cat] || '#000'} strokeWidth="6" strokeDasharray={dashArray} strokeDashoffset={offset} style={{ transition: 'stroke-dasharray 0.5s ease' }} />)
@@ -172,7 +188,7 @@ export const SalesAnalyticsWidget = ({ categoryStats = { stats: {}, total: 0 }, 
             <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', fontSize: '24px' }}>📊</div>
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', flexGrow: 1 }}>
-            {Object.entries(categoryStats.stats || {}).sort((a,b) => b[1] - a[1]).map(([cat, val]) => {
+            {sortedCategories.map(([cat, val]) => {
               const percent = categoryStats.total === 0 ? 0 : Math.round(((val || 0) / categoryStats.total) * 100);
               return (
                 <div key={cat} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '13px' }}>
@@ -185,27 +201,38 @@ export const SalesAnalyticsWidget = ({ categoryStats = { stats: {}, total: 0 }, 
         </div>
       </div>
       
-      <div style={{ flex: 1, minWidth: '220px', backgroundColor: 'var(--bg-card)', padding: '24px', borderRadius: '16px', boxShadow: '0 4px 6px -1px var(--shadow-color)', display: 'flex', flexDirection: 'column' }}>
-        <h2 style={{ margin: '0 0 16px 0', fontSize: '18px', color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '8px' }}>🏆 Топ продаж</h2>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', flexGrow: 1, justifyContent: 'center' }}>
-          {(!topSales || topSales.length === 0) ? <div style={{ color: 'var(--text-muted)', fontSize: '14px' }}>Нет данных</div> : 
-            topSales.map((item, idx) => (
-              <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingBottom: '8px', borderBottom: idx !== topSales.length - 1 ? '1px dashed var(--border-color)' : 'none' }}>
-                <span style={{ color: 'var(--text-main)', fontWeight: '600', fontSize: '15px' }}>{idx === 0 ? '🥇' : idx === 1 ? '🥈' : '🥉'} {item[0]}</span><span style={{ color: '#10b981', fontWeight: 'bold', fontSize: '15px' }}>{item[1]} шт</span>
+      {/* 🚀 НОВЫЙ БЛОК: ABC АНАЛИЗ */}
+      <div style={{ flex: 1.5, minWidth: '350px', backgroundColor: 'var(--bg-card)', padding: '24px', borderRadius: '16px', boxShadow: '0 4px 6px -1px var(--shadow-color)', display: 'flex', flexDirection: 'column' }}>
+        <h2 style={{ margin: '0 0 16px 0', fontSize: '18px', color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '8px' }}>🎯 ABC-Анализ меню</h2>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', flexGrow: 1, overflowY: 'auto', paddingRight: '4px' }}>
+          {abcAnalysis.length === 0 ? <div style={{ color: 'var(--text-muted)', fontSize: '14px' }}>Нет данных для анализа</div> : 
+            abcAnalysis.map((item, idx) => (
+              <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px', backgroundColor: 'var(--bg-main)', borderRadius: '12px', borderLeft: `4px solid ${item.groupColor}` }}>
+                <div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <span style={{ color: item.groupColor, fontWeight: '900', fontSize: '18px' }}>{item.group}</span>
+                    <span style={{ color: 'var(--text-main)', fontWeight: 'bold', fontSize: '15px' }}>{item.cat}</span>
+                  </div>
+                  <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '4px' }}>{item.hint}</div>
+                </div>
+                <div style={{ textAlign: 'right' }}>
+                  <div style={{ color: '#10b981', fontWeight: 'bold', fontSize: '15px' }}>{item.val.toLocaleString('ru-RU')} ₽</div>
+                  <div style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: 'bold' }}>{item.percent}% от кассы</div>
+                </div>
               </div>
             ))
           }
         </div>
       </div>
+
     </div>
   );
 };
 
-// 🚀 ПОЛНОСТЬЮ ОБНОВЛЕННЫЙ ВИДЖЕТ ПЕРСОНАЛА С РЕДАКТИРОВАНИЕМ ПИН-КОДОВ
 export const StaffWidget = ({ baristas = [], setBaristas, baristaPins = {}, setBaristaPins, baristaStats = {}, setBaristaStats }) => {
   const [newName, setNewName] = useState('');
   const [newPin, setNewPin] = useState('');
-  const [editingPinFor, setEditingPinFor] = useState(null); // Кто сейчас редактирует ПИН
+  const [editingPinFor, setEditingPinFor] = useState(null); 
   const [tempPin, setTempPin] = useState('');
 
   const handleAddStaff = () => {
@@ -250,7 +277,6 @@ export const StaffWidget = ({ baristas = [], setBaristas, baristaPins = {}, setB
             <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
               <span style={{ fontWeight: 'bold', color: 'var(--text-main)' }}>{b}</span>
               
-              {/* Логика редактирования ПИН-кода */}
               {editingPinFor === b ? (
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                   <input 
