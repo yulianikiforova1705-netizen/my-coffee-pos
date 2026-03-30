@@ -1,16 +1,27 @@
 import React, { useState, useEffect } from 'react';
+import { doc, onSnapshot } from 'firebase/firestore';
+// Убедись, что путь до firebase.js правильный
+import { db } from '../firebase'; 
 
-export const CustomerDisplay = ({ orderId }) => {
+export const CustomerDisplay = () => {
   const [cartItems, setCartItems] = useState([]);
   const [total, setTotal] = useState(0);
 
   useEffect(() => {
-    setCartItems([
-      { id: 1, name: 'Капучино', volume: '300 мл', price: 250 },
-      { id: 2, name: 'Круассан миндальный', volume: '1 шт', price: 180 }
-    ]);
-    setTotal(430);
-  }, [orderId]);
+    // Подписываемся на документ в Firebase
+    const displayRef = doc(db, 'live_display', 'current_order');
+    
+    const unsubscribe = onSnapshot(displayRef, (docSnap) => {
+      if (docSnap.exists()) {
+        const data = docSnap.data();
+        setCartItems(data.cart || []);
+        setTotal(data.total || 0);
+      }
+    });
+
+    // Очищаем подписку, если экран закроют
+    return () => unsubscribe();
+  }, []);
 
   return (
     <div style={{ display: 'flex', height: '100vh', width: '100%', backgroundColor: '#111827', color: 'white', fontFamily: 'sans-serif' }}>
@@ -21,9 +32,10 @@ export const CustomerDisplay = ({ orderId }) => {
           <h2 style={{ fontSize: '1.875rem', fontWeight: 'bold', marginBottom: '2rem', marginTop: 0 }}>Ваш заказ:</h2>
           
           <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-            {cartItems.map(item => (
-              <li key={item.id} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '1.5rem' }}>
-                <span>{item.name} <span style={{ color: '#9CA3AF', fontSize: '1.125rem', marginLeft: '0.5rem' }}>{item.volume}</span></span>
+            {cartItems.map((item, index) => (
+              // Используем index, так как в корзине могут быть одинаковые товары с одинаковым id
+              <li key={`${item.id}-${index}`} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '1.5rem' }}>
+                <span>{item.name} <span style={{ color: '#9CA3AF', fontSize: '1.125rem', marginLeft: '0.5rem' }}>{item.volume || ''}</span></span>
                 <span>{item.price} ₽</span>
               </li>
             ))}
@@ -45,7 +57,7 @@ export const CustomerDisplay = ({ orderId }) => {
            <div style={{ textAlign: 'center' }}>
              <h3 style={{ fontSize: '1.5rem', fontWeight: 'bold', marginBottom: '1rem', marginTop: 0 }}>Оставить чаевые баристе</h3>
              <div style={{ width: '16rem', height: '16rem', backgroundColor: 'white', borderRadius: '0.75rem', margin: '0 auto 1rem auto', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#111827', fontWeight: 'bold' }}>
-               [ QR CODE ]
+               [ ВАШ QR CODE ]
              </div>
              <p style={{ color: '#9CA3AF', fontSize: '1.125rem', margin: 0 }}>Наведите камеру телефона</p>
            </div>

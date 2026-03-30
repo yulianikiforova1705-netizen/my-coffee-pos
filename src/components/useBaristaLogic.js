@@ -1,3 +1,6 @@
+import { doc, setDoc } from 'firebase/firestore';
+// Обязательно проверь правильность пути до твоего файла firebase.js!
+import { db } from '../firebase';
 import { useState, useEffect } from 'react';
 
 export const useBaristaLogic = (props) => {
@@ -71,6 +74,23 @@ export const useBaristaLogic = (props) => {
   const availablePoints = clients[phone] ? (typeof clients[phone] === 'object' ? clients[phone].points : clients[phone]) : 0; 
   const pointsToSpend = usePoints ? Math.min(availablePoints, itemsSum) : 0; 
   const finalCharge = (itemsSum - pointsToSpend) + orderTips; 
+  // 🚀 НОВОЕ: Трансляция корзины в реальном времени для Экрана Гостя
+  useEffect(() => {
+    const syncLiveDisplay = async () => {
+      try {
+        // Перезаписываем единый документ 'current_order' в коллекции 'live_display'
+        await setDoc(doc(db, 'live_display', 'current_order'), {
+          cart: cart,
+          total: finalCharge,
+          updatedAt: new Date().toISOString()
+        });
+      } catch (error) {
+        console.error("Ошибка синхронизации экрана гостя:", error);
+      }
+    };
+
+    syncLiveDisplay();
+  }, [cart, finalCharge]); // Эффект срабатывает каждый раз, когда меняется корзина или сумма
 
   const handleApplyPromo = () => {
     const code = promoInput.trim().toUpperCase();
