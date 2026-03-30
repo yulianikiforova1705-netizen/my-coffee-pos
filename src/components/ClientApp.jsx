@@ -37,7 +37,8 @@ const ClientApp = ({ appData, clients = {}, menuItems = [], onClose }) => {
   
   const currentGuest = {
     name: dbGuest.name || 'Любимый гость',
-    points: dbGuest.points || 1350, 
+    points: dbGuest.points || 0, 
+    totalSpent: dbGuest.totalSpent || 0,
     phone: targetPhone
   };
 
@@ -45,22 +46,41 @@ const ClientApp = ({ appData, clients = {}, menuItems = [], onClose }) => {
     ? currentGuest.phone.slice(-4) 
     : currentGuest.phone;
 
-  const nextLevelPoints = 5000;
-  const progressToNextLevel = Math.min(((currentGuest.points % nextLevelPoints) / nextLevelPoints) * 100, 100);
+  // 🚀 НОВАЯ ЛОГИКА УРОВНЕЙ ЛОЯЛЬНОСТИ ДЛЯ ГОСТЯ
+  const getClientStatusDetails = (totalSpent) => {
+    if (!totalSpent) return { level: 'Бронза', icon: '🥉', cashback: '5%', gradient: 'linear-gradient(135deg, #cd7f32 0%, #8b4513 100%)', nextThreshold: 5000, nextLevel: 'Серебро', nextCashback: '10%' };
+    if (totalSpent >= 15000) return { level: 'Золото', icon: '🥇', cashback: '15%', gradient: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)', nextThreshold: null, nextLevel: null, nextCashback: null };
+    if (totalSpent >= 5000) return { level: 'Серебро', icon: '🥈', cashback: '10%', gradient: 'linear-gradient(135deg, #9ca3af 0%, #4b5563 100%)', nextThreshold: 15000, nextLevel: 'Золото', nextCashback: '15%' };
+    return { level: 'Бронза', icon: '🥉', cashback: '5%', gradient: 'linear-gradient(135deg, #cd7f32 0%, #8b4513 100%)', nextThreshold: 5000, nextLevel: 'Серебро', nextCashback: '10%' };
+  };
+
+  const statusInfo = getClientStatusDetails(currentGuest.totalSpent);
+  
+  // Вычисляем прогресс для полоски
+  let progressPercent = 100;
+  let remainingToNext = 0;
+  
+  if (statusInfo.nextThreshold) {
+    let currentLevelBase = 0;
+    if (statusInfo.level === 'Серебро') currentLevelBase = 5000;
+    
+    const pointsInCurrentLevel = currentGuest.totalSpent - currentLevelBase;
+    const levelSpan = statusInfo.nextThreshold - currentLevelBase;
+    
+    progressPercent = Math.min((pointsInCurrentLevel / levelSpan) * 100, 100);
+    remainingToNext = statusInfo.nextThreshold - currentGuest.totalSpent;
+  }
 
   const fallbackMenu = [
     { id: 991, name: 'Капучино', price: 250, category: 'Кофе', icon: '☕', desc: 'Классика с густой пенкой' },
     { id: 992, name: 'Круассан', price: 180, category: 'Выпечка', icon: '🥐', desc: 'Свежий и хрустящий' }
   ];
 
-  // 🚀 ОБНОВЛЕННАЯ МАГИЯ: Умный подборщик иконок v2.0
   const getSmartIcon = (item) => {
-    // Убрали проверку старой иконки
     const name = (item.name || '').toLowerCase();
     const cat = (item.category || '').toLowerCase();
     const text = name + ' ' + cat;
 
-    // Сначала ищем конкретные названия продуктов (чтобы категория не перебивала)
     if (text.includes('круассан')) return '🥐';
     if (text.includes('ролл') || text.includes('шаурма') || text.includes('wrap') || text.includes('врап')) return '🌯';
     if (text.includes('сэндвич') || text.includes('сендвич') || text.includes('панини') || text.includes('тост')) return '🥪';
@@ -71,15 +91,13 @@ const ClientApp = ({ appData, clients = {}, menuItems = [], onClose }) => {
     if (text.includes('салат') || text.includes('боул')) return '🥗';
     if (text.includes('суп')) return '🥣';
     
-    // Затем напитки
     if (text.includes('матча') || text.includes('чай')) return '🍵';
     if (text.includes('лимонад') || text.includes('айс') || text.includes('сок') || text.includes('фреш') || text.includes('смузи') || text.includes('вода') || text.includes('колд')) return '🥤';
     if (text.includes('какао') || text.includes('шоколад')) return '☕';
 
-    // Общие категории, если ничего не подошло
     if (text.includes('еда') || text.includes('перекус')) return '🥪';
     
-    return '☕'; // По умолчанию кофе
+    return '☕'; 
   };
 
   const realMenu = (menuItems && menuItems.length > 0) 
@@ -223,41 +241,53 @@ const ClientApp = ({ appData, clients = {}, menuItems = [], onClose }) => {
             </div>
             
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-              <div style={{ width: '48px', height: '48px', borderRadius: '50%', background: 'linear-gradient(135deg, #3b82f6 0%, #1e293b 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '20px', border: '2px solid rgba(255,255,255,0.1)', color: '#fff', boxShadow: 'inset 0 2px 4px rgba(255,255,255,0.2)', flexShrink: 0 }}>👤</div>
+              <div style={{ width: '48px', height: '48px', borderRadius: '50%', background: statusInfo.gradient, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '24px', border: '2px solid rgba(255,255,255,0.2)', color: '#fff', boxShadow: 'inset 0 2px 4px rgba(255,255,255,0.2)', flexShrink: 0 }}>{statusInfo.icon}</div>
             </div>
           </div>
 
           {/* ЛОЯЛЬНОСТЬ */}
           {activeTab === 'card' && (
             <>
-              <div style={{ background: 'linear-gradient(135deg, #3b82f6 0%, #a855f7 50%, #db2777 100%)', padding: '24px', borderRadius: '24px', color: 'white', boxShadow: '0 15px 30px -10px rgba(168, 85, 247, 0.3), 0 0 15px rgba(59, 130, 246, 0.2)', position: 'relative', overflow: 'hidden', border: '1px solid rgba(255,255,255,0.1)' }}>
+              {/* 🚀 ИЗМЕНЕНА КАРТА ЛОЯЛЬНОСТИ */}
+              <div style={{ background: statusInfo.gradient, padding: '24px', borderRadius: '24px', color: 'white', boxShadow: '0 15px 30px -10px rgba(0,0,0,0.3)', position: 'relative', overflow: 'hidden', border: '1px solid rgba(255,255,255,0.2)' }}>
                 <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', background: 'linear-gradient(30deg, transparent 0%, rgba(255,255,255,0.2) 50%, transparent 100%)', animation: 'shine 3s infinite', pointerEvents: 'none' }} />
-                <div style={{ position: 'absolute', top: '-10px', right: '-10px', opacity: 0.08, fontSize: '120px', transform: 'rotate(-15deg)' }}>☕</div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+                <div style={{ position: 'absolute', top: '-10px', right: '-10px', opacity: 0.15, fontSize: '140px', transform: 'rotate(-15deg)' }}>{statusInfo.icon}</div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', position: 'relative', zIndex: 1 }}>
                   <div style={{ fontSize: '12px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '2px', color: 'rgba(255,255,255,0.9)' }}>Loyalty Card</div>
-                  <div style={{ fontSize: '18px' }}>👑</div>
+                  <div style={{ backgroundColor: 'rgba(255,255,255,0.2)', padding: '4px 10px', borderRadius: '8px', fontSize: '13px', fontWeight: 'bold' }}>Кэшбэк {statusInfo.cashback}</div>
                 </div>
-                <div style={{ fontSize: '13px', opacity: 0.8, marginBottom: '4px' }}>Доступный баланс:</div>
-                <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px', marginBottom: '20px' }}>
-                  <div style={{ fontSize: '42px', fontWeight: '900', letterSpacing: '-2px', textShadow: '0 2px 10px rgba(0,0,0,0.2)' }}>{currentGuest.points}</div>
+                <div style={{ fontSize: '13px', opacity: 0.8, marginBottom: '4px', position: 'relative', zIndex: 1 }}>Доступный баланс:</div>
+                <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px', marginBottom: '24px', position: 'relative', zIndex: 1 }}>
+                  <div style={{ fontSize: '48px', fontWeight: '900', letterSpacing: '-2px', textShadow: '0 2px 10px rgba(0,0,0,0.2)' }}>{currentGuest.points}</div>
                   <div style={{ fontSize: '16px', fontWeight: 'bold', opacity: 0.9 }}>баллов</div>
                 </div>
-                <div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', marginBottom: '6px', color: 'rgba(255,255,255,0.8)' }}>
-                    <span>Уровень: Ценитель</span>
-                    <span>{currentGuest.points % nextLevelPoints} / {nextLevelPoints} до "Эксперт"</span>
-                  </div>
-                  <div style={{ width: '100%', height: '6px', backgroundColor: 'rgba(255,255,255,0.15)', borderRadius: '3px', overflow: 'hidden', border: '1px solid rgba(255,255,255,0.1)' }}>
-                    <div style={{ width: `${progressToNextLevel}%`, height: '100%', background: 'linear-gradient(90deg, #fff 0%, #3b82f6 100%)', borderRadius: '3px', boxShadow: '0 0 10px #fff' }} />
-                  </div>
+                
+                <div style={{ position: 'relative', zIndex: 1 }}>
+                  {statusInfo.nextLevel ? (
+                    <>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', marginBottom: '8px', color: 'rgba(255,255,255,0.9)', fontWeight: 'bold' }}>
+                        <span>{statusInfo.level} статус</span>
+                        <span>Ещё {remainingToNext.toLocaleString('ru-RU')} ₽ до {statusInfo.nextLevel}</span>
+                      </div>
+                      <div style={{ width: '100%', height: '8px', backgroundColor: 'rgba(0,0,0,0.2)', borderRadius: '4px', overflow: 'hidden', border: '1px solid rgba(255,255,255,0.1)' }}>
+                        <div style={{ width: `${progressPercent}%`, height: '100%', background: '#fff', borderRadius: '4px', boxShadow: '0 0 10px rgba(255,255,255,0.8)' }} />
+                      </div>
+                      <div style={{ fontSize: '11px', textAlign: 'center', marginTop: '8px', opacity: 0.8 }}>Следующий кэшбэк: {statusInfo.nextCashback}</div>
+                    </>
+                  ) : (
+                    <div style={{ textAlign: 'center', backgroundColor: 'rgba(255,255,255,0.1)', padding: '12px', borderRadius: '12px' }}>
+                      <span style={{ fontSize: '14px', fontWeight: 'bold' }}>🎉 Вы достигли максимального статуса!</span>
+                    </div>
+                  )}
                 </div>
               </div>
+              
               <div style={{ backgroundColor: 'var(--card-bg)', backdropFilter: 'blur(10px)', padding: '24px', borderRadius: '24px', border: '1px solid var(--border-color)', textAlign: 'center', boxShadow: 'var(--shadow-sm)' }}>
                 <div style={{ fontSize: '15px', fontWeight: 'bold', color: 'var(--text-main)', marginBottom: '16px', letterSpacing: '-0.3px' }}>Покажите этот код бариста</div>
                 <div style={{ width: '180px', height: '180px', backgroundColor: '#fff', margin: '0 auto 16px auto', borderRadius: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '12px', position: 'relative', boxShadow: '0 0 20px rgba(59, 130, 246, 0.15)' }}>
                   <img src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${currentGuest.phone}&color=0f172a`} alt="Guest QR Code" style={{ borderRadius: '8px', width: '100%', height: '100%' }} />
                 </div>
-                <div style={{ fontSize: '14px', color: 'var(--text-muted)', letterSpacing: '2px', backgroundColor: 'var(--phone-bg)', padding: '8px 16px', borderRadius: '8px', display: 'inline-block', fontFamily: 'Courier New, monospace' }}>
+                <div style={{ fontSize: '14px', color: 'var(--text-muted)', letterSpacing: '2px', backgroundColor: 'var(--phone-bg)', padding: '8px 16px', borderRadius: '8px', display: 'inline-block', fontFamily: 'Courier New, monospace', fontWeight: 'bold' }}>
                   +7 *** *** {displayPhone}
                 </div>
               </div>
@@ -314,19 +344,19 @@ const ClientApp = ({ appData, clients = {}, menuItems = [], onClose }) => {
           {activeTab === 'profile' && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '24px', animation: 'fadeIn 0.4s ease' }}>
               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '30px 20px', backgroundColor: 'var(--card-bg)', borderRadius: '24px', border: '1px solid var(--border-color)', boxShadow: 'var(--shadow-sm)', position: 'relative', overflow: 'hidden' }}>
-                <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '80px', background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(168, 85, 247, 0.1) 100%)' }} />
-                <div style={{ width: '90px', height: '90px', borderRadius: '50%', background: 'linear-gradient(135deg, #3b82f6 0%, #1e293b 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '36px', color: '#fff', marginBottom: '16px', boxShadow: '0 8px 16px rgba(59, 130, 246, 0.3)', position: 'relative', zIndex: 1, border: '4px solid var(--card-bg)' }}>👤</div>
+                <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '80px', background: statusInfo.gradient, opacity: 0.2 }} />
+                <div style={{ width: '90px', height: '90px', borderRadius: '50%', background: statusInfo.gradient, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '40px', color: '#fff', marginBottom: '16px', boxShadow: '0 8px 16px rgba(0,0,0,0.2)', position: 'relative', zIndex: 1, border: '4px solid var(--card-bg)' }}>{statusInfo.icon}</div>
                 <h2 style={{ margin: '0 0 4px 0', color: 'var(--text-main)', fontSize: '24px', fontWeight: '900', position: 'relative', zIndex: 1 }}>{currentGuest.name}</h2>
-                <div style={{ color: 'var(--text-muted)', fontSize: '15px', fontFamily: 'monospace', position: 'relative', zIndex: 1 }}>+7 *** *** {displayPhone}</div>
+                <div style={{ color: 'var(--text-muted)', fontSize: '15px', fontFamily: 'monospace', position: 'relative', zIndex: 1, fontWeight: 'bold' }}>+7 *** *** {displayPhone}</div>
               </div>
 
               <div style={{ display: 'flex', gap: '12px' }}>
                 <div style={{ flex: 1, padding: '16px', backgroundColor: 'var(--card-bg)', borderRadius: '20px', border: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', alignItems: 'center', boxShadow: 'var(--shadow-sm)' }}>
-                  <span style={{ fontSize: '28px', fontWeight: '900', color: '#10b981' }}>12</span>
+                  <span style={{ fontSize: '28px', fontWeight: '900', color: '#10b981' }}>{Math.floor(currentGuest.totalSpent / 250)}</span>
                   <span style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '4px', textTransform: 'uppercase', letterSpacing: '0.5px', fontWeight: 'bold' }}>Заказов</span>
                 </div>
                 <div style={{ flex: 1, padding: '16px', backgroundColor: 'var(--card-bg)', borderRadius: '20px', border: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', alignItems: 'center', boxShadow: 'var(--shadow-sm)' }}>
-                  <span style={{ fontSize: '28px', fontWeight: '900', color: '#3b82f6' }}>4.5k</span>
+                  <span style={{ fontSize: '28px', fontWeight: '900', color: '#3b82f6' }}>{currentGuest.totalSpent >= 1000 ? `${(currentGuest.totalSpent/1000).toFixed(1)}k` : currentGuest.totalSpent}</span>
                   <span style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '4px', textTransform: 'uppercase', letterSpacing: '0.5px', fontWeight: 'bold' }}>Потрачено, ₽</span>
                 </div>
               </div>
