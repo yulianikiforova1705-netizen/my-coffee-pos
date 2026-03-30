@@ -7,13 +7,17 @@ export const CustomerDisplay = () => {
   const [total, setTotal] = useState(0);
 
   useEffect(() => {
+    console.log('🎧 ПРИЕМНИК: Подключаюсь к каналу Firebase...');
     const displayRef = doc(db, 'live_display', 'current_order');
     
     const unsubscribe = onSnapshot(displayRef, (docSnap) => {
       if (docSnap.exists()) {
         const data = docSnap.data();
+        console.log('📺 ПРИЕМНИК: Поймал новые данные!', data);
         setCartItems(data.cart || []);
         setTotal(data.total || 0);
+      } else {
+        console.log('📭 ПРИЕМНИК: Документ пока пустой или не существует.');
       }
     });
 

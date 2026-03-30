@@ -73,17 +73,19 @@ export const useBaristaLogic = (props) => {
   const pointsToSpend = usePoints ? Math.min(availablePoints, itemsSum) : 0; 
   const finalCharge = (itemsSum - pointsToSpend) + orderTips; 
 
-  // 🚀 НОВОЕ: Трансляция корзины в реальном времени для Экрана Гостя
+  // 🚀 НОВОЕ: Трансляция корзины с маячком для отладки
   useEffect(() => {
     const syncLiveDisplay = async () => {
       try {
+        console.log('📡 ПЕРЕДАТЧИК: Пытаюсь отправить данные...', cart);
         await setDoc(doc(db, 'live_display', 'current_order'), {
           cart: cart,
           total: finalCharge,
           updatedAt: new Date().toISOString()
         });
+        console.log('✅ ПЕРЕДАТЧИК: Данные успешно улетели в Firebase!');
       } catch (error) {
-        console.error("Ошибка синхронизации экрана гостя:", error);
+        console.error("❌ Ошибка синхронизации экрана гостя:", error);
       }
     };
     syncLiveDisplay();
