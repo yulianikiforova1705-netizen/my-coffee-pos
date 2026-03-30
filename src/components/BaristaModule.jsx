@@ -49,7 +49,6 @@ const BaristaModule = ({
   const [foundClient, setFoundClient] = useState(null);
   const [pointsToSpend, setPointsToSpend] = useState(0);
 
-  // 🚀 СОСТОЯНИЯ ДЛЯ ЧАЕВЫХ
   const [showTipModal, setShowTipModal] = useState(false);
   const [tipAmount, setTipAmount] = useState(0);
   const [customTip, setCustomTip] = useState('');
@@ -111,18 +110,16 @@ const BaristaModule = ({
     }, 500);
   };
 
-  // 🚀 ПЕРЕХВАТЫВАЕМ НАЖАТИЕ "К ОПЛАТЕ" ДЛЯ ВВОДА ЧАЕВЫХ
   const handleCheckoutClick = () => {
     if (cart.length === 0) return alert('Корзина пуста!');
     setTipAmount(0);
     setCustomTip('');
-    setShowTipModal(true); // Открываем окно чаевых вместо моментальной оплаты
+    setShowTipModal(true); 
   };
 
-  // 🚀 ФИНАЛЬНЫЙ ПЕРЕХОД НА ЭКРАН ОПЛАТЫ
   const proceedToPayment = () => {
     const finalTip = customTip ? Number(customTip) : tipAmount;
-    setTipAmount(finalTip); // Сохраняем итоговые чаевые
+    setTipAmount(finalTip); 
     
     setShowTipModal(false);
     setCheckoutStep('summary');
@@ -133,16 +130,25 @@ const BaristaModule = ({
   };
 
   const handlePaymentSuccess = () => {
+    // 🚀 МАГИЯ ЗВУКА: Играем "Ке-чинг!" при успешной оплате
+    try {
+      const kachingSound = new Audio('https://actions.google.com/sounds/v1/foley/cash_register_kaching.ogg');
+      kachingSound.volume = 0.5; // Приятная громкость, чтобы не оглушить
+      kachingSound.play();
+    } catch (err) {
+      console.log('Браузер заблокировал автовоспроизведение звука', err);
+    }
+
     setShowCustomerDisplay(false);
     setFloatingRevenue(finalCharge + tipAmount);
     setIsSuccessFlash(true); 
     
     onNewOrder(
       cart.map(i => i.name).join(' + '), 
-      cartTotal, // Передаем полную сумму корзины (исправлен баг двойного вычета баллов)
+      cartTotal, 
       foundClient ? foundClient.phone : '', 
       pointsToSpend, 
-      tipAmount, // 💰 ПЕРЕДАЕМ ЧАЕВЫЕ В ГЛАВНУЮ БАЗУ
+      tipAmount, 
       loggedInBarista, 
       'В зале'
     );
@@ -349,7 +355,6 @@ const BaristaModule = ({
         </div>
       )}
 
-      {/* 🚀 НОВОЕ ОКНО: ВЫБОР ЧАЕВЫХ ПЕРЕД ОПЛАТОЙ */}
       {showTipModal && (
         <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(15, 23, 42, 0.8)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', backdropFilter: 'blur(8px)', animation: 'fadeIn 0.2s ease' }}>
           <div style={{ backgroundColor: 'var(--bg-card)', width: '100%', maxWidth: '360px', borderRadius: '24px', padding: '24px', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)', border: '1px solid var(--border-color)', animation: 'slideUp 0.3s ease' }}>
