@@ -1,14 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { doc, onSnapshot } from 'firebase/firestore';
-// Убедись, что путь до firebase.js правильный
-import { db } from '../firebase'; 
+import { db } from '../firebase.js';
 
 export const CustomerDisplay = () => {
   const [cartItems, setCartItems] = useState([]);
   const [total, setTotal] = useState(0);
 
   useEffect(() => {
-    // Подписываемся на документ в Firebase
     const displayRef = doc(db, 'live_display', 'current_order');
     
     const unsubscribe = onSnapshot(displayRef, (docSnap) => {
@@ -19,21 +17,18 @@ export const CustomerDisplay = () => {
       }
     });
 
-    // Очищаем подписку, если экран закроют
     return () => unsubscribe();
   }, []);
 
   return (
     <div style={{ display: 'flex', height: '100vh', width: '100%', backgroundColor: '#111827', color: 'white', fontFamily: 'sans-serif' }}>
       
-      {/* ЛЕВАЯ ЧАСТЬ: Состав заказа */}
       <div style={{ width: '50%', padding: '2rem', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', borderRight: '1px solid #374151' }}>
         <div>
           <h2 style={{ fontSize: '1.875rem', fontWeight: 'bold', marginBottom: '2rem', marginTop: 0 }}>Ваш заказ:</h2>
           
           <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '1rem' }}>
             {cartItems.map((item, index) => (
-              // Используем index, так как в корзине могут быть одинаковые товары с одинаковым id
               <li key={`${item.id}-${index}`} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '1.5rem' }}>
                 <span>{item.name} <span style={{ color: '#9CA3AF', fontSize: '1.125rem', marginLeft: '0.5rem' }}>{item.volume || ''}</span></span>
                 <span>{item.price} ₽</span>
@@ -42,7 +37,6 @@ export const CustomerDisplay = () => {
           </ul>
         </div>
 
-        {/* Итоговая сумма */}
         <div style={{ marginTop: '2rem', paddingTop: '2rem', borderTop: '1px solid #374151' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '2.25rem', fontWeight: 'bold', color: '#4ADE80' }}>
             <span>Итого:</span>
@@ -51,7 +45,6 @@ export const CustomerDisplay = () => {
         </div>
       </div>
 
-      {/* ПРАВАЯ ЧАСТЬ: Маркетинг и чаевые */}
       <div style={{ width: '50%', padding: '2rem', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', backgroundColor: '#1F2937' }}>
          {cartItems.length > 0 ? (
            <div style={{ textAlign: 'center' }}>

@@ -1,7 +1,6 @@
-import { doc, setDoc } from 'firebase/firestore';
-// Обязательно проверь правильность пути до твоего файла firebase.js!
-import { db } from '../firebase';
 import { useState, useEffect } from 'react';
+import { doc, setDoc } from 'firebase/firestore';
+import { db } from './firebase.js';
 
 export const useBaristaLogic = (props) => {
   const { onCloseShift, onNewOrder, menuItems, stopList, clients = {}, salarySettings, baristaStats, baristas, promocodes, cashbackPercent, loggedInBarista, onRateBarista, addLog } = props;
@@ -31,7 +30,6 @@ export const useBaristaLogic = (props) => {
   const [showConfetti, setShowConfetti] = useState(false);
   const [ratingSubmitted, setRatingSubmitted] = useState(false);
   
-  // 🚀 НОВОЕ: Состояния для причин низкой оценки
   const [selectedRating, setSelectedRating] = useState(0);
   const [showFeedbackReasons, setShowFeedbackReasons] = useState(false);
   const [feedbackSubmitted, setFeedbackSubmitted] = useState(false);
@@ -74,11 +72,11 @@ export const useBaristaLogic = (props) => {
   const availablePoints = clients[phone] ? (typeof clients[phone] === 'object' ? clients[phone].points : clients[phone]) : 0; 
   const pointsToSpend = usePoints ? Math.min(availablePoints, itemsSum) : 0; 
   const finalCharge = (itemsSum - pointsToSpend) + orderTips; 
+
   // 🚀 НОВОЕ: Трансляция корзины в реальном времени для Экрана Гостя
   useEffect(() => {
     const syncLiveDisplay = async () => {
       try {
-        // Перезаписываем единый документ 'current_order' в коллекции 'live_display'
         await setDoc(doc(db, 'live_display', 'current_order'), {
           cart: cart,
           total: finalCharge,
@@ -88,9 +86,8 @@ export const useBaristaLogic = (props) => {
         console.error("Ошибка синхронизации экрана гостя:", error);
       }
     };
-
     syncLiveDisplay();
-  }, [cart, finalCharge]); // Эффект срабатывает каждый раз, когда меняется корзина или сумма
+  }, [cart, finalCharge]);
 
   const handleApplyPromo = () => {
     const code = promoInput.trim().toUpperCase();
@@ -132,7 +129,6 @@ export const useBaristaLogic = (props) => {
     if (orderType !== 'Доставка 🛵') { setCheckoutStep('rating'); }
   };
 
-  // 🚀 НОВОЕ: Обработка клика по звездам
   const handleRatingSubmit = (stars) => {
     setSelectedRating(stars);
     onRateBarista(loggedInBarista, stars); 
@@ -140,18 +136,14 @@ export const useBaristaLogic = (props) => {
 
     if (stars === 5) { 
       setShowConfetti(true); 
-      // При 5 звездах причины не спрашиваем
     } else if (stars <= 3) {
-      // Если оценка 3 и ниже - показываем причины
       setShowFeedbackReasons(true);
     }
   };
 
-  // 🚀 НОВОЕ: Обработка клика по кнопке-причине
   const handleFeedbackReasonSubmit = (reason) => {
     setFeedbackSubmitted(true);
     setShowFeedbackReasons(false);
-    // Логируем причину, чтобы Владелец мог увидеть ее в Activity Feed
     if (addLog) {
       addLog(`⚠️ Причина низкой оценки (${selectedRating}⭐) бариста ${loggedInBarista}: ${reason}`, 'warning');
     }
@@ -205,7 +197,7 @@ export const useBaristaLogic = (props) => {
     phone, setPhone, usePoints, setUsePoints, orderTips, setOrderTips, orderType, setOrderType,
     floatingMoneys, promoInput, setPromoInput, appliedPromo, promoError,
     showCustomerDisplay, checkoutStep, setCheckoutStep, hoveredStar, setHoveredStar, showConfetti, ratingSubmitted,
-    selectedRating, showFeedbackReasons, feedbackSubmitted, handleFeedbackReasonSubmit, // Экспортируем новые стейты
+    selectedRating, showFeedbackReasons, feedbackSubmitted, handleFeedbackReasonSubmit,
     formatTime, addToCart, removeFromCart, isHappyHour, happyHourDiscount, promoDiscount,
     availablePoints, pointsToSpend, finalCharge, handleApplyPromo, handleCheckoutClick, handlePaymentSuccess,
     handleRatingSubmit, closeCustomerDisplay, handleToggleShift, finishZReport, simulateDeliveryOrder,
