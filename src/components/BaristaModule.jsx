@@ -49,9 +49,13 @@ const BaristaModule = ({
   const [foundClient, setFoundClient] = useState(null);
   const [pointsToSpend, setPointsToSpend] = useState(0);
 
+  // 🚀 СОСТОЯНИЯ ДЛЯ ЧАЕВЫХ
+  const [showTipModal, setShowTipModal] = useState(false);
+  const [tipAmount, setTipAmount] = useState(0);
+  const [customTip, setCustomTip] = useState('');
+
   const activeOrders = orders.filter(o => o.status === 'В процессе');
 
-  // 🚀 ЗАМЕНЯЕМ СТАРУЮ ФУНКЦИЮ НА УМНОГО ПОДБОРЩИКА
   const getProductIcon = (name, category) => {
     const text = ((name || '') + ' ' + (category || '')).toLowerCase();
     
@@ -71,7 +75,7 @@ const BaristaModule = ({
 
     if (text.includes('еда') || text.includes('перекус')) return '🥪';
     
-    return '☕'; // По умолчанию кофе
+    return '☕'; 
   };
 
   const handleAddToCart = (item) => {
@@ -107,8 +111,20 @@ const BaristaModule = ({
     }, 500);
   };
 
+  // 🚀 ПЕРЕХВАТЫВАЕМ НАЖАТИЕ "К ОПЛАТЕ" ДЛЯ ВВОДА ЧАЕВЫХ
   const handleCheckoutClick = () => {
     if (cart.length === 0) return alert('Корзина пуста!');
+    setTipAmount(0);
+    setCustomTip('');
+    setShowTipModal(true); // Открываем окно чаевых вместо моментальной оплаты
+  };
+
+  // 🚀 ФИНАЛЬНЫЙ ПЕРЕХОД НА ЭКРАН ОПЛАТЫ
+  const proceedToPayment = () => {
+    const finalTip = customTip ? Number(customTip) : tipAmount;
+    setTipAmount(finalTip); // Сохраняем итоговые чаевые
+    
+    setShowTipModal(false);
     setCheckoutStep('summary');
     setRatingSubmitted(false);
     setShowFeedbackReasons(false);
@@ -118,15 +134,15 @@ const BaristaModule = ({
 
   const handlePaymentSuccess = () => {
     setShowCustomerDisplay(false);
-    setFloatingRevenue(finalCharge);
+    setFloatingRevenue(finalCharge + tipAmount);
     setIsSuccessFlash(true); 
     
     onNewOrder(
       cart.map(i => i.name).join(' + '), 
-      finalCharge, 
+      cartTotal, // Передаем полную сумму корзины (исправлен баг двойного вычета баллов)
       foundClient ? foundClient.phone : '', 
       pointsToSpend, 
-      0, 
+      tipAmount, // 💰 ПЕРЕДАЕМ ЧАЕВЫЕ В ГЛАВНУЮ БАЗУ
       loggedInBarista, 
       'В зале'
     );
@@ -136,6 +152,8 @@ const BaristaModule = ({
       setClientPhone('');
       setFoundClient(null);
       setPointsToSpend(0);
+      setTipAmount(0);
+      setCustomTip('');
       setIsSuccessFlash(false);
       setFloatingRevenue(null);
       setCheckoutStep('rating');
@@ -331,9 +349,53 @@ const BaristaModule = ({
         </div>
       )}
 
+      {/* 🚀 НОВОЕ ОКНО: ВЫБОР ЧАЕВЫХ ПЕРЕД ОПЛАТОЙ */}
+      {showTipModal && (
+        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(15, 23, 42, 0.8)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', backdropFilter: 'blur(8px)', animation: 'fadeIn 0.2s ease' }}>
+          <div style={{ backgroundColor: 'var(--bg-card)', width: '100%', maxWidth: '360px', borderRadius: '24px', padding: '24px', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)', border: '1px solid var(--border-color)', animation: 'slideUp 0.3s ease' }}>
+            
+            <div style={{ textAlign: 'center', marginBottom: '24px' }}>
+              <div style={{ fontSize: '48px', marginBottom: '8px' }}>💖</div>
+              <h2 style={{ margin: 0, fontSize: '20px', fontWeight: '800', color: 'var(--text-main)' }}>Чаевые бариста</h2>
+              <p style={{ margin: '4px 0 0 0', color: 'var(--text-muted)', fontSize: '14px' }}>Гость хочет оставить на чай?</p>
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '16px' }}>
+              {[0, 50, 100, 150].map(amt => (
+                <button 
+                  key={amt} 
+                  onClick={() => { setTipAmount(amt); setCustomTip(''); }} 
+                  style={{ padding: '12px', borderRadius: '12px', border: `2px solid ${tipAmount === amt && customTip === '' ? '#3b82f6' : 'var(--border-color)'}`, backgroundColor: tipAmount === amt && customTip === '' ? 'rgba(59, 130, 246, 0.1)' : 'var(--bg-main)', color: tipAmount === amt && customTip === '' ? '#3b82f6' : 'var(--text-main)', fontWeight: 'bold', fontSize: '16px', cursor: 'pointer', transition: '0.2s' }}
+                >
+                  {amt === 0 ? 'Без чаевых' : `${amt} ₽`}
+                </button>
+              ))}
+            </div>
+
+            <div style={{ marginBottom: '24px' }}>
+              <input 
+                type="number" 
+                placeholder="Другая сумма (₽)..." 
+                value={customTip} 
+                onChange={(e) => { setCustomTip(e.target.value); setTipAmount(0); }} 
+                style={{ width: '100%', padding: '12px', borderRadius: '12px', border: `2px solid ${customTip ? '#3b82f6' : 'var(--border-color)'}`, backgroundColor: 'var(--bg-main)', color: 'var(--text-main)', fontSize: '16px', textAlign: 'center', boxSizing: 'border-box', outline: 'none' }} 
+              />
+            </div>
+
+            <button onClick={proceedToPayment} style={{ width: '100%', padding: '16px', borderRadius: '16px', border: 'none', backgroundColor: '#10b981', color: 'white', fontWeight: 'bold', fontSize: '18px', cursor: 'pointer', boxShadow: '0 4px 6px rgba(16, 185, 129, 0.2)' }}>
+              К оплате: {finalCharge + (customTip ? Number(customTip) : tipAmount)} ₽
+            </button>
+            
+            <button onClick={() => setShowTipModal(false)} style={{ width: '100%', padding: '12px', marginTop: '12px', borderRadius: '16px', border: 'none', backgroundColor: 'transparent', color: 'var(--text-muted)', fontWeight: 'bold', fontSize: '14px', cursor: 'pointer' }}>
+              Отмена
+            </button>
+          </div>
+        </div>
+      )}
+
       <CustomerDisplayModal 
         showCustomerDisplay={showCustomerDisplay} showConfetti={showConfetti} checkoutStep={checkoutStep} setCheckoutStep={setCheckoutStep}
-        cart={cart} finalCharge={finalCharge} handlePaymentSuccess={handlePaymentSuccess} closeCustomerDisplay={() => { setShowCustomerDisplay(false); setCheckoutStep('summary'); }}
+        cart={cart} finalCharge={finalCharge + tipAmount} handlePaymentSuccess={handlePaymentSuccess} closeCustomerDisplay={() => { setShowCustomerDisplay(false); setCheckoutStep('summary'); }}
         ratingSubmitted={ratingSubmitted} loggedInBarista={loggedInBarista} hoveredStar={hoveredStar} setHoveredStar={setHoveredStar}
         handleRatingSubmit={handleRatingSubmit} selectedRating={selectedRating} showFeedbackReasons={showFeedbackReasons} feedbackSubmitted={feedbackSubmitted}
         handleFeedbackReasonSubmit={(reason) => { setFeedbackSubmitted(true); }}
