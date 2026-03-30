@@ -130,13 +130,13 @@ const BaristaModule = ({
   };
 
   const handlePaymentSuccess = () => {
-    // 🚀 МАГИЯ ЗВУКА: Играем "Ке-чинг!" при успешной оплате
+    // 🚀 ИСПРАВЛЕНИЕ: Используем надежный .mp3 формат и перехватываем ошибки браузера
     try {
-      const kachingSound = new Audio('https://actions.google.com/sounds/v1/foley/cash_register_kaching.ogg');
-      kachingSound.volume = 0.5; // Приятная громкость, чтобы не оглушить
-      kachingSound.play();
+      const kachingSound = new Audio('https://www.myinstants.com/media/sounds/cash-register-kaching.mp3');
+      kachingSound.volume = 0.6;
+      kachingSound.play().catch(e => console.log('Браузер пока блокирует звук (нужен клик)', e));
     } catch (err) {
-      console.log('Браузер заблокировал автовоспроизведение звука', err);
+      console.log('Ошибка создания аудио', err);
     }
 
     setShowCustomerDisplay(false);
