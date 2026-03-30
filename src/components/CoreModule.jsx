@@ -289,6 +289,21 @@ const CoreModule = () => {
             </div>
           </div>
 
+          {/* 🚀 ВОЗВРАЩАЕМ АВТОРСТВО В САМЫЙ НИЗ */}
+          <div style={{ 
+            marginTop: 'auto', 
+            paddingTop: '32px', 
+            paddingBottom: isMobile ? '80px' : '16px', 
+            textAlign: 'center', 
+            color: 'var(--text-muted)', 
+            fontSize: '13px',
+            opacity: 0.8,
+            transition: 'color 0.3s'
+          }}>
+            {logic.appData?.appName || 'Аналитическая платформа сети кофеен'} © {new Date().getFullYear()} <br/>
+            Created with ❤️ by <strong style={{color: 'var(--text-main)'}}>{logic.appData?.ownerName || 'Yulia Nikiforova'}</strong>
+          </div>
+
           <DashboardModals 
             showTelegramModal={logic.showTelegramModal} 
             setShowTelegramModal={logic.setShowTelegramModal} 
