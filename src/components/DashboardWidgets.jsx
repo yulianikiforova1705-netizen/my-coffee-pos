@@ -153,7 +153,7 @@ export const BaristaEfficiencyTableWidget = ({ baristaEfficiency = [], baristaSt
   </div>
 );
 
-// 🚀 ЗДЕСЬ ДОБАВЛЕН ABC-АНАЛИЗ
+// 🚀 ТРОЙНОЙ ВИДЖЕТ: Диаграмма + ТОП продаж + ABC Анализ
 export const SalesAnalyticsWidget = ({ categoryStats = { stats: {}, total: 0 }, catColors = {}, topSales = [] }) => {
   let currentOffset = 0;
   
@@ -201,7 +201,21 @@ export const SalesAnalyticsWidget = ({ categoryStats = { stats: {}, total: 0 }, 
         </div>
       </div>
       
-      {/* 🚀 НОВЫЙ БЛОК: ABC АНАЛИЗ */}
+      {/* 🚀 ВОЗВРАЩЕННЫЙ ТОП ПРОДАЖ */}
+      <div style={{ flex: 1, minWidth: '220px', backgroundColor: 'var(--bg-card)', padding: '24px', borderRadius: '16px', boxShadow: '0 4px 6px -1px var(--shadow-color)', display: 'flex', flexDirection: 'column' }}>
+        <h2 style={{ margin: '0 0 16px 0', fontSize: '18px', color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '8px' }}>🏆 Топ продаж</h2>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', flexGrow: 1, justifyContent: 'center' }}>
+          {(!topSales || topSales.length === 0) ? <div style={{ color: 'var(--text-muted)', fontSize: '14px' }}>Нет данных</div> : 
+            topSales.map((item, idx) => (
+              <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingBottom: '8px', borderBottom: idx !== topSales.length - 1 ? '1px dashed var(--border-color)' : 'none' }}>
+                <span style={{ color: 'var(--text-main)', fontWeight: '600', fontSize: '15px' }}>{idx === 0 ? '🥇' : idx === 1 ? '🥈' : '🥉'} {item[0]}</span><span style={{ color: '#10b981', fontWeight: 'bold', fontSize: '15px' }}>{item[1]} шт</span>
+              </div>
+            ))
+          }
+        </div>
+      </div>
+
+      {/* НОВЫЙ БЛОК: ABC АНАЛИЗ */}
       <div style={{ flex: 1.5, minWidth: '350px', backgroundColor: 'var(--bg-card)', padding: '24px', borderRadius: '16px', boxShadow: '0 4px 6px -1px var(--shadow-color)', display: 'flex', flexDirection: 'column' }}>
         <h2 style={{ margin: '0 0 16px 0', fontSize: '18px', color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '8px' }}>🎯 ABC-Анализ меню</h2>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', flexGrow: 1, overflowY: 'auto', paddingRight: '4px' }}>
