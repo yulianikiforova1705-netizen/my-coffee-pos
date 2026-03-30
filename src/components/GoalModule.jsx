@@ -5,8 +5,8 @@ const GoalModule = ({ currentRevenue, targetRevenue }) => {
   const isGoalReached = currentRevenue >= targetRevenue;
 
   const successColor = '#20c997'; 
-  // 🚀 ИСПРАВЛЕНИЕ: Заменили бледный сиреневый на ваш фирменный ярко-синий!
-  const progressColor = '#3b82f6'; 
+  // 🚀 Сделали цвет ярким неоново-бирюзовым для идеального контраста в темной теме!
+  const progressColor = '#00d2ff'; 
   
   const barColor = isGoalReached ? successColor : progressColor;
 
@@ -93,7 +93,8 @@ const GoalModule = ({ currentRevenue, targetRevenue }) => {
             borderRadius: '999px',
             transition: 'width 1s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.5s ease',
             position: 'relative',
-            overflow: 'hidden'
+            overflow: 'hidden',
+            boxShadow: `0 0 8px ${barColor}66` // Добавили легкое свечение
           }}>
             <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent)', animation: isGoalReached ? 'none' : 'shimmer 2s infinite' }}></div>
           </div>
