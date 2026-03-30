@@ -340,23 +340,65 @@ export const useCoffeeLogic = () => {
     const newId = `#${1044 + orders.length}`; 
     const moneyPaid = totalSum - pointsSpent; 
     const pointsEarned = Math.floor(moneyPaid * (cashbackPercent / 100)); 
-    let orderCost = 0; let dessertsInOrder = 0; 
     
+    let orderCost = 0; 
+    let dessertsInOrder = 0; 
+    
+    // Считаем косты и десерты заранее
+    orderDescription.split(' + ').forEach(name => { 
+      const item = menuItems.find(i => i.name === name); 
+      if (item) {
+        if (item.costPrice) orderCost += item.costPrice; 
+        if (item.category === 'Десерты' || item.isDessert) dessertsInOrder += 1;
+      }
+    });
+
+    // Обновляем сырье для напитков
     updateIngredients(prevIngs => {
       let newIngs = [...prevIngs];
       orderDescription.split(' + ').forEach(name => { 
         const item = menuItems.find(i => i.name === name); 
-        if (item) {
-          if (item.costPrice) orderCost += item.costPrice; if (item.category === 'Десерты' || item.isDessert) dessertsInOrder += 1;
-          if (item.recipe) { Object.keys(item.recipe).forEach(ingId => { const idx = newIngs.findIndex(ing => ing.id === ingId); if (idx !== -1) { newIngs[idx] = { ...newIngs[idx], stock: Math.max(0, newIngs[idx].stock - item.recipe[ingId]) }; } }); }
+        if (item && item.recipe) { 
+          Object.keys(item.recipe).forEach(ingId => { 
+            const idx = newIngs.findIndex(ing => ing.id === ingId); 
+            if (idx !== -1) { 
+              newIngs[idx] = { ...newIngs[idx], stock: Math.max(0, newIngs[idx].stock - item.recipe[ingId]) }; 
+            } 
+          }); 
         }
       });
       return newIngs;
     });
 
-    setBaristaStats(prev => { const current = prev[activeBarista] || { tips: 0, dessertsSold: 0, revenue: 0, ratingSum: 0, ratingCount: 0 }; return { ...prev, [activeBarista]: { ...current, tips: current.tips + tips, dessertsSold: current.dessertsSold + dessertsInOrder, revenue: current.revenue + moneyPaid }}; });
+    // 🚀 ИСПРАВЛЕНИЕ: Списываем штучные товары (десерты, сэндвичи) со склада меню
+    updateMenu(prevMenu => {
+      let newMenu = [...prevMenu];
+      orderDescription.split(' + ').forEach(name => {
+        const idx = newMenu.findIndex(m => m.name === name);
+        // Если у товара есть поле inventory (штучный товар), отнимаем 1
+        if (idx !== -1 && newMenu[idx].inventory !== undefined) {
+           newMenu[idx] = { ...newMenu[idx], inventory: Math.max(0, newMenu[idx].inventory - 1) };
+        }
+      });
+      return newMenu;
+    });
+
+    // Добавляем чаевые в статистику баристы
+    setBaristaStats(prev => { 
+      const current = prev[activeBarista] || { tips: 0, dessertsSold: 0, revenue: 0, ratingSum: 0, ratingCount: 0 }; 
+      return { 
+        ...prev, 
+        [activeBarista]: { 
+          ...current, 
+          tips: current.tips + tips, 
+          dessertsSold: current.dessertsSold + dessertsInOrder, 
+          revenue: current.revenue + moneyPaid 
+        }
+      }; 
+    });
     
-    const orderProfit = moneyPaid - orderCost; const now = new Date(); 
+    const orderProfit = moneyPaid - orderCost; 
+    const now = new Date(); 
     
     const newOrder = { 
       id: newId, time: now.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}), 
@@ -374,7 +416,21 @@ export const useCoffeeLogic = () => {
       if (stat.id === 4) return { ...stat, rawValue: stat.rawValue + orderProfit, value: `${(stat.rawValue + orderProfit).toLocaleString('ru-RU')} ₽` }; 
       return stat; 
     }));
-    if (phone) { setClients(prev => { const oldData = typeof prev[phone] === 'object' ? prev[phone] : { points: prev[phone] || 0, visits: 0, totalSpent: 0 }; return { ...prev, [phone]: { points: oldData.points - pointsSpent + pointsEarned, visits: oldData.visits + 1, totalSpent: oldData.totalSpent + moneyPaid, lastVisit: now.toLocaleDateString('ru-RU') } }; }); }
+
+    if (phone) { 
+      setClients(prev => { 
+        const oldData = typeof prev[phone] === 'object' ? prev[phone] : { points: prev[phone] || 0, visits: 0, totalSpent: 0 }; 
+        return { 
+          ...prev, 
+          [phone]: { 
+            points: oldData.points - pointsSpent + pointsEarned, 
+            visits: oldData.visits + 1, 
+            totalSpent: oldData.totalSpent + moneyPaid, 
+            lastVisit: now.toLocaleDateString('ru-RU') 
+          } 
+        }; 
+      }); 
+    }
   };
 
   const handleCompleteOrder = (orderId) => { 
@@ -394,7 +450,6 @@ export const useCoffeeLogic = () => {
 
   const handleOpenDrawer = (baristaName) => triggerSecurityAlert(`Касса открыта без продажи (${baristaName})`); 
 
-  // 🚀 ИСПРАВЛЕНИЕ: ПРАВИЛЬНОЕ ЗАКРЫТИЕ СМЕНЫ С ОБНУЛЕНИЕМ СТАТИСТИКИ
   const handleCloseShift = (shiftData) => { 
     const currentOrdersCount = orders.filter(o => o.status !== 'Отменен').length;
     setShiftArchive([{ 
@@ -442,14 +497,12 @@ export const useCoffeeLogic = () => {
   const dateStr = currentTime.toLocaleDateString('ru-RU', { weekday: 'long', day: 'numeric', month: 'short' });
   const timeStr = currentTime.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
 
-  // 🚀 УМНАЯ СТАТИСТИКА: Считаем средний чек и проценты к прошлой смене
   const displayStats = useMemo(() => {
     const lastShift = shiftArchive.length > 0 ? shiftArchive[0] : null;
 
     return stats.map(stat => {
       let updatedStat = { ...stat };
       
-      // Считаем динамический средний чек
       if (stat.id === 3) {
         const rev = stats.find(s => s.id === 1)?.rawValue || 0;
         const validOrders = orders.filter(o => o.status !== 'Отменен');
@@ -458,7 +511,6 @@ export const useCoffeeLogic = () => {
         updatedStat.value = `${avg.toLocaleString('ru-RU')} ₽`;
       }
 
-      // Считаем проценты роста к прошлой смене
       if (lastShift) {
         let percent = 0;
         if (stat.id === 1) { 
@@ -475,7 +527,7 @@ export const useCoffeeLogic = () => {
           percent = Math.round(((updatedStat.rawValue - lastProfit) / lastProfit) * 100);
         }
         
-        if (percent > 999) percent = 999; // Защита от гигантских цифр
+        if (percent > 999) percent = 999; 
         updatedStat.change = `${percent > 0 ? '+' : ''}${percent}%`;
       } else {
         updatedStat.change = updatedStat.rawValue > 0 ? '+100%' : '0%';
