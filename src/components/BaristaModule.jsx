@@ -130,13 +130,31 @@ const BaristaModule = ({
   };
 
   const handlePaymentSuccess = () => {
-    // 🚀 ИСПРАВЛЕНИЕ: Используем надежный .mp3 формат и перехватываем ошибки браузера
+    // 🚀 МАГИЯ ЗВУКА v3.0: Синтезируем звук монетки (Марио-стайл) прямо математикой браузера!
     try {
-      const kachingSound = new Audio('https://www.myinstants.com/media/sounds/cash-register-kaching.mp3');
-      kachingSound.volume = 0.6;
-      kachingSound.play().catch(e => console.log('Браузер пока блокирует звук (нужен клик)', e));
+      const AudioContext = window.AudioContext || window.webkitAudioContext;
+      if (AudioContext) {
+        const ctx = new AudioContext();
+        const osc = ctx.createOscillator();
+        const gainNode = ctx.createGain();
+        
+        osc.type = 'sine';
+        // Мелодия успешной оплаты (прыжок ноты)
+        osc.frequency.setValueAtTime(987.77, ctx.currentTime); 
+        osc.frequency.setValueAtTime(1318.51, ctx.currentTime + 0.1); 
+        
+        gainNode.gain.setValueAtTime(0, ctx.currentTime);
+        gainNode.gain.linearRampToValueAtTime(0.3, ctx.currentTime + 0.05);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.5);
+        
+        osc.connect(gainNode);
+        gainNode.connect(ctx.destination);
+        
+        osc.start();
+        osc.stop(ctx.currentTime + 0.5);
+      }
     } catch (err) {
-      console.log('Ошибка создания аудио', err);
+      console.log('Браузер не поддерживает синтез звука', err);
     }
 
     setShowCustomerDisplay(false);
