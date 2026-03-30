@@ -18,6 +18,18 @@ const BaristaCart = ({
   handleCheckoutClick,
   isMobile
 }) => {
+
+  // 🚀 ЛОГИКА УРОВНЕЙ ЛОЯЛЬНОСТИ
+  const getClientStatus = (totalSpent) => {
+    if (!totalSpent) return { level: 'Бронза', icon: '🥉', color: '#cd7f32', nextThreshold: 5000, nextLevel: 'Серебро' };
+    if (totalSpent >= 15000) return { level: 'Золото', icon: '🥇', color: '#fbbf24', nextThreshold: null, nextLevel: null };
+    if (totalSpent >= 5000) return { level: 'Серебро', icon: '🥈', color: '#9ca3af', nextThreshold: 15000, nextLevel: 'Золото' };
+    return { level: 'Бронза', icon: '🥉', color: '#cd7f32', nextThreshold: 5000, nextLevel: 'Серебро' };
+  };
+
+  const clientStatus = foundClient ? getClientStatus(foundClient.totalSpent) : null;
+  const amountToNextLevel = clientStatus && clientStatus.nextThreshold ? clientStatus.nextThreshold - (foundClient.totalSpent || 0) : 0;
+
   return (
     <div style={{ backgroundColor: 'var(--bg-card)', borderRadius: '24px', boxShadow: '0 10px 25px -5px var(--shadow-color)', display: 'flex', flexDirection: 'column', flexGrow: 1, border: '1px solid var(--border-color)', position: 'relative', overflow: 'hidden' }}>
       
@@ -67,13 +79,32 @@ const BaristaCart = ({
             </div>
           </div>
         ) : (
-          <div style={{ backgroundColor: 'rgba(16, 185, 129, 0.1)', border: '1px solid rgba(16, 185, 129, 0.3)', borderRadius: '12px', padding: '16px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-              <span style={{ fontWeight: 'bold', color: 'var(--text-main)', fontSize: '15px' }}>Гость: +7 {foundClient.phone}</span>
-              <button onClick={() => { setFoundClient(null); setPointsToSpend(0); }} style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', fontSize: '13px', fontWeight: 'bold' }}>✖ Отмена</button>
+          <div style={{ backgroundColor: 'rgba(16, 185, 129, 0.05)', border: `1px solid ${clientStatus.color}`, borderRadius: '16px', padding: '16px', position: 'relative' }}>
+            
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '12px' }}>
+              <div>
+                <span style={{ fontWeight: 'bold', color: 'var(--text-main)', fontSize: '16px', display: 'block', marginBottom: '4px' }}>+7 {foundClient.phone}</span>
+                <span style={{ 
+                  display: 'inline-flex', alignItems: 'center', gap: '6px', 
+                  backgroundColor: `${clientStatus.color}22`, color: clientStatus.color, 
+                  padding: '4px 10px', borderRadius: '8px', fontSize: '12px', fontWeight: 'bold' 
+                }}>
+                  {clientStatus.icon} {clientStatus.level} статус
+                </span>
+              </div>
+              <button onClick={() => { setFoundClient(null); setPointsToSpend(0); }} style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', fontSize: '13px', fontWeight: 'bold', padding: '4px' }}>✖ Отмена</button>
             </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <span style={{ color: '#10b981', fontWeight: '900', fontSize: '15px' }}>Баланс: {foundClient.points} баллов</span>
+
+            {/* Подсказка для апсейла */}
+            {clientStatus.nextLevel && (
+              <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '12px', backgroundColor: 'var(--bg-main)', padding: '8px', borderRadius: '8px' }}>
+                До статуса <strong>{clientStatus.nextLevel}</strong> осталось {amountToNextLevel.toLocaleString('ru-RU')} ₽ покупок. 
+                <br/><em>💡 Предложите гостю десерт или пачку кофе с собой!</em>
+              </div>
+            )}
+
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px dashed var(--border-color)', paddingTop: '12px' }}>
+              <span style={{ color: '#10b981', fontWeight: '900', fontSize: '16px' }}>Баланс: {foundClient.points} Б</span>
               {foundClient.points > 0 && cartTotal > 0 && (
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                   <span style={{ fontSize: '13px', color: 'var(--text-muted)' }}>Списать:</span>
