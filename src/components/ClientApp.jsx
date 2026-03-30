@@ -46,17 +46,16 @@ const ClientApp = ({ appData, clients = {}, menuItems = [], onClose }) => {
     ? currentGuest.phone.slice(-4) 
     : currentGuest.phone;
 
-  // 🚀 НОВАЯ ЛОГИКА УРОВНЕЙ ЛОЯЛЬНОСТИ ДЛЯ ГОСТЯ
+  // 🚀 ПЕРЕЛИВАЮЩИЕСЯ ГРАДИЕНТЫ МЕТАЛЛОВ
   const getClientStatusDetails = (totalSpent) => {
-    if (!totalSpent) return { level: 'Бронза', icon: '🥉', cashback: '5%', gradient: 'linear-gradient(135deg, #cd7f32 0%, #8b4513 100%)', nextThreshold: 5000, nextLevel: 'Серебро', nextCashback: '10%' };
-    if (totalSpent >= 15000) return { level: 'Золото', icon: '🥇', cashback: '15%', gradient: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)', nextThreshold: null, nextLevel: null, nextCashback: null };
-    if (totalSpent >= 5000) return { level: 'Серебро', icon: '🥈', cashback: '10%', gradient: 'linear-gradient(135deg, #9ca3af 0%, #4b5563 100%)', nextThreshold: 15000, nextLevel: 'Золото', nextCashback: '15%' };
-    return { level: 'Бронза', icon: '🥉', cashback: '5%', gradient: 'linear-gradient(135deg, #cd7f32 0%, #8b4513 100%)', nextThreshold: 5000, nextLevel: 'Серебро', nextCashback: '10%' };
+    if (!totalSpent) return { level: 'Бронза', icon: '🥉', cashback: '5%', gradient: 'linear-gradient(45deg, #cd7f32, #8b4513, #d2691e, #cd7f32)', nextThreshold: 5000, nextLevel: 'Серебро', nextCashback: '10%' };
+    if (totalSpent >= 15000) return { level: 'Золото', icon: '🥇', cashback: '15%', gradient: 'linear-gradient(45deg, #fbbf24, #f59e0b, #ea580c, #fbbf24)', nextThreshold: null, nextLevel: null, nextCashback: null };
+    if (totalSpent >= 5000) return { level: 'Серебро', icon: '🥈', cashback: '10%', gradient: 'linear-gradient(45deg, #9ca3af, #4b5563, #e5e7eb, #9ca3af)', nextThreshold: 15000, nextLevel: 'Золото', nextCashback: '15%' };
+    return { level: 'Бронза', icon: '🥉', cashback: '5%', gradient: 'linear-gradient(45deg, #cd7f32, #8b4513, #d2691e, #cd7f32)', nextThreshold: 5000, nextLevel: 'Серебро', nextCashback: '10%' };
   };
 
   const statusInfo = getClientStatusDetails(currentGuest.totalSpent);
   
-  // Вычисляем прогресс для полоски
   let progressPercent = 100;
   let remainingToNext = 0;
   
@@ -209,6 +208,17 @@ const ClientApp = ({ appData, clients = {}, menuItems = [], onClose }) => {
         @keyframes anim-pastry { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.08); } }
         @keyframes anim-dessert { 0%, 100% { transform: translateY(0); } 25% { transform: translateY(-5px) rotate(-5deg); } 75% { transform: translateY(-5px) rotate(5deg); } }
         
+        /* 🚀 НОВЫЕ АНИМАЦИИ ДЛЯ КАРТЫ */
+        @keyframes gradientFlow {
+          0% { background-position: 0% 50%; }
+          50% { background-position: 100% 50%; }
+          100% { background-position: 0% 50%; }
+        }
+        @keyframes shine {
+          0% { transform: translateX(-200%) rotate(30deg); }
+          100% { transform: translateX(200%) rotate(30deg); }
+        }
+
         .hide-scroll::-webkit-scrollbar { display: none; }
         .hide-scroll { -ms-overflow-style: none; scrollbar-width: none; }
       `}</style>
@@ -241,17 +251,31 @@ const ClientApp = ({ appData, clients = {}, menuItems = [], onClose }) => {
             </div>
             
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-              <div style={{ width: '48px', height: '48px', borderRadius: '50%', background: statusInfo.gradient, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '24px', border: '2px solid rgba(255,255,255,0.2)', color: '#fff', boxShadow: 'inset 0 2px 4px rgba(255,255,255,0.2)', flexShrink: 0 }}>{statusInfo.icon}</div>
+              <div style={{ 
+                width: '48px', height: '48px', borderRadius: '50%', 
+                background: statusInfo.gradient, backgroundSize: '300% 300%', animation: 'gradientFlow 5s ease infinite',
+                display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '24px', 
+                border: '2px solid rgba(255,255,255,0.2)', color: '#fff', boxShadow: 'inset 0 2px 4px rgba(255,255,255,0.2)', flexShrink: 0 
+              }}>{statusInfo.icon}</div>
             </div>
           </div>
 
           {/* ЛОЯЛЬНОСТЬ */}
           {activeTab === 'card' && (
             <>
-              {/* 🚀 ИЗМЕНЕНА КАРТА ЛОЯЛЬНОСТИ */}
-              <div style={{ background: statusInfo.gradient, padding: '24px', borderRadius: '24px', color: 'white', boxShadow: '0 15px 30px -10px rgba(0,0,0,0.3)', position: 'relative', overflow: 'hidden', border: '1px solid rgba(255,255,255,0.2)' }}>
-                <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', background: 'linear-gradient(30deg, transparent 0%, rgba(255,255,255,0.2) 50%, transparent 100%)', animation: 'shine 3s infinite', pointerEvents: 'none' }} />
+              {/* 🚀 ОЖИВШАЯ КАРТА С ПЕРЕЛИВАМИ И БЛИКОМ */}
+              <div style={{ 
+                background: statusInfo.gradient, 
+                backgroundSize: '300% 300%',
+                animation: 'gradientFlow 5s ease infinite',
+                padding: '24px', borderRadius: '24px', color: 'white', 
+                boxShadow: '0 15px 30px -10px rgba(0,0,0,0.4)', position: 'relative', overflow: 'hidden', border: '1px solid rgba(255,255,255,0.2)' 
+              }}>
                 <div style={{ position: 'absolute', top: '-10px', right: '-10px', opacity: 0.15, fontSize: '140px', transform: 'rotate(-15deg)' }}>{statusInfo.icon}</div>
+                
+                {/* Анимация блика поверх карты */}
+                <div style={{ position: 'absolute', top: '-50%', left: '-50%', width: '200%', height: '200%', background: 'linear-gradient(to right, rgba(255,255,255,0) 0%, rgba(255,255,255,0.3) 50%, rgba(255,255,255,0) 100%)', animation: 'shine 4s infinite', pointerEvents: 'none', zIndex: 0 }} />
+                
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', position: 'relative', zIndex: 1 }}>
                   <div style={{ fontSize: '12px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '2px', color: 'rgba(255,255,255,0.9)' }}>Loyalty Card</div>
                   <div style={{ backgroundColor: 'rgba(255,255,255,0.2)', padding: '4px 10px', borderRadius: '8px', fontSize: '13px', fontWeight: 'bold' }}>Кэшбэк {statusInfo.cashback}</div>
@@ -344,8 +368,8 @@ const ClientApp = ({ appData, clients = {}, menuItems = [], onClose }) => {
           {activeTab === 'profile' && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '24px', animation: 'fadeIn 0.4s ease' }}>
               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '30px 20px', backgroundColor: 'var(--card-bg)', borderRadius: '24px', border: '1px solid var(--border-color)', boxShadow: 'var(--shadow-sm)', position: 'relative', overflow: 'hidden' }}>
-                <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '80px', background: statusInfo.gradient, opacity: 0.2 }} />
-                <div style={{ width: '90px', height: '90px', borderRadius: '50%', background: statusInfo.gradient, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '40px', color: '#fff', marginBottom: '16px', boxShadow: '0 8px 16px rgba(0,0,0,0.2)', position: 'relative', zIndex: 1, border: '4px solid var(--card-bg)' }}>{statusInfo.icon}</div>
+                <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '80px', background: statusInfo.gradient, backgroundSize: '300% 300%', animation: 'gradientFlow 5s ease infinite', opacity: 0.2 }} />
+                <div style={{ width: '90px', height: '90px', borderRadius: '50%', background: statusInfo.gradient, backgroundSize: '300% 300%', animation: 'gradientFlow 5s ease infinite', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '40px', color: '#fff', marginBottom: '16px', boxShadow: '0 8px 16px rgba(0,0,0,0.2)', position: 'relative', zIndex: 1, border: '4px solid var(--card-bg)' }}>{statusInfo.icon}</div>
                 <h2 style={{ margin: '0 0 4px 0', color: 'var(--text-main)', fontSize: '24px', fontWeight: '900', position: 'relative', zIndex: 1 }}>{currentGuest.name}</h2>
                 <div style={{ color: 'var(--text-muted)', fontSize: '15px', fontFamily: 'monospace', position: 'relative', zIndex: 1, fontWeight: 'bold' }}>+7 *** *** {displayPhone}</div>
               </div>
