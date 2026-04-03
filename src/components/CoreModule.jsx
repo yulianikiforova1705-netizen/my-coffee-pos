@@ -206,7 +206,7 @@ const CoreModule = () => {
                       <StatsModule stats={logic.stats} />
                       <PnLWidget currentRevenue={logic.currentRevenue} costOfGoods={logic.costOfGoods} totalManualExpenses={logic.totalManualExpenses} currentNetProfit={logic.currentNetProfit} />
                       <SalesAnalyticsWidget categoryStats={logic.categoryStats} catColors={logic.catColors} topSales={logic.topSales} />
-                      <ChartModule currentRevenue={logic.currentRevenue} />
+                    <ChartModule hourlyHeatmap={logic.hourlyHeatmap} categoryStats={logic.categoryStats} catColors={logic.catColors} />
                       <TableModule orders={logic.orders} onCompleteOrder={logic.handleCompleteOrder} onCancelOrder={logic.handleCancelOrder} allowExport={true} />
                     </>
                   )}
