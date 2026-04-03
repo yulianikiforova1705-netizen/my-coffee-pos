@@ -1,13 +1,16 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { doc, onSnapshot } from 'firebase/firestore';
 import { db } from './firebase.js'; 
-import { QRCodeSVG } from 'qrcode.react'; // 🚀 ИМПОРТ ГЕНЕРАТОРА QR-КОДОВ
+import { QRCodeSVG } from 'qrcode.react'; 
+import Confetti from 'react-confetti'; // 🚀 ИМПОРТИРУЕМ МАГИЮ
 
 export const CustomerDisplay = () => {
   const [cartItems, setCartItems] = useState([]);
   const [total, setTotal] = useState(0);
+  const [showConfetti, setShowConfetti] = useState(false); // 🚀 Состояние салюта
+  const prevCartRef = useRef(0); // 🚀 Память о прошлой корзине
 
-  // 🔗 Ссылка, которая будет зашифрована в QR-коде (поменяй на свою ссылку для чаевых!)
+  // 🔗 Ссылка для чаевых
   const tipsUrl = "https://cloudtips.ru/"; 
 
   const fontFamily = "'Segoe UI', Roboto, Helvetica, Arial, sans-serif";
@@ -49,8 +52,21 @@ export const CustomerDisplay = () => {
     const unsubscribe = onSnapshot(displayRef, (docSnap) => {
       if (docSnap.exists()) {
         const data = docSnap.data();
-        setCartItems(data.cart || []);
+        const newCart = data.cart || [];
+        
+        setCartItems(newCart);
         setTotal(data.total || 0);
+
+        // 🚀 ЛОГИКА ВЗРЫВА КОНФЕТТИ: 
+        // Если в корзине были товары, а теперь 0 -> успешная оплата!
+        if (prevCartRef.current > 0 && newCart.length === 0) {
+          setShowConfetti(true);
+          // Убираем конфетти через 5 секунд
+          setTimeout(() => setShowConfetti(false), 5000);
+        }
+        
+        // Запоминаем текущее количество для следующей проверки
+        prevCartRef.current = newCart.length;
       }
     });
 
@@ -67,11 +83,23 @@ export const CustomerDisplay = () => {
   };
 
   return (
-    <div style={{ display: 'flex', height: '100vh', width: '100%', backgroundColor: colors.bgMain, color: colors.textMain, fontFamily: fontFamily, padding: '2rem', boxSizing: 'border-box', gap: '2rem' }}>
+    <div style={{ display: 'flex', height: '100vh', width: '100%', backgroundColor: colors.bgMain, color: colors.textMain, fontFamily: fontFamily, padding: '2rem', boxSizing: 'border-box', gap: '2rem', overflow: 'hidden' }}>
       
+      {/* 🚀 ЕСЛИ АКТИВНО - ПОКАЗЫВАЕМ КОНФЕТТИ ПОВЕРХ ВСЕГО */}
+      {showConfetti && (
+        <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', zIndex: 9999, pointerEvents: 'none' }}>
+          <Confetti 
+            width={window.innerWidth} 
+            height={window.innerHeight} 
+            recycle={false} // Чтобы конфетти не сыпалось бесконечно
+            numberOfPieces={400} // Плотность салюта
+          />
+        </div>
+      )}
+
       <style>{animationStyles}</style>
 
-      <div className="animate-card" style={{ ...cardStyle, width: '60%', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', animationDelay: '0.2s' }}>
+      <div className="animate-card" style={{ ...cardStyle, width: '60%', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', animationDelay: '0.2s', zIndex: 1 }}>
         <div>
           <h2 style={{ fontSize: '2rem', fontWeight: '900', marginBottom: '2.5rem', marginTop: 0, color: colors.accent, letterSpacing: '-0.5px' }}>Ваш заказ:</h2>
           
@@ -100,14 +128,13 @@ export const CustomerDisplay = () => {
         </div>
       </div>
 
-      <div className="animate-card" style={{ ...cardStyle, width: '40%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', animationDelay: '0.4s' }}>
+      <div className="animate-card" style={{ ...cardStyle, width: '40%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', animationDelay: '0.4s', zIndex: 1 }}>
          <div key={cartItems.length > 0 ? 'tips' : 'promo'} className="animate-right-panel" style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
            {cartItems.length > 0 ? (
              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1.5rem' }}>
                <h3 style={{ fontSize: '1.8rem', fontWeight: '800', marginBottom: '0.5rem', marginTop: 0, color: colors.accent }}>Оставить чаевые баристе</h3>
                <div style={{ width: '18rem', height: '18rem', backgroundColor: colors.qrcodeBg, borderRadius: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: colors.bgMain, fontWeight: 'bold', border: `8px solid ${colors.qrcodeBg}`, boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.5)' }}>
                  
-                 {/* 🚀 РЕАЛЬНЫЙ QR КОД */}
                  <QRCodeSVG 
                     value={tipsUrl} 
                     size={220} 
@@ -121,9 +148,15 @@ export const CustomerDisplay = () => {
              </div>
            ) : (
              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1.5rem' }}>
-               <div style={{ fontSize: '5rem', marginBottom: '1rem' }}>🎁</div>
-               <h3 style={{ fontSize: '2rem', fontWeight: '900', marginBottom: '0.5rem', marginTop: 0, color: colors.accent }}>Кэшбэк 10% с каждого кофе!</h3>
-               <p style={{ color: colors.textMuted, fontSize: '1.4rem', margin: 0, maxWidth: '85%', lineHeight: '1.5' }}>Скачайте наше приложение и получайте баллы за каждую покупку.</p>
+               <div style={{ fontSize: '5rem', marginBottom: '1rem' }}>
+                 {showConfetti ? '🎉' : '🎁'} {/* Смайлик меняется во время салюта */}
+               </div>
+               <h3 style={{ fontSize: '2rem', fontWeight: '900', marginBottom: '0.5rem', marginTop: 0, color: colors.accent }}>
+                 {showConfetti ? 'Спасибо за заказ!' : 'Кэшбэк 10% с каждого кофе!'}
+               </h3>
+               <p style={{ color: colors.textMuted, fontSize: '1.4rem', margin: 0, maxWidth: '85%', lineHeight: '1.5' }}>
+                 {showConfetti ? 'Ждем вас снова в нашей кофейне.' : 'Скачайте наше приложение и получайте баллы за каждую покупку.'}
+               </p>
              </div>
            )}
          </div>
