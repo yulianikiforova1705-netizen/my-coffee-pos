@@ -103,11 +103,11 @@ export const KDSDisplay = () => {
             let timeColor = '#10b981'; // Зеленый (до 5 мин)
             let isAlert = false;
 
-           // Стало так (режим быстрого тестирования):
-if (minutesAgo >= 1) timeColor = '#f59e0b'; // Желтый через 1 мин
-if (minutesAgo >= 2) {
-  timeColor = '#ef4444'; // Красный и пульсация через 2 мин
-  isAlert = true; 
+          // Возвращаем боевой режим:
+if (minutesAgo >= 5) timeColor = '#f59e0b'; // Желтый (от 5 до 10 мин)
+if (minutesAgo >= 10) {
+  timeColor = '#ef4444'; // Красный (больше 10 мин)
+  isAlert = true; // Включаем пульсацию
 }
 
             return (
