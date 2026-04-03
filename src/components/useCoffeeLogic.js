@@ -339,7 +339,26 @@ export const useCoffeeLogic = () => {
   const handleCreateOrder = (orderDescription, totalSum, phone = '', pointsSpent = 0, tips = 0, activeBarista = 'Маша', orderType = 'В зале') => {
     const newId = `#${1044 + orders.length}`; 
     const moneyPaid = totalSum - pointsSpent; 
-    const pointsEarned = Math.floor(moneyPaid * (cashbackPercent / 100)); 
+    
+    // 🚀 НОВАЯ ЛОГИКА СТАТУСОВ: Считаем кэшбэк в зависимости от LTV (всех трат гостя)
+    let currentCashbackPercent = cashbackPercent; // Базовый (Бронза)
+    let oldData = { points: 0, visits: 0, totalSpent: 0 };
+    
+    if (phone && clients[phone]) {
+      oldData = typeof clients[phone] === 'object' ? clients[phone] : { points: clients[phone] || 0, visits: 0, totalSpent: 0 };
+      
+      // Определяем статус до текущей покупки
+      if (oldData.totalSpent >= 10000) {
+        currentCashbackPercent = 10; // 🥇 Золото
+      } else if (oldData.totalSpent >= 3000) {
+        currentCashbackPercent = 7;  // 🥈 Серебро
+      } else {
+        currentCashbackPercent = 5;  // 🥉 Бронза
+      }
+    }
+
+    // Начисляем баллы по текущему статусу
+    const pointsEarned = Math.floor(moneyPaid * (currentCashbackPercent / 100)); 
     
     let orderCost = 0; 
     let dessertsInOrder = 0; 
@@ -413,15 +432,28 @@ export const useCoffeeLogic = () => {
     }));
 
     if (phone) { 
+      // 🚀 ОБНОВЛЯЕМ КЛИЕНТА В БАЗЕ, УЧИТЫВАЯ НОВЫЕ ТРАТЫ И НОВЫЙ СТАТУС
+      const newTotalSpent = oldData.totalSpent + moneyPaid;
+      
+      let newLevel = 'Бронза';
+      if (newTotalSpent >= 10000) newLevel = 'Золото';
+      else if (newTotalSpent >= 3000) newLevel = 'Серебро';
+
+      // Проверяем, повысился ли уровень прямо сейчас
+      const oldLevel = oldData.totalSpent >= 10000 ? 'Золото' : (oldData.totalSpent >= 3000 ? 'Серебро' : 'Бронза');
+      if (oldLevel !== newLevel) {
+        addLog(`🎉 Гость ${phone} достиг уровня ${newLevel}!`, 'success');
+      }
+
       setClients(prev => { 
-        const oldData = typeof prev[phone] === 'object' ? prev[phone] : { points: prev[phone] || 0, visits: 0, totalSpent: 0 }; 
         return { 
           ...prev, 
           [phone]: { 
             points: oldData.points - pointsSpent + pointsEarned, 
             visits: oldData.visits + 1, 
-            totalSpent: oldData.totalSpent + moneyPaid, 
-            lastVisit: now.toLocaleDateString('ru-RU') 
+            totalSpent: newTotalSpent, 
+            lastVisit: now.toLocaleDateString('ru-RU'),
+            level: newLevel // Сохраняем красивое название уровня в базу
           } 
         }; 
       }); 

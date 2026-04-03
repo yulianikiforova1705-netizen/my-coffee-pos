@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { doc, setDoc } from 'firebase/firestore';
-import { db } from './firebase.js'; // Убедись, что путь правильный (если файл в той же папке, то './firebase.js')
+import { db } from './firebase.js'; 
 
 const BaristaCart = ({
   cart,
@@ -44,12 +44,12 @@ const BaristaCart = ({
   }, [cart, finalCharge]);
 
 
-  // 🚀 ЛОГИКА УРОВНЕЙ ЛОЯЛЬНОСТИ
+  // 🚀 ЛОГИКА УРОВНЕЙ ЛОЯЛЬНОСТИ (Синхронизировано с useCoffeeLogic)
   const getClientStatus = (totalSpent) => {
-    if (!totalSpent) return { level: 'Бронза', icon: '🥉', color: '#cd7f32', nextThreshold: 5000, nextLevel: 'Серебро' };
-    if (totalSpent >= 15000) return { level: 'Золото', icon: '🥇', color: '#fbbf24', nextThreshold: null, nextLevel: null };
-    if (totalSpent >= 5000) return { level: 'Серебро', icon: '🥈', color: '#9ca3af', nextThreshold: 15000, nextLevel: 'Золото' };
-    return { level: 'Бронза', icon: '🥉', color: '#cd7f32', nextThreshold: 5000, nextLevel: 'Серебро' };
+    if (!totalSpent) return { level: 'Бронза', icon: '🥉', color: '#b45309', nextThreshold: 3000, nextLevel: 'Серебро' };
+    if (totalSpent >= 10000) return { level: 'Золото', icon: '🥇', color: '#fbbf24', nextThreshold: null, nextLevel: null };
+    if (totalSpent >= 3000) return { level: 'Серебро', icon: '🥈', color: '#94a3b8', nextThreshold: 10000, nextLevel: 'Золото' };
+    return { level: 'Бронза', icon: '🥉', color: '#b45309', nextThreshold: 3000, nextLevel: 'Серебро' };
   };
 
   const clientStatus = foundClient ? getClientStatus(foundClient.totalSpent) : null;
