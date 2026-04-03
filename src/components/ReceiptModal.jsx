@@ -8,7 +8,7 @@ const ReceiptModal = ({ order, onClose, appData }) => {
   const items = order.item ? order.item.split(' + ') : [];
 
   return (
-    <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(15, 23, 42, 0.85)', zIndex: 9999, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '20px', backdropFilter: 'blur(4px)' }}>
+    <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(15, 23, 42, 0.85)', zIndex: 100000, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '20px', backdropFilter: 'blur(4px)' }}>
       
       {/* 🚀 CSS МАГИЯ ДЛЯ ПЕЧАТИ: скрывает фон и оставляет только ленту */}
       <style>{`
