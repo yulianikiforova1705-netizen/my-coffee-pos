@@ -21,6 +21,28 @@ export const CustomerDisplay = () => {
     qrcodeBg: '#ffffff', // Фон QR кода
   };
 
+  // 🚀 ОБЪЕКТ С CSS АНИМАЦИЯМИ (встроенные стили React не поддерживают keyframes, поэтому используем style tag)
+  const animationStyles = `
+    @keyframes fadeInSlideIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    
+    @keyframes newItemSlide {
+      0% { opacity: 0; transform: translateX(-30px); max-height: 0px; padding-bottom: 0px; margin-bottom: 0px; }
+      100% { opacity: 1; transform: translateX(0); max-height: 100px; padding-bottom: 1.25rem; margin-bottom: 0px; }
+    }
+    
+    @keyframes crossFade {
+      0% { opacity: 0; }
+      100% { opacity: 1; }
+    }
+    
+    .animate-card { animation: fadeInSlideIn 0.8s ease-out forwards; }
+    .animate-list-item { animation: newItemSlide 0.5s ease-out forwards; }
+    .animate-right-panel { animation: crossFade 0.6s ease-in-out forwards; }
+  `;
+
   useEffect(() => {
     const displayRef = doc(db, 'live_display', 'current_order');
     
@@ -42,19 +64,27 @@ export const CustomerDisplay = () => {
     padding: '2rem',
     boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.3)',
     border: `1px solid ${colors.border}`,
+    opacity: 0, // Стартовое состояние для анимации
   };
 
   return (
     <div style={{ display: 'flex', height: '100vh', width: '100%', backgroundColor: colors.bgMain, color: colors.textMain, fontFamily: fontFamily, padding: '2rem', boxSizing: 'border-box', gap: '2rem' }}>
       
-      {/* ЛЕВАЯ ЧАСТЬ: Состав заказа в виде стильной карточки */}
-      <div style={{ ...cardStyle, width: '60%', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+      {/* 🚀 ВСТАВЛЯЕМ CSS ТЕГ С АНИМАЦИЯМИ */}
+      <style>{animationStyles}</style>
+
+      {/* ЛЕВАЯ ЧАСТЬ: Состав заказа в виде стильной карточки (анимировано fadeInSlideIn) */}
+      <div className="animate-card" style={{ ...cardStyle, width: '60%', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', animationDelay: '0.2s' }}>
         <div>
           <h2 style={{ fontSize: '2rem', fontWeight: '900', marginBottom: '2.5rem', marginTop: 0, color: colors.accent, letterSpacing: '-0.5px' }}>Ваш заказ:</h2>
           
-          <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '1.25rem', overflowY: 'auto' }}>
+          <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '1.25rem', overflowY: 'auto', overflowX: 'hidden' }}>
             {cartItems.map((item, index) => (
-              <li key={`${item.id}-${index}`} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '1.6rem', paddingBottom: '1.25rem', borderBottom: `1px dashed ${colors.border}` }}>
+              <li 
+                key={`${item.id}-${index}`} 
+                className="animate-list-item" // 🚀 АНИМАЦИЯ НОВОЙ ПОЗИЦИИ
+                style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '1.6rem', borderBottom: `1px dashed ${colors.border}`, boxSizing: 'border-box' }}
+              >
                 <span style={{ fontWeight: '600' }}>
                   {item.name} 
                   <span style={{ color: colors.textMuted, fontSize: '1.2rem', marginLeft: '0.75rem', fontWeight: 'normal' }}>{item.volume || ''}</span>
@@ -69,29 +99,32 @@ export const CustomerDisplay = () => {
         <div style={{ marginTop: '2rem', paddingTop: '2rem', borderTop: `2px solid ${colors.border}` }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '3rem', fontWeight: '900' }}>
             <span style={{ color: colors.textMuted }}>Итого:</span>
-            <span style={{ color: colors.accent }}>{total.toLocaleString('ru-RU')} ₽</span>
+            <span style={{ color: colors.accent, transition: 'all 0.3s ease' }}>{total.toLocaleString('ru-RU')} ₽</span>
           </div>
         </div>
       </div>
 
-      {/* ПРАВАЯ ЧАСТЬ: Маркетинг и чаевые */}
-      <div style={{ ...cardStyle, width: '40%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center' }}>
-         {cartItems.length > 0 ? (
-           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1.5rem' }}>
-             <h3 style={{ fontSize: '1.8rem', fontWeight: '800', marginBottom: '0.5rem', marginTop: 0, color: colors.accent }}>Оставить чаевые баристе</h3>
-             <div style={{ width: '18rem', height: '18rem', backgroundColor: colors.qrcodeBg, borderRadius: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: colors.bgMain, fontWeight: 'bold', border: `8px solid ${colors.qrcodeBg}`, boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.5)' }}>
-               {/* Мы сюда потом вставим реальный QR код */}
-               <div style={{ fontSize: '1.2rem', padding: '1rem', border: `3px dashed ${colors.bgMain}`, borderRadius: '12px' }}>[ QR CODE ]</div>
+      {/* ПРАВАЯ ЧАСТЬ: Маркетинг и чаевые (анимировано fadeInSlideIn) */}
+      <div className="animate-card" style={{ ...cardStyle, width: '40%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', animationDelay: '0.4s' }}>
+         {/* 🚀 АНИМАЦИЯ ПЕРЕКЛЮЧЕНИЯ ПАНЕЛИ (crossFade) */}
+         <div key={cartItems.length > 0 ? 'tips' : 'promo'} className="animate-right-panel" style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+           {cartItems.length > 0 ? (
+             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1.5rem' }}>
+               <h3 style={{ fontSize: '1.8rem', fontWeight: '800', marginBottom: '0.5rem', marginTop: 0, color: colors.accent }}>Оставить чаевые баристе</h3>
+               <div style={{ width: '18rem', height: '18rem', backgroundColor: colors.qrcodeBg, borderRadius: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: colors.bgMain, fontWeight: 'bold', border: `8px solid ${colors.qrcodeBg}`, boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.5)' }}>
+                 {/* Мы сюда потом вставим реальный QR код */}
+                 <div style={{ fontSize: '1.2rem', padding: '1rem', border: `3px dashed ${colors.bgMain}`, borderRadius: '12px' }}>[ QR CODE ]</div>
+               </div>
+               <p style={{ color: colors.textMuted, fontSize: '1.3rem', margin: 0, maxWidth: '80%' }}>Наведите камеру телефона, чтобы поблагодарить баристу.</p>
              </div>
-             <p style={{ color: colors.textMuted, fontSize: '1.3rem', margin: 0, maxWidth: '80%' }}>Наведите камеру телефона, чтобы поблагодарить баристу.</p>
-           </div>
-         ) : (
-           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1.5rem' }}>
-             <div style={{ fontSize: '5rem', marginBottom: '1rem' }}>🎁</div>
-             <h3 style={{ fontSize: '2rem', fontWeight: '900', marginBottom: '0.5rem', marginTop: 0, color: colors.accent }}>Кэшбэк 10% с каждого кофе!</h3>
-             <p style={{ color: colors.textMuted, fontSize: '1.4rem', margin: 0, maxWidth: '85%', lineHeight: '1.5' }}>Скачайте наше приложение и получайте баллы за каждую покупку.</p>
-           </div>
-         )}
+           ) : (
+             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1.5rem' }}>
+               <div style={{ fontSize: '5rem', marginBottom: '1rem' }}>🎁</div>
+               <h3 style={{ fontSize: '2rem', fontWeight: '900', marginBottom: '0.5rem', marginTop: 0, color: colors.accent }}>Кэшбэк 10% с каждого кофе!</h3>
+               <p style={{ color: colors.textMuted, fontSize: '1.4rem', margin: 0, maxWidth: '85%', lineHeight: '1.5' }}>Скачайте наше приложение и получайте баллы за каждую покупку.</p>
+             </div>
+           )}
+         </div>
       </div>
 
     </div>
