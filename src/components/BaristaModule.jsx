@@ -9,6 +9,9 @@ import BaristaCart from './BaristaCart';
 import BaristaQueue from './BaristaQueue';
 import BaristaCabinet from './BaristaCabinet'; 
 
+// 🚀 ИМПОРТИРУЕМ НАШ НОВЫЙ КОМПОНЕНТ ЧЕКА
+import ReceiptModal from './ReceiptModal'; 
+
 const BaristaModule = ({
   onCloseShift, onNewOrder, onOpenDrawer, menuItems = [], stopList = [],
   onToggleStopList, clients = {}, salarySettings, baristaStats,
@@ -52,6 +55,10 @@ const BaristaModule = ({
   const [showTipModal, setShowTipModal] = useState(false);
   const [tipAmount, setTipAmount] = useState(0);
   const [customTip, setCustomTip] = useState('');
+
+  // 🚀 СОСТОЯНИЯ ДЛЯ ЦИФРОВОГО ЧЕКА
+  const [showReceipt, setShowReceipt] = useState(false);
+  const [lastOrderForReceipt, setLastOrderForReceipt] = useState(null);
 
   const activeOrders = orders.filter(o => o.status === 'В процессе');
 
@@ -130,7 +137,6 @@ const BaristaModule = ({
   };
 
   const handlePaymentSuccess = () => {
-    // 🚀 МАГИЯ ЗВУКА v3.0: Синтезируем звук монетки (Марио-стайл) прямо математикой браузера!
     try {
       const AudioContext = window.AudioContext || window.webkitAudioContext;
       if (AudioContext) {
@@ -139,7 +145,6 @@ const BaristaModule = ({
         const gainNode = ctx.createGain();
         
         osc.type = 'sine';
-        // Мелодия успешной оплаты (прыжок ноты)
         osc.frequency.setValueAtTime(987.77, ctx.currentTime); 
         osc.frequency.setValueAtTime(1318.51, ctx.currentTime + 0.1); 
         
@@ -157,12 +162,25 @@ const BaristaModule = ({
       console.log('Браузер не поддерживает синтез звука', err);
     }
 
+    const orderDescription = cart.map(i => i.name).join(' + ');
+    const totalWithTip = finalCharge + tipAmount;
+
+    // 🚀 ФОРМИРУЕМ ДАННЫЕ ДЛЯ ЧЕКА ПЕРЕД ТЕМ КАК ОЧИСТИТЬ КОРЗИНУ
+    setLastOrderForReceipt({
+      id: `#${Date.now().toString().slice(-4)}`, // Временный ID для чека
+      time: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}),
+      barista: loggedInBarista,
+      orderType: 'В зале',
+      item: orderDescription,
+      total: totalWithTip
+    });
+
     setShowCustomerDisplay(false);
-    setFloatingRevenue(finalCharge + tipAmount);
+    setFloatingRevenue(totalWithTip);
     setIsSuccessFlash(true); 
     
     onNewOrder(
-      cart.map(i => i.name).join(' + '), 
+      orderDescription, 
       cartTotal, 
       foundClient ? foundClient.phone : '', 
       pointsToSpend, 
@@ -171,6 +189,9 @@ const BaristaModule = ({
       'В зале'
     );
     
+    // 🚀 ОТКРЫВАЕМ ОКНО ЧЕКА
+    setShowReceipt(true);
+
     setTimeout(() => {
       setCart([]);
       setClientPhone('');
@@ -414,6 +435,15 @@ const BaristaModule = ({
             </button>
           </div>
         </div>
+      )}
+
+      {/* 🚀 ВЫЗОВ НАШЕГО КОМПОНЕНТА ЧЕКА */}
+      {showReceipt && (
+        <ReceiptModal 
+          order={lastOrderForReceipt} 
+          onClose={() => setShowReceipt(false)} 
+          appData={{ appName: 'GOURMET COFFEE' }} 
+        />
       )}
 
       <CustomerDisplayModal 
