@@ -1,11 +1,6 @@
 import { useState, useEffect } from 'react';
-import { doc, setDoc } from 'firebase/firestore';
-import { db } from './firebase.js';
 
 export const useBaristaLogic = (props) => {
-  // САМЫЙ ПЕРВЫЙ ЛОГ - он должен появиться сразу при загрузке страницы
-  console.log('🚀 МАЯЧОК: Хук useBaristaLogic запущен и готов к работе!');
-
   const { onCloseShift, onNewOrder, menuItems, stopList, clients = {}, salarySettings, baristaStats, baristas, promocodes, cashbackPercent, loggedInBarista, onRateBarista, addLog } = props;
 
   const [cart, setCart] = useState([]);
@@ -75,24 +70,6 @@ export const useBaristaLogic = (props) => {
   const availablePoints = clients[phone] ? (typeof clients[phone] === 'object' ? clients[phone].points : clients[phone]) : 0; 
   const pointsToSpend = usePoints ? Math.min(availablePoints, itemsSum) : 0; 
   const finalCharge = (itemsSum - pointsToSpend) + orderTips; 
-
-  // 📡 ТРАНСЛЯЦИЯ В FIREBASE
-  useEffect(() => {
-    const syncLiveDisplay = async () => {
-      try {
-        console.log('📡 ПЕРЕДАТЧИК: Пытаюсь отправить корзину...', cart);
-        await setDoc(doc(db, 'live_display', 'current_order'), {
-          cart: cart,
-          total: finalCharge,
-          updatedAt: new Date().toISOString()
-        });
-        console.log('✅ ПЕРЕДАТЧИК: Успешно синхронизировано!');
-      } catch (error) {
-        console.error("❌ ПЕРЕДАТЧИК ОШИБКА:", error);
-      }
-    };
-    syncLiveDisplay();
-  }, [cart, finalCharge]);
 
   const handleApplyPromo = () => {
     const code = promoInput.trim().toUpperCase();
