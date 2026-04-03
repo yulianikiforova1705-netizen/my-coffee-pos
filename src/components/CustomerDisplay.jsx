@@ -1,27 +1,27 @@
 import React, { useState, useEffect } from 'react';
 import { doc, onSnapshot } from 'firebase/firestore';
-// Убедись, что путь до firebase.js правильный (если файл в той же папке, то './firebase.js')
 import { db } from './firebase.js'; 
+import { QRCodeSVG } from 'qrcode.react'; // 🚀 ИМПОРТ ГЕНЕРАТОРА QR-КОДОВ
 
 export const CustomerDisplay = () => {
   const [cartItems, setCartItems] = useState([]);
   const [total, setTotal] = useState(0);
 
-  // Кастомный шрифт, если твоя платформа использует другой, мы можем поменять
+  // 🔗 Ссылка, которая будет зашифрована в QR-коде (поменяй на свою ссылку для чаевых!)
+  const tipsUrl = "https://cloudtips.ru/"; 
+
   const fontFamily = "'Segoe UI', Roboto, Helvetica, Arial, sans-serif";
 
-  // Цвета твоей платформы
   const colors = {
-    bgMain: '#0f172a', // Очень темный синий (основной фон)
-    bgCard: '#1e293b', // Темно-синий (фон правой части)
-    accent: '#3b82f6', // Синий акцент (как кнопки на кассе)
-    border: '#334155', // Цвет линий
-    textMain: '#ffffff', // Основной текст
-    textMuted: '#94a3b8', // Приглушенный текст (объем)
-    qrcodeBg: '#ffffff', // Фон QR кода
+    bgMain: '#0f172a', 
+    bgCard: '#1e293b', 
+    accent: '#3b82f6', 
+    border: '#334155', 
+    textMain: '#ffffff', 
+    textMuted: '#94a3b8', 
+    qrcodeBg: '#ffffff', 
   };
 
-  // 🚀 ОБЪЕКТ С CSS АНИМАЦИЯМИ (встроенные стили React не поддерживают keyframes, поэтому используем style tag)
   const animationStyles = `
     @keyframes fadeInSlideIn {
       from { opacity: 0; transform: translateY(20px); }
@@ -57,23 +57,20 @@ export const CustomerDisplay = () => {
     return () => unsubscribe();
   }, []);
 
-  // Базовый стиль для карточки-контейнера
   const cardStyle = {
     backgroundColor: colors.bgCard,
     borderRadius: '24px',
     padding: '2rem',
     boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.3)',
     border: `1px solid ${colors.border}`,
-    opacity: 0, // Стартовое состояние для анимации
+    opacity: 0, 
   };
 
   return (
     <div style={{ display: 'flex', height: '100vh', width: '100%', backgroundColor: colors.bgMain, color: colors.textMain, fontFamily: fontFamily, padding: '2rem', boxSizing: 'border-box', gap: '2rem' }}>
       
-      {/* 🚀 ВСТАВЛЯЕМ CSS ТЕГ С АНИМАЦИЯМИ */}
       <style>{animationStyles}</style>
 
-      {/* ЛЕВАЯ ЧАСТЬ: Состав заказа в виде стильной карточки (анимировано fadeInSlideIn) */}
       <div className="animate-card" style={{ ...cardStyle, width: '60%', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', animationDelay: '0.2s' }}>
         <div>
           <h2 style={{ fontSize: '2rem', fontWeight: '900', marginBottom: '2.5rem', marginTop: 0, color: colors.accent, letterSpacing: '-0.5px' }}>Ваш заказ:</h2>
@@ -82,7 +79,7 @@ export const CustomerDisplay = () => {
             {cartItems.map((item, index) => (
               <li 
                 key={`${item.id}-${index}`} 
-                className="animate-list-item" // 🚀 АНИМАЦИЯ НОВОЙ ПОЗИЦИИ
+                className="animate-list-item" 
                 style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '1.6rem', borderBottom: `1px dashed ${colors.border}`, boxSizing: 'border-box' }}
               >
                 <span style={{ fontWeight: '600' }}>
@@ -95,7 +92,6 @@ export const CustomerDisplay = () => {
           </ul>
         </div>
 
-        {/* Итоговая сумма (переделана под синий акцент платформы) */}
         <div style={{ marginTop: '2rem', paddingTop: '2rem', borderTop: `2px solid ${colors.border}` }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '3rem', fontWeight: '900' }}>
             <span style={{ color: colors.textMuted }}>Итого:</span>
@@ -104,16 +100,22 @@ export const CustomerDisplay = () => {
         </div>
       </div>
 
-      {/* ПРАВАЯ ЧАСТЬ: Маркетинг и чаевые (анимировано fadeInSlideIn) */}
       <div className="animate-card" style={{ ...cardStyle, width: '40%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', animationDelay: '0.4s' }}>
-         {/* 🚀 АНИМАЦИЯ ПЕРЕКЛЮЧЕНИЯ ПАНЕЛИ (crossFade) */}
          <div key={cartItems.length > 0 ? 'tips' : 'promo'} className="animate-right-panel" style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
            {cartItems.length > 0 ? (
              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1.5rem' }}>
                <h3 style={{ fontSize: '1.8rem', fontWeight: '800', marginBottom: '0.5rem', marginTop: 0, color: colors.accent }}>Оставить чаевые баристе</h3>
                <div style={{ width: '18rem', height: '18rem', backgroundColor: colors.qrcodeBg, borderRadius: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: colors.bgMain, fontWeight: 'bold', border: `8px solid ${colors.qrcodeBg}`, boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.5)' }}>
-                 {/* Мы сюда потом вставим реальный QR код */}
-                 <div style={{ fontSize: '1.2rem', padding: '1rem', border: `3px dashed ${colors.bgMain}`, borderRadius: '12px' }}>[ QR CODE ]</div>
+                 
+                 {/* 🚀 РЕАЛЬНЫЙ QR КОД */}
+                 <QRCodeSVG 
+                    value={tipsUrl} 
+                    size={220} 
+                    bgColor={colors.qrcodeBg} 
+                    fgColor={colors.bgMain} 
+                    level="H" 
+                 />
+
                </div>
                <p style={{ color: colors.textMuted, fontSize: '1.3rem', margin: 0, maxWidth: '80%' }}>Наведите камеру телефона, чтобы поблагодарить баристу.</p>
              </div>
