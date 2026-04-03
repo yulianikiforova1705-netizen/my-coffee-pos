@@ -182,7 +182,8 @@ const BaristaModule = ({
     onNewOrder(
       orderDescription, 
       cartTotal, 
-      foundClient ? foundClient.phone : '', 
+      // 🚀 ИСПРАВЛЕНИЕ: Если гость найден - берем его номер. Если новый - берем то, что ввели в поле!
+      foundClient ? foundClient.phone : clientPhone.replace(/\D/g, ''), 
       pointsToSpend, 
       tipAmount, 
       loggedInBarista, 
