@@ -344,7 +344,6 @@ export const useCoffeeLogic = () => {
     let orderCost = 0; 
     let dessertsInOrder = 0; 
     
-    // Считаем косты и десерты заранее
     orderDescription.split(' + ').forEach(name => { 
       const item = menuItems.find(i => i.name === name); 
       if (item) {
@@ -353,7 +352,6 @@ export const useCoffeeLogic = () => {
       }
     });
 
-    // Обновляем сырье для напитков
     updateIngredients(prevIngs => {
       let newIngs = [...prevIngs];
       orderDescription.split(' + ').forEach(name => { 
@@ -370,12 +368,10 @@ export const useCoffeeLogic = () => {
       return newIngs;
     });
 
-    // 🚀 ИСПРАВЛЕНИЕ: Списываем штучные товары (десерты, сэндвичи) со склада меню
     updateMenu(prevMenu => {
       let newMenu = [...prevMenu];
       orderDescription.split(' + ').forEach(name => {
         const idx = newMenu.findIndex(m => m.name === name);
-        // Если у товара есть поле inventory (штучный товар), отнимаем 1
         if (idx !== -1 && newMenu[idx].inventory !== undefined) {
            newMenu[idx] = { ...newMenu[idx], inventory: Math.max(0, newMenu[idx].inventory - 1) };
         }
@@ -383,7 +379,6 @@ export const useCoffeeLogic = () => {
       return newMenu;
     });
 
-    // Добавляем чаевые в статистику баристы
     setBaristaStats(prev => { 
       const current = prev[activeBarista] || { tips: 0, dessertsSold: 0, revenue: 0, ratingSum: 0, ratingCount: 0 }; 
       return { 
@@ -450,8 +445,35 @@ export const useCoffeeLogic = () => {
 
   const handleOpenDrawer = (baristaName) => triggerSecurityAlert(`Касса открыта без продажи (${baristaName})`); 
 
+  // 🚀 НОВОЕ: Умный Z-отчет в Telegram
   const handleCloseShift = (shiftData) => { 
     const currentOrdersCount = orders.filter(o => o.status !== 'Отменен').length;
+    
+    // Формируем красивое сообщение для Telegram
+    const lowStockItems = ingredients.filter(i => i.stock <= i.min);
+    const lowStockText = lowStockItems.length > 0 
+      ? lowStockItems.map(i => `• ${i.name}: ${i.stock} ${i.unit}`).join('\n')
+      : 'Все позиции в норме ✅';
+
+    const tgMessage = `
+📊 <b>Z-ОТЧЕТ: СМЕНА ЗАКРЫТА</b>
+📅 ${new Date().toLocaleDateString('ru-RU')}
+🧑‍🍳 Бариста: ${loggedInBarista}
+
+💰 <b>ФИНАНСЫ:</b>
+Выручка: ${shiftData.revenue} ₽
+Чеков пробито: ${currentOrdersCount} шт
+Чаевые бариста: ${shiftData.tips || 0} ₽
+Зарплата за смену: ${shiftData.salary}
+
+⚠️ <b>СКЛАД (Остатки):</b>
+${lowStockText}
+    `;
+    
+    // Отправляем в Telegram
+    sendTelegramMessage(tgMessage);
+
+    // Архивация и сброс
     setShiftArchive([{ 
       id: Date.now(), 
       date: new Date().toLocaleString(), 
@@ -470,7 +492,7 @@ export const useCoffeeLogic = () => {
     ]);
     setExpenses([]);
     
-    addLog(`🗄️ Смена закрыта. Выручка сохранена в архив.`, 'success'); 
+    addLog(`🗄️ Смена закрыта. Z-Отчет отправлен в Telegram.`, 'success'); 
   };
 
   const handleBackup = () => {
