@@ -1,4 +1,6 @@
-import React from 'react';
+import React, { useEffect } from 'react';
+import { doc, setDoc } from 'firebase/firestore';
+import { db } from './firebase.js'; // Убедись, что путь правильный (если файл в той же папке, то './firebase.js')
 
 const BaristaCart = ({
   cart,
@@ -18,6 +20,29 @@ const BaristaCart = ({
   handleCheckoutClick,
   isMobile
 }) => {
+
+  // 🚀 ТРАНСЛЯТОР В FIREBASE ДЛЯ ЭКРАНА ГОСТЯ
+  useEffect(() => {
+    const syncLiveDisplay = async () => {
+      try {
+        console.log('📡 ПЕРЕДАТЧИК (BaristaCart): Отправляю корзину...', cart);
+        await setDoc(doc(db, 'live_display', 'current_order'), {
+          cart: cart || [],
+          total: finalCharge || 0,
+          updatedAt: new Date().toISOString()
+        });
+        console.log('✅ ПЕРЕДАТЧИК: Успешно синхронизировано!');
+      } catch (error) {
+        console.error("❌ ПЕРЕДАТЧИК ОШИБКА:", error);
+      }
+    };
+    
+    // Запускаем синхронизацию только если корзина реально существует как массив
+    if (cart && Array.isArray(cart)) {
+      syncLiveDisplay();
+    }
+  }, [cart, finalCharge]);
+
 
   // 🚀 ЛОГИКА УРОВНЕЙ ЛОЯЛЬНОСТИ
   const getClientStatus = (totalSpent) => {
