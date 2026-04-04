@@ -340,57 +340,71 @@ export const useCoffeeLogic = () => {
     const newId = `#${1044 + orders.length}`; 
     const moneyPaid = totalSum - pointsSpent; 
     
-    // 🚀 НОВАЯ ЛОГИКА СТАТУСОВ: Считаем кэшбэк в зависимости от LTV (всех трат гостя)
-    let currentCashbackPercent = cashbackPercent; // Базовый (Бронза)
+    let currentCashbackPercent = cashbackPercent; 
     let oldData = { points: 0, visits: 0, totalSpent: 0 };
     
     if (phone && clients[phone]) {
       oldData = typeof clients[phone] === 'object' ? clients[phone] : { points: clients[phone] || 0, visits: 0, totalSpent: 0 };
-      
-      // Определяем статус до текущей покупки
-      if (oldData.totalSpent >= 10000) {
-        currentCashbackPercent = 10; // 🥇 Золото
-      } else if (oldData.totalSpent >= 3000) {
-        currentCashbackPercent = 7;  // 🥈 Серебро
-      } else {
-        currentCashbackPercent = 5;  // 🥉 Бронза
-      }
+      if (oldData.totalSpent >= 10000) currentCashbackPercent = 10;
+      else if (oldData.totalSpent >= 3000) currentCashbackPercent = 7;
+      else currentCashbackPercent = 5;
     }
 
-    // Начисляем баллы по текущему статусу
     const pointsEarned = Math.floor(moneyPaid * (currentCashbackPercent / 100)); 
     
     let orderCost = 0; 
     let dessertsInOrder = 0; 
     
-    orderDescription.split(' + ').forEach(name => { 
-      const item = menuItems.find(i => i.name === name); 
+    // 🚀 ИСПРАВЛЕНИЕ: Очищаем название от добавок (отрезаем всё, что после скобки), чтобы найти оригинальный рецепт
+    orderDescription.split(' + ').forEach(fullName => { 
+      const baseName = fullName.split(' (+')[0]; 
+      const item = menuItems.find(i => i.name === baseName); 
       if (item) {
         if (item.costPrice) orderCost += item.costPrice; 
         if (item.category === 'Десерты' || item.isDessert) dessertsInOrder += 1;
       }
     });
 
+    // 🚀 СПИСАНИЕ СО СКЛАДА + УМНЫЕ АЛЕРТЫ В ТЕЛЕГРАМ
     updateIngredients(prevIngs => {
       let newIngs = [...prevIngs];
-      orderDescription.split(' + ').forEach(name => { 
-        const item = menuItems.find(i => i.name === name); 
+      let alertsToFire = [];
+
+      orderDescription.split(' + ').forEach(fullName => { 
+        const baseName = fullName.split(' (+')[0];
+        const item = menuItems.find(i => i.name === baseName); 
         if (item && item.recipe) { 
           Object.keys(item.recipe).forEach(ingId => { 
             const idx = newIngs.findIndex(ing => ing.id === ingId); 
             if (idx !== -1) { 
-              newIngs[idx] = { ...newIngs[idx], stock: Math.max(0, newIngs[idx].stock - item.recipe[ingId]) }; 
+              const oldStock = newIngs[idx].stock;
+              const newStock = Math.max(0, oldStock - item.recipe[ingId]);
+              newIngs[idx] = { ...newIngs[idx], stock: newStock }; 
+
+              // 🔥 ЭКСТРЕННЫЙ АЛЕРТ: если было больше минимума, а теперь стало меньше или равно!
+              if (oldStock > newIngs[idx].min && newStock <= newIngs[idx].min) {
+                alertsToFire.push(`🚨 <b>ВНИМАНИЕ! ЗАКОНЧИЛСЯ ИНГРЕДИЕНТ</b>\n\n<b>Позиция:</b> ${newIngs[idx].name}\n<b>Остаток:</b> ${newStock} ${newIngs[idx].unit}\n\n<i>Нужна срочная закупка!</i>`);
+              }
             } 
           }); 
         }
       });
+
+      // Отправляем сообщения в Telegram
+      if (alertsToFire.length > 0) {
+        setTimeout(() => {
+          alertsToFire.forEach(msg => sendTelegramMessage(msg));
+        }, 500);
+      }
+
       return newIngs;
     });
 
     updateMenu(prevMenu => {
       let newMenu = [...prevMenu];
-      orderDescription.split(' + ').forEach(name => {
-        const idx = newMenu.findIndex(m => m.name === name);
+      orderDescription.split(' + ').forEach(fullName => {
+        const baseName = fullName.split(' (+')[0];
+        const idx = newMenu.findIndex(m => m.name === baseName);
         if (idx !== -1 && newMenu[idx].inventory !== undefined) {
            newMenu[idx] = { ...newMenu[idx], inventory: Math.max(0, newMenu[idx].inventory - 1) };
         }
@@ -432,14 +446,12 @@ export const useCoffeeLogic = () => {
     }));
 
     if (phone) { 
-      // 🚀 ОБНОВЛЯЕМ КЛИЕНТА В БАЗЕ, УЧИТЫВАЯ НОВЫЕ ТРАТЫ И НОВЫЙ СТАТУС
       const newTotalSpent = oldData.totalSpent + moneyPaid;
       
       let newLevel = 'Бронза';
       if (newTotalSpent >= 10000) newLevel = 'Золото';
       else if (newTotalSpent >= 3000) newLevel = 'Серебро';
 
-      // Проверяем, повысился ли уровень прямо сейчас
       const oldLevel = oldData.totalSpent >= 10000 ? 'Золото' : (oldData.totalSpent >= 3000 ? 'Серебро' : 'Бронза');
       if (oldLevel !== newLevel) {
         addLog(`🎉 Гость ${phone} достиг уровня ${newLevel}!`, 'success');
@@ -453,7 +465,7 @@ export const useCoffeeLogic = () => {
             visits: oldData.visits + 1, 
             totalSpent: newTotalSpent, 
             lastVisit: now.toLocaleDateString('ru-RU'),
-            level: newLevel // Сохраняем красивое название уровня в базу
+            level: newLevel 
           } 
         }; 
       }); 
@@ -592,7 +604,7 @@ ${lowStockText}
   }, [stats, orders, shiftArchive]);
 
   const topSales = useMemo(() => { const counts = {}; (orders || []).forEach(order => { if (order.status === 'Отменен') return; (order.item || '').split(' + ').forEach(itemName => counts[itemName] = (counts[itemName] || 0) + 1); }); return Object.entries(counts).sort((a, b) => b[1] - a[1]).slice(0, 3); }, [orders]); 
-  const categoryStats = useMemo(() => { const statsObj = {}; let totalRevenue = 0; if (!(orders || []).filter(o => o.status !== 'Отменен').length) return { stats: { 'Нет продаж': 0 }, total: 0 }; (orders || []).forEach(order => { if (order.status === 'Отменен') return; (order.item || '').split(' + ').forEach(itemName => { const menuItem = (menuItems || []).find(m => m.name === itemName); const cat = menuItem?.category || (menuItem?.isDessert ? 'Десерты' : 'Кофе'); const price = menuItem?.price || 0; if (statsObj[cat] !== undefined) statsObj[cat] += price; else statsObj[cat] = price; totalRevenue += price; }); }); return { stats: statsObj, total: totalRevenue }; }, [orders, menuItems]);
+  const categoryStats = useMemo(() => { const statsObj = {}; let totalRevenue = 0; if (!(orders || []).filter(o => o.status !== 'Отменен').length) return { stats: { 'Нет продаж': 0 }, total: 0 }; (orders || []).forEach(order => { if (order.status === 'Отменен') return; (order.item || '').split(' + ').forEach(itemName => { const menuItem = (menuItems || []).find(m => m.name === itemName.split(' (+')[0]); const cat = menuItem?.category || (menuItem?.isDessert ? 'Десерты' : 'Кофе'); const price = menuItem?.price || 0; if (statsObj[cat] !== undefined) statsObj[cat] += price; else statsObj[cat] = price; totalRevenue += price; }); }); return { stats: statsObj, total: totalRevenue }; }, [orders, menuItems]);
   const catColors = useMemo(() => { const baseColors = { 'Кофе': '#3b82f6', 'Еда': '#10b981', 'Десерты': '#8b5cf6', 'Зерно': '#f59e0b', 'Выпечка': '#f43f5e', 'Нет продаж': '#cbd5e1' }; Object.keys(categoryStats.stats).forEach((cat, index) => { if (!baseColors[cat]) { const fallbackColors = ['#0ea5e9', '#84cc16', '#eab308', '#d946ef', '#14b8a6']; baseColors[cat] = fallbackColors[index % fallbackColors.length]; } }); return baseColors; }, [categoryStats]);
   
   const baristaEfficiency = useMemo(() => { 
