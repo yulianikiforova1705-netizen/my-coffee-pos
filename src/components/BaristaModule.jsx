@@ -11,7 +11,6 @@ import BaristaCabinet from './BaristaCabinet';
 import ReceiptModal from './ReceiptModal'; 
 
 const BaristaModule = ({
-  // 🚀 БРОНЯ: ДОБАВЛЕНЫ ДЕФОЛТНЫЕ ПУСТЫЕ ЗНАЧЕНИЯ, ЧТОБЫ ИЗБЕЖАТЬ БЕЛОГО ЭКРАНА
   onCloseShift, onNewOrder, onOpenDrawer, menuItems = [], stopList = [],
   onToggleStopList, clients = {}, salarySettings = {}, baristaStats = {},
   baristas = [], promocodes = [], cashbackPercent = 0, loggedInBarista = '',
@@ -116,7 +115,6 @@ const BaristaModule = ({
   const proceedToPayment = () => { setTipAmount(customTip ? Number(customTip) : tipAmount); setShowTipModal(false); setCheckoutStep('summary'); setRatingSubmitted(false); setShowFeedbackReasons(false); setFeedbackSubmitted(false); setShowCustomerDisplay(true); };
 
   const handlePaymentSuccess = () => {
-    // 🚀 ВОЗВРАЩАЕМ ЗВУК КАССЫ
     try {
       const AudioContext = window.AudioContext || window.webkitAudioContext;
       if (AudioContext) {
@@ -177,19 +175,17 @@ const BaristaModule = ({
   };
 
   const finishZReport = () => {
-    // 🚀 БРОНЯ: Безопасное чтение выручки
     const revenue = baristaStats?.[loggedInBarista]?.revenue || 0;
     const tips = baristaStats?.[loggedInBarista]?.tips || 0;
     onCloseShift({ revenue, ordersCount: 0, salary: 1500, tips });
     setShowZReport(false);
-    setIsShiftOpen(false); // СБРОС СМЕНЫ
+    setIsShiftOpen(false); 
     if (onLogout) onLogout(); 
   };
 
   const categories = ['Все', ...Array.from(new Set(menuItems.map(item => item.category || 'Прочее')))];
   const filteredMenu = activeCategory === 'Все' ? menuItems : menuItems.filter(item => item.category === activeCategory);
 
-  // 🚀 БРОНЯ: Безопасное чтение статистики десертов
   const currentDessertsSold = baristaStats?.[loggedInBarista]?.dessertsSold || 0;
   const challengeGoal = 10;
   const challengeProgress = Math.min((currentDessertsSold / challengeGoal) * 100, 100);
@@ -219,7 +215,7 @@ const BaristaModule = ({
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '20px' }}>
           <div onClick={() => setShowBaristaCabinet(true)} className="barista-profile-hover" style={{ display: 'flex', alignItems: 'center', gap: '12px', flexShrink: 0, cursor: 'pointer', padding: '6px 12px', borderRadius: '12px', transition: '0.2s', marginLeft: '-12px' }}>
             <div style={{ width: '40px', height: '40px', borderRadius: '50%', backgroundColor: '#3b82f6', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '20px', fontWeight: 'bold' }}>
-              {loggedInBarista?.charAt(0) || 'Б'} {/* 🚀 БРОНЯ: защита первой буквы */}
+              {loggedInBarista?.charAt(0) || 'Б'}
             </div>
             <div>
               <div style={{ fontWeight: 'bold', color: 'var(--text-main)', fontSize: '16px' }}>{loggedInBarista || 'Бариста'}</div>
@@ -237,13 +233,26 @@ const BaristaModule = ({
       <div style={{ display: 'flex', gap: '24px', flexGrow: 1, flexDirection: isMobile ? 'column' : 'row' }}>
         <BaristaMenu isMobile={isMobile} mobileView={mobileView} categories={categories} activeCategory={activeCategory} setActiveCategory={setActiveCategory} filteredMenu={filteredMenu} stopList={stopList} handleAddToCart={handleAddToCart} challengeGoal={challengeGoal} currentDessertsSold={currentDessertsSold} challengeProgress={challengeProgress} ingredients={ingredients} cart={cart} />
         <div style={{ flex: 1, display: (!isMobile || mobileView === 'cart') ? 'flex' : 'none', flexDirection: 'column', gap: '16px', minHeight: isMobile ? 'auto' : '600px', width: '100%' }}>
-          <div style={{ display: 'flex', gap: '6px', backgroundColor: 'var(--bg-card)', padding: '8px', borderRadius: '16px', border: '1px solid var(--border-color)', overflowX: 'auto' }} className="hide-scroll">
-            {['cart', 'queue', 'delivery', 'telegram', 'tools'].map(tab => (
-              <button key={tab} onClick={() => setActiveRightTab(tab)} style={{ flex: 1, minWidth: '80px', padding: '12px 4px', borderRadius: '10px', border: 'none', backgroundColor: activeRightTab === tab ? '#3b82f6' : 'transparent', color: activeRightTab === tab ? 'white' : 'var(--text-main)', fontWeight: 'bold', cursor: 'pointer', fontSize: '13px' }}>
-                {tab === 'cart' ? '🛒 Касса' : tab === 'queue' ? '🛎️ Очередь' : tab === 'delivery' ? '🛵 Дост.' : tab === 'telegram' ? '✈️ TG' : '🛠 Инстр.'}
-              </button>
-            ))}
+          
+          <div style={{ display: 'flex', gap: '6px', backgroundColor: 'var(--bg-card)', padding: '8px', borderRadius: '16px', boxShadow: '0 2px 4px -1px var(--shadow-color)', border: '1px solid var(--border-color)', overflowX: 'auto' }} className="hide-scroll">
+            <button onClick={() => setActiveRightTab('cart')} style={{ flex: 1, minWidth: '80px', padding: '12px 4px', borderRadius: '10px', border: 'none', backgroundColor: activeRightTab === 'cart' ? '#3b82f6' : 'transparent', color: activeRightTab === 'cart' ? 'white' : 'var(--text-main)', fontWeight: 'bold', cursor: 'pointer', transition: 'all 0.2s', fontSize: '13px' }}>
+              🛒 Касса
+            </button>
+            <button onClick={() => setActiveRightTab('queue')} style={{ flex: 1, minWidth: '80px', padding: '12px 4px', borderRadius: '10px', border: 'none', backgroundColor: activeRightTab === 'queue' ? '#f59e0b' : 'transparent', color: activeRightTab === 'queue' ? 'white' : 'var(--text-main)', fontWeight: 'bold', cursor: 'pointer', transition: 'all 0.2s', fontSize: '13px', position: 'relative' }}>
+              🛎️ Очередь
+              {activeOrders.length > 0 && <span style={{ position: 'absolute', top: '-5px', right: '-5px', backgroundColor: '#ef4444', color: 'white', fontSize: '10px', padding: '2px 6px', borderRadius: '10px' }}>{activeOrders.length}</span>}
+            </button>
+            <button onClick={() => setActiveRightTab('delivery')} style={{ flex: 1, minWidth: '80px', padding: '12px 4px', borderRadius: '10px', border: 'none', backgroundColor: activeRightTab === 'delivery' ? '#10b981' : 'transparent', color: activeRightTab === 'delivery' ? 'white' : 'var(--text-main)', fontWeight: 'bold', cursor: 'pointer', transition: 'all 0.2s', fontSize: '13px' }}>
+              🛵 Дост.
+            </button>
+            <button onClick={() => setActiveRightTab('telegram')} style={{ flex: 1, minWidth: '80px', padding: '12px 4px', borderRadius: '10px', border: 'none', backgroundColor: activeRightTab === 'telegram' ? '#0088cc' : 'transparent', color: activeRightTab === 'telegram' ? 'white' : 'var(--text-main)', fontWeight: 'bold', cursor: 'pointer', transition: 'all 0.2s', fontSize: '13px' }}>
+              ✈️ TG
+            </button>
+            <button onClick={() => setActiveRightTab('tools')} style={{ flex: 1, minWidth: '80px', padding: '12px 4px', borderRadius: '10px', border: 'none', backgroundColor: activeRightTab === 'tools' ? '#8b5cf6' : 'transparent', color: activeRightTab === 'tools' ? 'white' : 'var(--text-main)', fontWeight: 'bold', cursor: 'pointer', transition: 'all 0.2s', fontSize: '13px' }}>
+              🛠 Инстр.
+            </button>
           </div>
+
           {activeRightTab === 'cart' && <BaristaCart cart={cart} removeFromCart={removeFromCart} isSuccessFlash={isSuccessFlash} foundClient={foundClient} clientPhone={clientPhone} setClientPhone={setClientPhone} handleFindClient={handleFindClient} setFoundClient={setFoundClient} setPointsToSpend={setPointsToSpend} pointsToSpend={pointsToSpend} cartTotal={cartTotal} floatingRevenue={floatingRevenue} finalCharge={finalCharge} handleCheckoutClick={handleCheckoutClick} isMobile={isMobile} />}
           {activeRightTab === 'queue' && <BaristaQueue activeOrders={activeOrders} onCompleteOrder={onCompleteOrder} onCancelOrder={onCancelOrder} isMobile={isMobile} />}
           {activeRightTab === 'delivery' && <DeliveryWidget onAddDeliveryToRevenue={onAddDeliveryToRevenue} />}
