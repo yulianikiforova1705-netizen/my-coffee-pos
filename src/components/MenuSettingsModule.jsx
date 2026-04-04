@@ -10,6 +10,28 @@ const MenuSettingsModule = ({ menuItems, onAddMenuItem, onEditMenuItem, onDelete
   
   const [editingId, setEditingId] = useState(null);
 
+  // 🚀 МАГИЯ СКАЧИВАНИЯ QR-КОДА
+  const handleDownloadQR = async () => {
+    try {
+      // Указываем твою ссылку и размер 1000x1000 для идеального качества печати
+      const qrUrl = "https://api.qrserver.com/v1/create-qr-code/?size=1000x1000&data=https://my-coffee-pos.vercel.app/menu&margin=20";
+      
+      const response = await fetch(qrUrl);
+      const blob = await response.blob();
+      const downloadUrl = URL.createObjectURL(blob);
+      
+      const link = document.createElement('a');
+      link.href = downloadUrl;
+      link.download = "QR_Menu_Gourmet_Coffee.png"; // Красивое имя файла
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(downloadUrl);
+    } catch (error) {
+      alert('Ошибка при скачивании QR-кода. Проверьте интернет-соединение.');
+    }
+  };
+
   const handleSubmit = () => {
     if (!newName || !newPrice || !newCost || !newInventory) return;
     
@@ -57,7 +79,6 @@ const MenuSettingsModule = ({ menuItems, onAddMenuItem, onEditMenuItem, onDelete
     }
   };
 
-  // 🚀 УМНЫЙ ПОДБОРЩИК ИКОНОК (Диктаторский режим - игнорирует старую базу)
   const getSmartIconDisplay = (item) => {
     const text = ((item.name || '') + ' ' + (item.category || '')).toLowerCase();
     
@@ -82,9 +103,22 @@ const MenuSettingsModule = ({ menuItems, onAddMenuItem, onEditMenuItem, onDelete
 
   return (
     <div style={{ backgroundColor: 'var(--bg-card)', padding: '24px', borderRadius: '16px', boxShadow: '0 4px 6px -1px var(--shadow-color)', marginBottom: '24px', transition: 'all 0.3s ease' }}>
-      <h2 style={{ margin: '0 0 20px 0', fontSize: '18px', color: 'var(--text-main)' }}>
-        {editingId ? '✏️ Редактирование позиции' : '⚙️ Управление меню и складом'}
-      </h2>
+      
+      {/* 🚀 ИЗМЕНЕННЫЙ ЗАГОЛОВОК С КНОПКОЙ СКАЧИВАНИЯ QR */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', flexWrap: 'wrap', gap: '10px' }}>
+        <h2 style={{ margin: 0, fontSize: '18px', color: 'var(--text-main)' }}>
+          {editingId ? '✏️ Редактирование позиции' : '⚙️ Управление меню и складом'}
+        </h2>
+        <button 
+          onClick={handleDownloadQR} 
+          style={{ padding: '10px 16px', backgroundColor: '#8b5cf6', color: 'white', border: 'none', borderRadius: '12px', cursor: 'pointer', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '8px', boxShadow: '0 4px 10px rgba(139, 92, 246, 0.4)', transition: 'transform 0.2s' }}
+          onMouseOver={(e) => e.currentTarget.style.transform = 'scale(1.05)'}
+          onMouseOut={(e) => e.currentTarget.style.transform = 'scale(1)'}
+          title="Скачать готовый QR-код для печати"
+        >
+          🖨️ Скачать QR-меню
+        </button>
+      </div>
       
       <div style={{ display: 'flex', gap: '12px', marginBottom: '24px', flexWrap: 'wrap', alignItems: 'center', backgroundColor: editingId ? 'rgba(59, 130, 246, 0.05)' : 'transparent', padding: editingId ? '16px' : '0', borderRadius: '12px', border: editingId ? '1px dashed #3b82f6' : 'none' }}>
         <input type="text" placeholder="Название" value={newName} onChange={(e) => setNewName(e.target.value)} style={{ flex: 2, minWidth: '120px', padding: '12px', borderRadius: '8px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-main)', color: 'var(--text-main)' }} />
@@ -119,7 +153,6 @@ const MenuSettingsModule = ({ menuItems, onAddMenuItem, onEditMenuItem, onDelete
             <div>
               <div style={{ color: 'var(--text-main)', fontWeight: '600', fontSize: '14px', display: 'flex', alignItems: 'center', gap: '6px' }}>
                 {item.name} 
-                {/* 🚀 ВЫВОДИМ УМНУЮ ИКОНКУ */}
                 <span title={item.category || 'Неизвестно'}>{getSmartIconDisplay(item)}</span>
               </div>
               <div style={{ color: 'var(--text-muted)', fontSize: '13px', display: 'flex', flexDirection: 'column', gap: '4px', marginTop: '6px' }}>
