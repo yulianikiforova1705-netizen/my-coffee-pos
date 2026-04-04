@@ -12,13 +12,21 @@ const QRMenu = () => {
     if (text.includes('ролл') || text.includes('шаурма') || text.includes('wrap')) return '🌯';
     if (text.includes('сэндвич') || text.includes('сендвич') || text.includes('тост')) return '🥪';
     if (text.includes('сырник') || text.includes('блин') || text.includes('каша')) return '🍳';
-    if (text.includes('печенье') || text.includes('макарон')) return '🍪';
+    if (text.includes('печенье') || text.includes('кукис') || text.includes('макарон')) return '🍪';
     if (text.includes('чизкейк') || text.includes('торт') || text.includes('десерт')) return '🍰';
     if (text.includes('салат')) return '🥗';
     if (text.includes('матча') || text.includes('чай')) return '🍵';
     if (text.includes('лимонад') || text.includes('айс') || text.includes('сок')) return '🥤';
     if (text.includes('какао') || text.includes('шоколад') || text.includes('латте') || text.includes('капучино') || text.includes('эспрессо') || text.includes('раф')) return '☕';
     return '☕';
+  };
+
+  const getSmartAnimationClass = (item) => {
+    const text = ((item.name || '') + ' ' + (item.category || '')).toLowerCase();
+    if (text.includes('какао') || text.includes('шоколад') || text.includes('латте') || text.includes('капучино') || text.includes('эспрессо') || text.includes('раф') || text.includes('матча') || text.includes('чай') || text.includes('лимонад') || text.includes('сок') || text.includes('колд')) {
+      return 'coffee-icon-steaming'; // 🚀 Пар для кофе и чая
+    }
+    return 'food-icon-active'; // 🚀 Движение для еды
   };
 
   const categories = ['Все', ...new Set(menuItems.map(item => item.category).filter(Boolean))];
@@ -31,6 +39,7 @@ const QRMenu = () => {
       <div className="neon-orb orb-blue"></div>
       <div className="neon-orb orb-green"></div>
       <div className="neon-orb orb-purple"></div>
+      <div className="neon-orb orb-pink"></div> {/* 🚀 НОВЫЙ НЕОН СПРАВА */}
 
       {/* ШАПКА МЕНЮ */}
       <div className="menu-header">
@@ -61,6 +70,11 @@ const QRMenu = () => {
               className={`menu-card ${isStopped ? 'stopped' : ''}`} 
               key={item.id} 
               style={{ animationDelay: `${index * 0.08}s` }}
+              onClick={() => {
+                if (!isStopped) {
+                  alert('Заказ можно оформить только у баристы на кассе. Ждем вас! ☕');
+                }
+              }} // 🚀 Теперь нажимается и объясняет, почему не добавляет
             >
               {isStopped && (
                 <div className="stop-overlay">
@@ -68,7 +82,7 @@ const QRMenu = () => {
                 </div>
               )}
               
-              <div className="icon-container">
+              <div className={`icon-container ${getSmartAnimationClass(item)}`}>
                 {getSmartIcon(item)}
               </div>
               
@@ -79,7 +93,7 @@ const QRMenu = () => {
               
               <div className="card-footer">
                 <span className="item-price">{item.price} ₽</span>
-                <div className="add-btn">+</div>
+                {/* 🚀 Убрали "+" из футера, он вводил в заблуждение */}
               </div>
             </div>
           )
@@ -88,7 +102,7 @@ const QRMenu = () => {
 
       <style>{`
         .qr-menu-wrapper {
-          background-color: #050b14; /* Максимально темный фон для яркого неона */
+          background-color: #050b14;
           min-height: 100vh;
           width: 100vw;
           font-family: system-ui, -apple-system, sans-serif;
@@ -103,7 +117,7 @@ const QRMenu = () => {
         .neon-orb {
           position: absolute;
           border-radius: 50%;
-          filter: blur(60px); /* Размытие для эффекта свечения */
+          filter: blur(70px); 
           z-index: 0;
           pointer-events: none;
         }
@@ -112,24 +126,32 @@ const QRMenu = () => {
           left: -10%;
           width: 400px;
           height: 400px;
-          background: rgba(59, 130, 246, 0.4); /* Яркий синий */
+          background: rgba(59, 130, 246, 0.4); 
           animation: floatOrb 10s infinite alternate ease-in-out;
         }
         .orb-green {
-          top: 50%;
-          right: -20%;
+          top: 40%;
+          right: -30%;
           width: 350px;
           height: 350px;
-          background: rgba(16, 185, 129, 0.25); /* Изумрудный */
+          background: rgba(16, 185, 129, 0.25); 
           animation: floatOrb 12s infinite alternate-reverse ease-in-out;
         }
         .orb-purple {
-          bottom: -10%;
-          left: 20%;
+          bottom: -15%;
+          left: 10%;
           width: 300px;
           height: 300px;
-          background: rgba(139, 92, 246, 0.3); /* Фиолетовый */
+          background: rgba(139, 92, 246, 0.3); 
           animation: floatOrb 14s infinite alternate ease-in-out;
+        }
+        .orb-pink { /* 🚀 НОВЫЙ НЕОНОВЫЙ ШАР */
+          top: 15%;
+          right: -30%;
+          width: 320px;
+          height: 320px;
+          background: rgba(236, 72, 153, 0.25); 
+          animation: floatOrb 11s infinite alternate-reverse ease-in-out;
         }
 
         /* --- ШАПКА --- */
@@ -145,6 +167,7 @@ const QRMenu = () => {
           margin-bottom: 10px;
           animation: floatCup 3s ease-in-out infinite;
           filter: drop-shadow(0 10px 10px rgba(0,0,0,0.4));
+          position: relative;
         }
         .menu-title {
           margin: 0;
@@ -186,13 +209,13 @@ const QRMenu = () => {
           transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
           cursor: pointer;
           backdrop-filter: blur(10px);
-          -webkit-backdrop-filter: blur(10px); /* Для Apple */
+          -webkit-backdrop-filter: blur(10px);
         }
         .category-btn.active {
           background-color: rgba(59, 130, 246, 0.8);
           color: white;
           border-color: rgba(59, 130, 246, 1);
-          box-shadow: 0 0 20px rgba(59, 130, 246, 0.4);
+          box-shadow: 0 0 25px rgba(59, 130, 246, 0.4);
         }
 
         /* --- КАРТОЧКИ (НАСТОЯЩЕЕ СТЕКЛО) --- */
@@ -205,26 +228,26 @@ const QRMenu = () => {
           z-index: 1;
         }
         .menu-card {
-          background: rgba(255, 255, 255, 0.03); /* Почти полная прозрачность */
+          background: rgba(255, 255, 255, 0.04);
           border-radius: 24px;
           padding: 18px;
           border: 1px solid rgba(255, 255, 255, 0.08);
-          border-top: 1px solid rgba(255, 255, 255, 0.15); /* Блик сверху */
-          border-left: 1px solid rgba(255, 255, 255, 0.15); /* Блик слева */
+          border-top: 1px solid rgba(255, 255, 255, 0.18);
+          border-left: 1px solid rgba(255, 255, 255, 0.18);
           opacity: 0;
           display: flex;
           flex-direction: column;
           gap: 14px;
           animation: fadeInCascade 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
-          box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
-          backdrop-filter: blur(16px); /* Основной эффект стекла */
-          -webkit-backdrop-filter: blur(16px);
+          box-shadow: 0 10px 40px 0 rgba(0, 0, 0, 0.35);
+          backdrop-filter: blur(18px);
+          -webkit-backdrop-filter: blur(18px);
           transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), background 0.2s;
           cursor: pointer;
         }
-        .menu-card:active {
+        .menu-card:active { /* 🚀 ТЕПЕРЬ ОНО ПРАВИЛЬНО И УПРУГО НАЖИМАЕТСЯ */
           transform: scale(0.95);
-          background: rgba(255, 255, 255, 0.06);
+          background: rgba(255, 255, 255, 0.07);
         }
         .menu-card.stopped {
           cursor: default;
@@ -233,11 +256,11 @@ const QRMenu = () => {
         .stop-overlay {
           position: absolute;
           top: 0; left: 0; right: 0; bottom: 0;
-          background-color: rgba(15, 23, 42, 0.6);
+          background-color: rgba(15, 23, 42, 0.65);
           border-radius: 24px;
           z-index: 5;
-          backdrop-filter: blur(3px);
-          -webkit-backdrop-filter: blur(3px);
+          backdrop-filter: blur(4px);
+          -webkit-backdrop-filter: blur(4px);
           display: flex;
           align-items: center;
           justify-content: center;
@@ -261,10 +284,34 @@ const QRMenu = () => {
           align-items: center;
           justify-content: center;
           font-size: 64px;
-          transition: transform 0.3s;
+          position: relative;
         }
-        .menu-card:hover .icon-container {
-          transform: scale(1.1) rotate(2deg);
+
+        /* --- 🚀 МАГИЯ ПАРА ДЛЯ КОФЕ --- */
+        .coffee-icon-steaming::after {
+          content: '〰〰〰'; /* Имитация струек пара */
+          position: absolute;
+          top: -15px; left: 50%;
+          transform: translateX(-50%);
+          font-size: 14px;
+          color: rgba(255, 255, 255, 0.5);
+          filter: blur(1px);
+          font-weight: bold;
+          animation: floatSteam 2.5s infinite ease-in-out;
+        }
+
+        /* --- 🚀 МАГИЯ ДВИЖЕНИЯ ДЛЯ ЕДЫ --- */
+        .food-icon-active::after {
+          content: '🎁'; /* Имитация 'подарка'/вкусняшки */
+          position: absolute;
+          top: -10px; right: 10px;
+          font-size: 16px;
+          opacity: 0.1;
+          filter: blur(2px);
+          animation: floatSteam 3s infinite alternate ease-in-out;
+        }
+        .menu-card:hover .food-icon-active {
+          animation: pulseFood 0.8s ease-out;
         }
 
         .card-content { flex-grow: 1; }
@@ -286,25 +333,13 @@ const QRMenu = () => {
           margin-top: auto;
           display: flex;
           align-items: center;
-          justify-content: space-between;
+          justify-content: center; /* Центрируем цену */
         }
         .item-price {
           font-weight: 900;
-          color: #34d399; /* Яркий изумрудный для ценника */
-          font-size: 22px;
-          text-shadow: 0 2px 4px rgba(0,0,0,0.5);
-        }
-        .add-btn {
-          width: 32px;
-          height: 32px;
-          border-radius: 10px;
-          background-color: rgba(255, 255, 255, 0.1);
-          border: 1px solid rgba(255,255,255,0.2);
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          font-size: 16px;
-          color: white;
+          color: #34d399; 
+          font-size: 24px; /* Цена стала чуть крупнее и в центре */
+          text-shadow: 0 2px 5px rgba(0,0,0,0.5);
         }
 
         /* --- СКРОЛЛ И АНИМАЦИИ --- */
@@ -322,6 +357,16 @@ const QRMenu = () => {
         @keyframes floatOrb { 
           0% { transform: translate(0, 0) scale(1); } 
           100% { transform: translate(40px, 30px) scale(1.1); } 
+        }
+        @keyframes floatSteam { /* 🚀 Анимация пара */
+          0%, 100% { opacity: 0; transform: translateX(-50%) translateY(0) scale(1); }
+          50% { opacity: 1; transform: translateX(-50%) translateY(-10px) scale(1.1); }
+          80% { opacity: 0; transform: translateX(-50%) translateY(-15px) scale(1); }
+        }
+        @keyframes pulseFood { /* 🚀 Анимация еды */
+          0% { transform: scale(1); }
+          30% { transform: scale(1.1); }
+          100% { transform: scale(1); }
         }
       `}</style>
     </div>
