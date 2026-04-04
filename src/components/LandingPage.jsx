@@ -47,10 +47,11 @@ const LandingPage = ({ appData, onRoleSelect, onGuestEnter }) => {
   );
 
   return (
-    <div className="landing-wrapper" style={{ flexGrow: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', padding: '40px 20px' }}>
+    <div className="landing-wrapper" style={{ flexGrow: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', padding: '40px 0' }}>
       <style>{`
-        .landing-wrapper { background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); }
+        .landing-wrapper { background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); overflow-x: hidden; }
         [data-theme="dark"] .landing-wrapper { background: linear-gradient(135deg, #0f172a 0%, #000 100%); }
+        
         .role-card-new { background-color: rgba(255, 255, 255, 0.03); backdrop-filter: blur(10px); padding: 40px; border-radius: 24px; border: 1px solid rgba(255,255,255,0.06); border-top: 4px solid var(--border-base); cursor: pointer; width: 240px; display: flex; flex-direction: column; align-items: center; gap: 16px; transition: all 0.3s ease; position: relative; overflow: hidden; }
         .role-card-new:hover { transform: translateY(-8px); background-color: rgba(255, 255, 255, 0.07); border-color: var(--accent); box-shadow: 0 15px 35px -5px rgba(0,0,0,0.5), 0 0 15px rgba(255,255,255,0.05); }
         .card-icon-container { width: 80px; height: 80px; margin-bottom: 8px; }
@@ -69,7 +70,7 @@ const LandingPage = ({ appData, onRoleSelect, onGuestEnter }) => {
         .steam-3 { animation-delay: 0.6s; }
         .role-card-new:hover .steam-line { stroke: #fff; animation-duration: 1s; opacity: 1; }
         
-        /* 🚀 СТИЛИ ДЛЯ КНОПОК ПЛАНШЕТОВ В ОДНУ ЛИНИЮ */
+        /* 🚀 ИСПРАВЛЕННЫЕ СТИЛИ ДЛЯ КНОПОК (СВАЙП НА ТЕЛЕФОНЕ) */
         .tablet-module-container {
           margin-top: 50px;
           display: flex;
@@ -77,7 +78,6 @@ const LandingPage = ({ appData, onRoleSelect, onGuestEnter }) => {
           align-items: center;
           gap: 20px;
           width: 100%;
-          max-width: 1000px;
           border-top: 1px solid rgba(255,255,255,0.1);
           padding-top: 30px;
         }
@@ -89,13 +89,23 @@ const LandingPage = ({ appData, onRoleSelect, onGuestEnter }) => {
           font-weight: bold;
           margin: 0;
         }
+        
         .tablet-buttons-row {
           display: flex;
           gap: 16px;
-          justify-content: center;
-          flex-wrap: nowrap; /* 🚀 Гарантирует одну линию */
-          width: 100%;
+          justify-content: flex-start; /* Выравнивание от левого края для свайпа */
+          width: 100vw; /* Строго на ширину экрана */
+          max-width: 1000px;
+          overflow-x: auto; /* 🚀 Включаем горизонтальный скролл */
+          padding: 10px 20px;
+          box-sizing: border-box;
+          scroll-snap-type: x mandatory; /* Мягкое прилипание */
         }
+        
+        /* Прячем визуальную полосу прокрутки, оставляя функционал */
+        .tablet-buttons-row::-webkit-scrollbar { display: none; }
+        .tablet-buttons-row { -ms-overflow-style: none; scrollbar-width: none; }
+
         .tablet-btn {
           padding: 16px 20px;
           background: rgba(255, 255, 255, 0.03);
@@ -111,9 +121,20 @@ const LandingPage = ({ appData, onRoleSelect, onGuestEnter }) => {
           justify-content: center;
           gap: 10px;
           transition: all 0.2s ease;
-          white-space: nowrap; /* 🚀 Текст внутри кнопки не переносится */
-          flex: 1; /* 🚀 Кнопки занимают равное место в линии */
+          white-space: nowrap; 
+          flex: 0 0 auto; /* 🚀 Запрещаем кнопкам сжиматься */
+          scroll-snap-align: start; /* Точка прилипания при свайпе */
         }
+
+        /* 🚀 Для больших экранов (ПК/Планшеты) центрируем кнопки */
+        @media (min-width: 768px) {
+          .tablet-buttons-row {
+            justify-content: center;
+            overflow-x: visible;
+            width: 100%;
+          }
+        }
+
         .tablet-btn:hover {
           transform: translateY(-3px);
           background: rgba(255, 255, 255, 0.1);
@@ -131,7 +152,7 @@ const LandingPage = ({ appData, onRoleSelect, onGuestEnter }) => {
       
       <MainLogo />
       
-      <div style={{ display: 'flex', gap: '32px', flexWrap: 'wrap', justifyContent: 'center' }}>
+      <div style={{ display: 'flex', gap: '32px', flexWrap: 'wrap', justifyContent: 'center', padding: '0 20px' }}>
         {[
           { role: 'Владелец', Icon: OwnerIcon, color: '#f59e0b', desc: 'Финансы, P&L, Цели сети', border: 'rgba(245, 158, 11, 0.4)' },
           { role: 'Управляющий', Icon: ManagerIcon, color: '#3b82f6', desc: 'Склад, Расписание, КДС', border: 'rgba(59, 130, 246, 0.4)' },
@@ -147,7 +168,7 @@ const LandingPage = ({ appData, onRoleSelect, onGuestEnter }) => {
         ))}
       </div>
 
-      {/* 🚀 БЛОК ДОПОЛНИТЕЛЬНЫХ ЭКРАНОВ В ОДНУ ЛИНИЮ */}
+      {/* 🚀 БЛОК ДОПОЛНИТЕЛЬНЫХ ЭКРАНОВ СО СВАЙПОМ */}
       <div className="tablet-module-container">
         <p className="tablet-title">Гостевые экраны и модули</p>
         <div className="tablet-buttons-row">
