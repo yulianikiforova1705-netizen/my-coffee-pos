@@ -11,14 +11,14 @@ import BaristaCabinet from './BaristaCabinet';
 import ReceiptModal from './ReceiptModal'; 
 
 const BaristaModule = ({
+  // 🚀 БРОНЯ: ДОБАВЛЕНЫ ДЕФОЛТНЫЕ ПУСТЫЕ ЗНАЧЕНИЯ, ЧТОБЫ ИЗБЕЖАТЬ БЕЛОГО ЭКРАНА
   onCloseShift, onNewOrder, onOpenDrawer, menuItems = [], stopList = [],
-  onToggleStopList, clients = {}, salarySettings, baristaStats,
-  baristas, promocodes = [], cashbackPercent, loggedInBarista,
+  onToggleStopList, clients = {}, salarySettings = {}, baristaStats = {},
+  baristas = [], promocodes = [], cashbackPercent = 0, loggedInBarista = '',
   onRequestBaristaSwitch, onRateBarista, onAddDeliveryToRevenue,
   handleWriteOff, ingredients = [],
   orders = [], onCompleteOrder = () => {}, onCancelOrder = () => {},
   onLogout,
-  // ПРИНИМАЕМ ИЗ CORE:
   isShiftOpen, setIsShiftOpen, startingCash, setStartingCash
 }) => {
   const [cart, setCart] = useState([]);
@@ -76,6 +76,7 @@ const BaristaModule = ({
   const handleAddToCart = (item) => {
     const freshItem = menuItems.find(m => m.id === item.id) || item;
     if (stopList.includes(freshItem.id)) { alert(`❌ ${freshItem.name} в стоп-листе!`); return; }
+    
     const findStock = (obj) => {
       if (!obj) return undefined;
       if (obj.stock !== undefined && obj.stock !== '') return Number(obj.stock);
@@ -84,16 +85,20 @@ const BaristaModule = ({
       if (obj.count !== undefined && obj.count !== '') return Number(obj.count);
       return undefined;
     };
+    
     let availableStock = findStock(freshItem);
+    
     if (availableStock === undefined && ingredients && ingredients.length > 0) {
       const linkedIngredient = ingredients.find(ing => ing.name.toLowerCase().trim() === freshItem.name.toLowerCase().trim() || ing.id === freshItem.id);
       if (linkedIngredient) availableStock = findStock(linkedIngredient);
     }
+    
     if (availableStock !== undefined && !isNaN(availableStock)) {
       const inCartCount = cart.filter(c => c.id === freshItem.id).length;
       if (availableStock <= 0) { alert(`❌ "${freshItem.name}" закончился! (Остаток: 0)`); return; }
       if (inCartCount >= availableStock) { alert(`❌ Доступно всего: ${availableStock} шт.`); return; }
     }
+    
     setCart([...cart, freshItem]);
     if (activeRightTab !== 'cart') setActiveRightTab('cart');
   };
@@ -121,8 +126,9 @@ const BaristaModule = ({
   };
 
   const finishZReport = () => {
-    const revenue = baristaStats[loggedInBarista]?.revenue || 0;
-    const tips = baristaStats[loggedInBarista]?.tips || 0;
+    // 🚀 БРОНЯ: Безопасное чтение выручки
+    const revenue = baristaStats?.[loggedInBarista]?.revenue || 0;
+    const tips = baristaStats?.[loggedInBarista]?.tips || 0;
     onCloseShift({ revenue, ordersCount: 0, salary: 1500, tips });
     setShowZReport(false);
     setIsShiftOpen(false); // СБРОС СМЕНЫ
@@ -132,12 +138,17 @@ const BaristaModule = ({
   const categories = ['Все', ...Array.from(new Set(menuItems.map(item => item.category || 'Прочее')))];
   const filteredMenu = activeCategory === 'Все' ? menuItems : menuItems.filter(item => item.category === activeCategory);
 
+  // 🚀 БРОНЯ: Безопасное чтение статистики десертов
+  const currentDessertsSold = baristaStats?.[loggedInBarista]?.dessertsSold || 0;
+  const challengeGoal = 10;
+  const challengeProgress = Math.min((currentDessertsSold / challengeGoal) * 100, 100);
+
   if (!isShiftOpen) {
     return (
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', flexGrow: 1, height: '100%', minHeight: '60vh', animation: 'fadeIn 0.3s ease' }}>
         <div style={{ backgroundColor: 'var(--bg-card)', padding: '40px', borderRadius: '24px', width: '100%', maxWidth: '420px', textAlign: 'center', boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1)', border: '1px solid var(--border-color)' }}>
           <div style={{ fontSize: '64px', marginBottom: '16px' }}>☕</div>
-          <h2 style={{ margin: '0 0 8px 0', fontSize: '28px', color: 'var(--text-main)', fontWeight: '900' }}>Привет, {loggedInBarista}!</h2>
+          <h2 style={{ margin: '0 0 8px 0', fontSize: '28px', color: 'var(--text-main)', fontWeight: '900' }}>Привет, {loggedInBarista || 'Бариста'}!</h2>
           <p style={{ margin: '0 0 32px 0', color: 'var(--text-muted)', fontSize: '16px' }}>Твоя смена еще не открыта.</p>
           <div style={{ textAlign: 'left', marginBottom: '32px' }}>
             <label style={{ fontSize: '12px', fontWeight: 'bold', color: 'var(--text-muted)', display: 'block', marginBottom: '8px' }}>РАЗМЕН В КАССЕ (₽)</label>
@@ -156,13 +167,15 @@ const BaristaModule = ({
       <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', justifyContent: 'space-between', alignItems: isMobile ? 'stretch' : 'center', gap: '12px', backgroundColor: 'var(--bg-card)', padding: '16px', borderRadius: '16px', boxShadow: '0 4px 6px -1px var(--shadow-color)' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '20px' }}>
           <div onClick={() => setShowBaristaCabinet(true)} className="barista-profile-hover" style={{ display: 'flex', alignItems: 'center', gap: '12px', flexShrink: 0, cursor: 'pointer', padding: '6px 12px', borderRadius: '12px', transition: '0.2s', marginLeft: '-12px' }}>
-            <div style={{ width: '40px', height: '40px', borderRadius: '50%', backgroundColor: '#3b82f6', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '20px', fontWeight: 'bold' }}>{loggedInBarista.charAt(0)}</div>
+            <div style={{ width: '40px', height: '40px', borderRadius: '50%', backgroundColor: '#3b82f6', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '20px', fontWeight: 'bold' }}>
+              {loggedInBarista?.charAt(0) || 'Б'} {/* 🚀 БРОНЯ: защита первой буквы */}
+            </div>
             <div>
-              <div style={{ fontWeight: 'bold', color: 'var(--text-main)', fontSize: '16px' }}>{loggedInBarista}</div>
+              <div style={{ fontWeight: 'bold', color: 'var(--text-main)', fontSize: '16px' }}>{loggedInBarista || 'Бариста'}</div>
               <div style={{ fontSize: '12px', color: '#10b981', fontWeight: 'bold' }}>Смена открыта</div>
             </div>
           </div>
-          <button onClick={() => onRequestBaristaSwitch(baristas.find(b => b !== loggedInBarista))} style={{ padding: '8px 12px', backgroundColor: 'var(--bg-main)', border: '1px solid var(--border-color)', borderRadius: '8px', cursor: 'pointer', fontSize: '12px', fontWeight: 'bold' }}>🔄 Сменить</button>
+          <button onClick={() => baristas.length > 1 ? onRequestBaristaSwitch(baristas.find(b => b !== loggedInBarista)) : alert('Вы единственный бариста в системе')} style={{ padding: '8px 12px', backgroundColor: 'var(--bg-main)', border: '1px solid var(--border-color)', borderRadius: '8px', cursor: 'pointer', fontSize: '12px', fontWeight: 'bold' }}>🔄 Сменить</button>
         </div>
         <div style={{ display: 'flex', gap: '8px' }}>
           <button onClick={() => onOpenDrawer(loggedInBarista)} style={{ flex: 1, padding: '12px', backgroundColor: 'var(--bg-main)', border: '1px solid var(--border-color)', borderRadius: '12px', fontWeight: 'bold' }}>💵 Касса</button>
@@ -221,7 +234,7 @@ const BaristaModule = ({
 
       {showReceipt && <ReceiptModal order={lastOrderForReceipt} onClose={() => setShowReceipt(false)} appData={{ appName: 'GOURMET COFFEE' }} />}
       <CustomerDisplayModal showCustomerDisplay={showCustomerDisplay} showConfetti={showConfetti} checkoutStep={checkoutStep} setCheckoutStep={setCheckoutStep} cart={cart} finalCharge={finalCharge + tipAmount} handlePaymentSuccess={handlePaymentSuccess} closeCustomerDisplay={() => { setShowCustomerDisplay(false); setCheckoutStep('summary'); }} ratingSubmitted={ratingSubmitted} loggedInBarista={loggedInBarista} hoveredStar={hoveredStar} setHoveredStar={setHoveredStar} handleRatingSubmit={(star) => { setSelectedRating(star); setRatingSubmitted(true); onRateBarista(loggedInBarista, star); if (star >= 4) { setShowConfetti(true); setTimeout(() => setShowConfetti(false), 3000); } else { setShowFeedbackReasons(true); } }} selectedRating={selectedRating} showFeedbackReasons={showFeedbackReasons} feedbackSubmitted={feedbackSubmitted} handleFeedbackReasonSubmit={() => setFeedbackSubmitted(true)} />
-      <ZReportModal showZReport={showZReport} shiftTime={new Date().getTime()} shiftRevenue={baristaStats[loggedInBarista]?.revenue || 0} baristas={baristas} baristaStats={baristaStats} salarySettings={salarySettings} finishZReport={finishZReport} />
+      <ZReportModal showZReport={showZReport} shiftTime={new Date().getTime()} shiftRevenue={baristaStats?.[loggedInBarista]?.revenue || 0} baristas={baristas} baristaStats={baristaStats} salarySettings={salarySettings} finishZReport={finishZReport} />
       <BaristaCabinet isOpen={showBaristaCabinet} onClose={() => setShowBaristaCabinet(false)} baristaName={loggedInBarista} baristaStats={baristaStats} salarySettings={salarySettings} />
     </div>
   );
