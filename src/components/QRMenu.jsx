@@ -5,7 +5,6 @@ const QRMenu = () => {
   const { menuItems, stopList } = useCoffeeLogic();
   const [activeCategory, setActiveCategory] = useState('Все');
   
-  // 🚀 СОСТОЯНИЕ ДЛЯ КРАСИВОГО УВЕДОМЛЕНИЯ
   const [toastVisible, setToastVisible] = useState(false);
   const timerRef = useRef(null);
 
@@ -83,7 +82,7 @@ const QRMenu = () => {
               key={item.id} 
               style={{ animationDelay: `${index * 0.08}s` }}
               onClick={() => {
-                if (!isStopped) showToast(); // 🚀 ВЫЗЫВАЕМ КРАСИВОЕ УВЕДОМЛЕНИЕ
+                if (!isStopped) showToast(); 
               }}
             >
               {isStopped && (
@@ -109,7 +108,7 @@ const QRMenu = () => {
         })}
       </div>
 
-      {/* 🚀 КАСТОМНОЕ УВЕДОМЛЕНИЕ (ТОСТ) */}
+      {/* КАСТОМНОЕ УВЕДОМЛЕНИЕ (ТОСТ) */}
       <div className={`custom-toast ${toastVisible ? 'show' : ''}`}>
         Заказ можно оформить только у баристы на кассе. Ждем вас! ☕
       </div>
@@ -199,7 +198,24 @@ const QRMenu = () => {
 
         /* --- КАРТОЧКИ --- */
         .menu-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 16px; padding-bottom: 100px; position: relative; z-index: 1; }
-        .menu-card { background: rgba(255, 255, 255, 0.04); border-radius: 24px; padding: 18px; border: 1px solid rgba(255, 255, 255, 0.08); border-top: 1px solid rgba(255, 255, 255, 0.18); border-left: 1px solid rgba(255, 255, 255, 0.18); opacity: 0; display: flex; flexDirection: column; gap: 14px; animation: fadeInCascade 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; box-shadow: 0 10px 40px 0 rgba(0, 0, 0, 0.35); backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px); transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), background 0.2s; cursor: pointer; }
+        .menu-card { 
+          background: rgba(255, 255, 255, 0.04); 
+          border-radius: 24px; 
+          padding: 18px; 
+          border: 1px solid rgba(255, 255, 255, 0.08); 
+          border-top: 1px solid rgba(255, 255, 255, 0.18); 
+          border-left: 1px solid rgba(255, 255, 255, 0.18); 
+          opacity: 0; 
+          display: flex; 
+          flex-direction: column; /* 🚀 ИСПРАВЛЕНА ТА САМАЯ ОШИБКА */
+          gap: 14px; 
+          animation: fadeInCascade 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; 
+          box-shadow: 0 10px 40px 0 rgba(0, 0, 0, 0.35); 
+          backdrop-filter: blur(18px); 
+          -webkit-backdrop-filter: blur(18px); 
+          transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), background 0.2s; 
+          cursor: pointer; 
+        }
         .menu-card:active { transform: scale(0.95); background: rgba(255, 255, 255, 0.07); }
         .menu-card.stopped { cursor: default; }
         
