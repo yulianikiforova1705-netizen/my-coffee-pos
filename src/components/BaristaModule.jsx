@@ -8,8 +8,6 @@ import BaristaMenu from './BaristaMenu';
 import BaristaCart from './BaristaCart';
 import BaristaQueue from './BaristaQueue';
 import BaristaCabinet from './BaristaCabinet'; 
-
-// 🚀 ИМПОРТИРУЕМ НАШ НОВЫЙ КОМПОНЕНТ ЧЕКА
 import ReceiptModal from './ReceiptModal'; 
 
 const BaristaModule = ({
@@ -21,6 +19,10 @@ const BaristaModule = ({
   orders = [], onCompleteOrder = () => {}, onCancelOrder = () => {},
   onLogout 
 }) => {
+  // 🚀 НОВЫЕ СОСТОЯНИЯ ДЛЯ ОТКРЫТИЯ СМЕНЫ
+  const [isShiftOpen, setIsShiftOpen] = useState(false);
+  const [startingCash, setStartingCash] = useState(2000);
+
   const [cart, setCart] = useState([]);
   const [activeCategory, setActiveCategory] = useState('Все');
   const [activeRightTab, setActiveRightTab] = useState('cart'); 
@@ -57,7 +59,6 @@ const BaristaModule = ({
   const [tipAmount, setTipAmount] = useState(0);
   const [customTip, setCustomTip] = useState('');
 
-  // 🚀 СОСТОЯНИЯ ДЛЯ ЦИФРОВОГО ЧЕКА
   const [showReceipt, setShowReceipt] = useState(false);
   const [lastOrderForReceipt, setLastOrderForReceipt] = useState(null);
 
@@ -166,9 +167,8 @@ const BaristaModule = ({
     const orderDescription = cart.map(i => i.name).join(' + ');
     const totalWithTip = finalCharge + tipAmount;
 
-    // 🚀 ФОРМИРУЕМ ДАННЫЕ ДЛЯ ЧЕКА ПЕРЕД ТЕМ КАК ОЧИСТИТЬ КОРЗИНУ
     setLastOrderForReceipt({
-      id: `#${Date.now().toString().slice(-4)}`, // Временный ID для чека
+      id: `#${Date.now().toString().slice(-4)}`, 
       time: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}),
       barista: loggedInBarista,
       orderType: 'В зале',
@@ -190,7 +190,6 @@ const BaristaModule = ({
       'В зале'
     );
     
-    // 🚀 ОТКРЫВАЕМ ОКНО ЧЕКА
     setShowReceipt(true);
 
     setTimeout(() => {
@@ -236,6 +235,46 @@ const BaristaModule = ({
   const challengeGoal = 10;
   const challengeProgress = Math.min((currentDessertsSold / challengeGoal) * 100, 100);
 
+  // 🚀 ЭКРАН ОТКРЫТИЯ СМЕНЫ (БЛОКИРУЕТ ДОСТУП К КАССЕ)
+  if (!isShiftOpen) {
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', flexGrow: 1, height: '100%', minHeight: '60vh', animation: 'fadeIn 0.3s ease' }}>
+        <div style={{ backgroundColor: 'var(--bg-card)', padding: '40px', borderRadius: '24px', width: '100%', maxWidth: '420px', textAlign: 'center', boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1)', border: '1px solid var(--border-color)' }}>
+          <div style={{ fontSize: '64px', marginBottom: '16px' }}>☕</div>
+          <h2 style={{ margin: '0 0 8px 0', fontSize: '28px', color: 'var(--text-main)', fontWeight: '900' }}>Привет, {loggedInBarista}!</h2>
+          <p style={{ margin: '0 0 32px 0', color: 'var(--text-muted)', fontSize: '16px' }}>Твоя смена еще не открыта.</p>
+
+          <div style={{ textAlign: 'left', marginBottom: '32px' }}>
+            <label style={{ fontSize: '12px', fontWeight: 'bold', color: 'var(--text-muted)', display: 'block', marginBottom: '8px' }}>РАЗМЕН В КАССЕ НА НАЧАЛО ДНЯ (₽)</label>
+            <input 
+              type="number" 
+              value={startingCash} 
+              onChange={(e) => setStartingCash(e.target.value)}
+              style={{ width: '100%', padding: '16px', borderRadius: '12px', border: '2px solid var(--border-color)', backgroundColor: 'var(--bg-main)', color: 'var(--text-main)', fontSize: '20px', fontWeight: 'bold', textAlign: 'center', boxSizing: 'border-box', outline: 'none' }}
+            />
+          </div>
+
+          <button 
+            onClick={() => setIsShiftOpen(true)}
+            style={{ width: '100%', padding: '16px', backgroundColor: '#10b981', color: 'white', border: 'none', borderRadius: '16px', fontSize: '18px', fontWeight: '900', cursor: 'pointer', boxShadow: '0 10px 15px -3px rgba(16, 185, 129, 0.4)', transition: 'transform 0.2s' }}
+            onMouseOver={(e) => e.target.style.transform = 'scale(1.02)'}
+            onMouseOut={(e) => e.target.style.transform = 'scale(1)'}
+          >
+            🟢 ОТКРЫТЬ СМЕНУ
+          </button>
+
+          <button 
+            onClick={onLogout}
+            style={{ marginTop: '16px', padding: '12px', backgroundColor: 'transparent', color: '#ef4444', border: 'none', fontWeight: 'bold', cursor: 'pointer', fontSize: '14px' }}
+          >
+            🚪 Выйти из аккаунта
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // ОСНОВНОЙ ИНТЕРФЕЙС КАССЫ
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%', gap: isMobile ? '12px' : '20px', paddingBottom: isMobile ? '80px' : '0' }}>
       
@@ -439,7 +478,6 @@ const BaristaModule = ({
         </div>
       )}
 
-      {/* 🚀 ВЫЗОВ НАШЕГО КОМПОНЕНТА ЧЕКА */}
       {showReceipt && (
         <ReceiptModal 
           order={lastOrderForReceipt} 
