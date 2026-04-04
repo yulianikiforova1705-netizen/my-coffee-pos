@@ -23,8 +23,20 @@ const CoreModule = () => {
   const logic = useCoffeeLogic();
   const [showBaristaCabinet, setShowBaristaCabinet] = useState(false);
   const [isFullScreen, setIsFullScreen] = useState(false);
-  
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+
+  // 🚀 УМНАЯ ПАМЯТЬ СМЕНЫ (LocalStorage)
+  const [isShiftOpen, setIsShiftOpen] = useState(() => {
+    return localStorage.getItem('isShiftOpen') === 'true';
+  });
+  const [startingCash, setStartingCash] = useState(() => {
+    return localStorage.getItem('startingCash') || '2000';
+  });
+
+  useEffect(() => {
+    localStorage.setItem('isShiftOpen', isShiftOpen);
+    localStorage.setItem('startingCash', startingCash);
+  }, [isShiftOpen, startingCash]);
 
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth <= 768);
@@ -35,9 +47,6 @@ const CoreModule = () => {
   const [activeOwnerTab, setActiveOwnerTab] = useState('Сводка');
   const [activeManagerTab, setActiveManagerTab] = useState('Операционка');
 
-// 🚀 ДОБАВЛЯЕМ ГЛОБАЛЬНУЮ ПАМЯТЬ ДЛЯ СМЕНЫ
-  const [isShiftOpen, setIsShiftOpen] = useState(false);
-  const [startingCash, setStartingCash] = useState(2000);
   const toggleFullScreen = () => {
     if (!document.fullscreenElement) {
       document.documentElement.requestFullscreen().catch(e => console.error(e));
@@ -205,19 +214,9 @@ const CoreModule = () => {
                       <StatsModule stats={logic.stats} />
                       <PnLWidget currentRevenue={logic.currentRevenue} costOfGoods={logic.costOfGoods} totalManualExpenses={logic.totalManualExpenses} currentNetProfit={logic.currentNetProfit} />
                       <SalesAnalyticsWidget categoryStats={logic.categoryStats} catColors={logic.catColors} topSales={logic.topSales} />
-                      
-                     {/* 🚀 ПОДКЛЮЧАЕМ ДАННЫЕ О ВЫРУЧКЕ К ГРАФИКУ */}
-                      <ChartModule 
-                        currentRevenue={logic.currentRevenue} 
-                        hourlyHeatmap={logic.hourlyHeatmap} 
-                        categoryStats={logic.categoryStats} 
-                        catColors={logic.catColors} 
-                      />
-                      
-                      {/* 🚀 ВОТ ЗДЕСЬ ИСПРАВЛЯЕМ: ПЕРЕДАЕМ ВЫРУЧКУ В РЕЙТИНГ */}
+                      <ChartModule currentRevenue={logic.currentRevenue} hourlyHeatmap={logic.hourlyHeatmap} categoryStats={logic.categoryStats} catColors={logic.catColors} />
                       <NetworkRatingWidget currentRevenue={logic.currentRevenue} />
-                      
-                      <TableModule orders={logic.orders} onCompleteOrder={logic.handleCompleteOrder} onCancelOrder={logic.handleCancelOrder} allowExport={true} /> 
+                      <TableModule orders={logic.orders} onCompleteOrder={logic.handleCompleteOrder} onCancelOrder={logic.handleCancelOrder} allowExport={true} />
                     </>
                   )}
                   {activeOwnerTab === 'Журнал' && <ActivityFeedModule logs={logic.logs} />}
@@ -295,7 +294,6 @@ const CoreModule = () => {
                   onCompleteOrder={logic.handleCompleteOrder} 
                   onCancelOrder={logic.handleCancelOrder}
                   onLogout={() => logic.setCurrentRole(null)} 
-                  // 🚀 ПЕРЕДАЕМ ПАМЯТЬ В БАРИСТУ:
                   isShiftOpen={isShiftOpen}
                   setIsShiftOpen={setIsShiftOpen}
                   startingCash={startingCash}
@@ -305,61 +303,22 @@ const CoreModule = () => {
             </div>
           </div>
 
-          <div style={{ 
-            marginTop: 'auto', 
-            paddingTop: '32px', 
-            paddingBottom: isMobile ? '80px' : '16px', 
-            textAlign: 'center', 
-            color: 'var(--text-muted)', 
-            fontSize: '13px',
-            opacity: 0.8,
-            transition: 'color 0.3s'
-          }}>
+          <div style={{ marginTop: 'auto', paddingTop: '32px', paddingBottom: isMobile ? '80px' : '16px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '13px', opacity: 0.8, transition: 'color 0.3s' }}>
             {logic.appData?.appName || 'Аналитическая платформа сети кофеен'} © {new Date().getFullYear()} <br/>
             Created with ❤️ by <strong style={{color: 'var(--text-main)'}}>{logic.appData?.ownerName || 'Yulia Nikiforova'}</strong>
           </div>
 
-          <DashboardModals 
-            showTelegramModal={logic.showTelegramModal} 
-            setShowTelegramModal={logic.setShowTelegramModal} 
-            currentRevenue={logic.currentRevenue} 
-            totalManualExpenses={logic.totalManualExpenses} 
-            currentNetProfit={logic.currentNetProfit} 
-            topSales={logic.topSales} 
-            showProcurementModal={logic.showProcurementModal} 
-            setShowProcurementModal={logic.setShowProcurementModal} 
-            ingredients={logic.ingredients} 
-            menuItems={logic.menuItems} 
-            showArchiveModal={logic.showArchiveModal} 
-            setShowArchiveModal={logic.setShowArchiveModal} 
-            shiftArchive={logic.shiftArchive} 
-            onApproveProcurement={logic.handleApproveProcurement}
-          />
+          <DashboardModals showTelegramModal={logic.showTelegramModal} setShowTelegramModal={logic.setShowTelegramModal} currentRevenue={logic.currentRevenue} totalManualExpenses={logic.totalManualExpenses} currentNetProfit={logic.currentNetProfit} topSales={logic.topSales} showProcurementModal={logic.showProcurementModal} setShowProcurementModal={logic.setShowProcurementModal} ingredients={logic.ingredients} menuItems={logic.menuItems} showArchiveModal={logic.showArchiveModal} setShowArchiveModal={logic.setShowArchiveModal} shiftArchive={logic.shiftArchive} onApproveProcurement={logic.handleApproveProcurement} />
 
-          <BaristaCabinet 
-            isOpen={showBaristaCabinet} 
-            onClose={() => setShowBaristaCabinet(false)} 
-            baristaName={logic.loggedInBarista} 
-            baristaStats={logic.baristaStats} 
-            salarySettings={logic.salarySettings} 
-          />
+          <BaristaCabinet isOpen={showBaristaCabinet} onClose={() => setShowBaristaCabinet(false)} baristaName={logic.loggedInBarista} baristaStats={logic.baristaStats} salarySettings={logic.salarySettings} />
         </>
       )}
 
-      {/* ПИН-КОД */}
       {logic.pinModal.isOpen && (
         <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.8)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', backdropFilter: 'blur(8px)' }}>
           <div style={{ backgroundColor: '#ffffff', padding: '30px', borderRadius: '20px', width: '300px', textAlign: 'center', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)' }}>
             <h3 style={{ margin: '0 0 20px 0', fontSize: '18px', color: '#111827' }}>ВХОД</h3>
-            <input 
-              type="password" 
-              maxLength="4" 
-              value={logic.pinInput} 
-              onChange={(e) => logic.setPinInput(e.target.value.replace(/\D/g, ''))} 
-              onKeyDown={(e) => { if (e.key === 'Enter') logic.handlePinSubmit(); }}
-              style={{ width: '100%', fontSize: '28px', textAlign: 'center', padding: '10px', borderRadius: '10px', border: `2px solid #e5e7eb`, backgroundColor: '#f3f4f6', color: '#111827', letterSpacing: '8px', boxSizing: 'border-box' }} 
-              autoFocus 
-            />
+            <input type="password" maxLength="4" value={logic.pinInput} onChange={(e) => logic.setPinInput(e.target.value.replace(/\D/g, ''))} onKeyDown={(e) => { if (e.key === 'Enter') logic.handlePinSubmit(); }} style={{ width: '100%', fontSize: '28px', textAlign: 'center', padding: '10px', borderRadius: '10px', border: `2px solid #e5e7eb`, backgroundColor: '#f3f4f6', color: '#111827', letterSpacing: '8px', boxSizing: 'border-box' }} autoFocus />
             <div style={{ display: 'flex', gap: '10px', marginTop: '20px' }}>
               <button onClick={logic.cancelPin} style={{ flex: 1, padding: '10px', borderRadius: '8px', border: 'none', backgroundColor: '#e5e7eb', color: '#111827', fontWeight: 'bold', cursor: 'pointer' }}>ОТМЕНА</button>
               <button onClick={logic.handlePinSubmit} style={{ flex: 1, padding: '10px', backgroundColor: '#3b82f6', color: 'white', borderRadius: '8px', border: 'none', fontWeight: 'bold', cursor: 'pointer' }}>ВОЙТИ</button>
