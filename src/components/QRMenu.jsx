@@ -2,7 +2,8 @@ import React, { useState, useRef } from 'react';
 import { useCoffeeLogic } from './useCoffeeLogic';
 
 const QRMenu = () => {
-  const { menuItems, stopList } = useCoffeeLogic();
+  // 🚀 ДОБАВИЛИ ingredients ДЛЯ ПРОВЕРКИ ОСТАТКОВ
+  const { menuItems, stopList, ingredients } = useCoffeeLogic();
   const [activeCategory, setActiveCategory] = useState('Все');
   
   const [toastVisible, setToastVisible] = useState(false);
@@ -34,11 +35,33 @@ const QRMenu = () => {
 
   const getSmartAnimationClass = (item) => {
     const text = ((item.name || '') + ' ' + (item.category || '')).toLowerCase();
-    // 🚀 ИСПРАВЛЕНИЕ: Добавили 'кофе', 'американо' и 'флэт'
     if (text.includes('кофе') || text.includes('американо') || text.includes('флэт') || text.includes('какао') || text.includes('шоколад') || text.includes('латте') || text.includes('капучино') || text.includes('эспрессо') || text.includes('раф') || text.includes('матча') || text.includes('чай') || text.includes('лимонад') || text.includes('сок') || text.includes('колд')) {
       return 'coffee-icon-steaming';
     }
     return 'food-icon-active'; 
+  };
+
+  // 🚀 УМНАЯ ПРОВЕРКА ОСТАТКОВ
+  const getAvailableStock = (item) => {
+    const findStock = (obj) => {
+      if (!obj) return undefined;
+      if (obj.stock !== undefined && obj.stock !== '') return Number(obj.stock);
+      if (obj.inventory !== undefined && obj.inventory !== '') return Number(obj.inventory);
+      if (obj.quantity !== undefined && obj.quantity !== '') return Number(obj.quantity);
+      if (obj.count !== undefined && obj.count !== '') return Number(obj.count);
+      return undefined;
+    };
+
+    let stock = findStock(item);
+
+    if (stock === undefined && ingredients && ingredients.length > 0) {
+      const linkedIngredient = ingredients.find(ing => 
+        ing.name.toLowerCase().trim() === item.name.toLowerCase().trim() || 
+        ing.id === item.id
+      );
+      if (linkedIngredient) stock = findStock(linkedIngredient);
+    }
+    return stock;
   };
 
   const categories = ['Все', ...new Set(menuItems.map(item => item.category).filter(Boolean))];
@@ -76,7 +99,13 @@ const QRMenu = () => {
       {/* КАРТОЧКИ ТОВАРОВ */}
       <div className="menu-grid">
         {filteredMenu.map((item, index) => {
-          const isStopped = stopList.includes(item.id);
+          
+          // 🚀 ЛОГИКА БЛОКИРОВКИ: проверяем и ручной стоп-лист, и нулевые остатки на складе
+          const isManualStop = stopList.includes(item.id);
+          const availableStock = getAvailableStock(item);
+          const isZeroStock = availableStock !== undefined && availableStock <= 0;
+          const isStopped = isManualStop || isZeroStock;
+
           return (
             <div 
               className={`menu-card ${isStopped ? 'stopped' : ''}`} 
@@ -88,20 +117,24 @@ const QRMenu = () => {
             >
               {isStopped && (
                 <div className="stop-overlay">
-                  <div className="stop-badge">СКОРО БУДЕТ</div>
+                  {/* Меняем текст в зависимости от причины блокировки */}
+                  <div className="stop-badge">{isZeroStock ? 'ЗАКОНЧИЛОСЬ' : 'СКОРО БУДЕТ'}</div>
                 </div>
               )}
               
-              <div className={`icon-container ${getSmartAnimationClass(item)}`}>
+              <div 
+                className={`icon-container ${!isStopped ? getSmartAnimationClass(item) : ''}`} 
+                style={{ filter: isStopped ? 'grayscale(100%) opacity(0.4)' : 'none' }}
+              >
                 {getSmartIcon(item)}
               </div>
               
-              <div className="card-content">
+              <div className="card-content" style={{ opacity: isStopped ? 0.6 : 1 }}>
                 <div className="item-name">{item.name}</div>
                 {item.desc && <div className="item-desc">{item.desc}</div>}
               </div>
               
-              <div className="card-footer">
+              <div className="card-footer" style={{ opacity: isStopped ? 0.6 : 1 }}>
                 <span className="item-price">{item.price} ₽</span>
               </div>
             </div>
@@ -211,23 +244,26 @@ const QRMenu = () => {
           -webkit-backdrop-filter: blur(18px); 
           transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), background 0.2s; 
           cursor: pointer; 
+          position: relative;
+          overflow: hidden;
         }
         .menu-card:active { transform: scale(0.95); background: rgba(255, 255, 255, 0.07); }
         .menu-card.stopped { cursor: default; }
+        .menu-card.stopped:active { transform: none; background: rgba(255, 255, 255, 0.04); }
         
-        .stop-overlay { position: absolute; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(15, 23, 42, 0.65); border-radius: 24px; z-index: 5; backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; }
-        .stop-badge { background-color: #ef4444; color: white; font-size: 13px; font-weight: 900; padding: 8px 14px; border-radius: 12px; box-shadow: 0 4px 15px rgba(239, 68, 68, 0.4); transform: rotate(-5deg); }
+        .stop-overlay { position: absolute; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(15, 23, 42, 0.75); z-index: 5; backdrop-filter: blur(2px); -webkit-backdrop-filter: blur(2px); display: flex; align-items: center; justify-content: center; }
+        .stop-badge { background-color: #ef4444; color: white; font-size: 13px; font-weight: 900; padding: 8px 14px; border-radius: 12px; box-shadow: 0 4px 15px rgba(239, 68, 68, 0.4); transform: rotate(-5deg); letter-spacing: 1px;}
 
-        .icon-container { height: 120px; background-color: rgba(255, 255, 255, 0.02); border-radius: 18px; display: flex; align-items: center; justify-content: center; font-size: 64px; position: relative; }
+        .icon-container { height: 120px; background-color: rgba(255, 255, 255, 0.02); border-radius: 18px; display: flex; align-items: center; justify-content: center; font-size: 64px; position: relative; transition: filter 0.3s; }
 
         .coffee-icon-steaming::after { content: '〰〰〰'; position: absolute; top: 12px; left: 50%; transform: translateX(-50%); font-size: 14px; color: rgba(255, 255, 255, 0.4); filter: blur(1px); font-weight: bold; animation: floatSteam 2.5s infinite ease-in-out; }
         .food-icon-active::after { content: '✨'; position: absolute; top: 16px; right: 25px; font-size: 18px; opacity: 0.6; animation: sparkleFood 2s infinite alternate ease-in-out; }
-        .menu-card:hover .food-icon-active { animation: pulseFood 0.8s ease-out; }
+        .menu-card:not(.stopped):hover .food-icon-active { animation: pulseFood 0.8s ease-out; }
 
-        .card-content { flex-grow: 1; display: flex; flex-direction: column; }
+        .card-content { flex-grow: 1; display: flex; flex-direction: column; transition: opacity 0.3s; }
         .item-name { font-weight: 800; font-size: 17px; line-height: 1.2; margin-bottom: 6px; color: #ffffff; text-shadow: 0 2px 4px rgba(0,0,0,0.5); }
         .item-desc { font-size: 13px; color: #94a3b8; line-height: 1.4; }
-        .card-footer { margin-top: auto; display: flex; align-items: center; justify-content: center; }
+        .card-footer { margin-top: auto; display: flex; align-items: center; justify-content: center; transition: opacity 0.3s; }
         .item-price { font-weight: 900; color: #34d399; font-size: 24px; text-shadow: 0 2px 5px rgba(0,0,0,0.5); }
 
         .hide-scroll::-webkit-scrollbar { display: none; }
