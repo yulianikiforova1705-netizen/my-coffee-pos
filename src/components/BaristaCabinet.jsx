@@ -3,10 +3,18 @@ import React from 'react';
 const BaristaCabinet = ({ isOpen, onClose, baristaName, baristaStats = {}, salarySettings = {} }) => {
   if (!isOpen) return null;
 
-  const stats = baristaStats[baristaName] || { tips: 0, dessertsSold: 0, revenue: 0, ratingSum: 0, ratingCount: 0 };
+  // 🚀 ЖЕЛЕЗОБЕТОННЫЙ ПРЕДОХРАНИТЕЛЬ ОТ NaN
+  const rawStats = baristaStats[baristaName] || {};
+  const stats = {
+    tips: Number(rawStats.tips) || 0,
+    dessertsSold: Number(rawStats.dessertsSold) || 0,
+    revenue: Number(rawStats.revenue) || 0,
+    ratingSum: Number(rawStats.ratingSum) || 0,
+    ratingCount: Number(rawStats.ratingCount) || 0
+  };
   
-  const baseSalary = salarySettings.base || 1500;
-  const percentBonus = Math.round(stats.revenue * ((salarySettings.percent || 5) / 100));
+  const baseSalary = Number(salarySettings.base) || 1500;
+  const percentBonus = Math.round(stats.revenue * ((Number(salarySettings.percent) || 5) / 100));
   const estimatedSalary = baseSalary + percentBonus;
   
   const avgRating = stats.ratingCount > 0 ? (stats.ratingSum / stats.ratingCount).toFixed(1) : '—';
@@ -76,7 +84,7 @@ const BaristaCabinet = ({ isOpen, onClose, baristaName, baristaStats = {}, salar
             
             <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '8px', fontSize: '11px', color: 'var(--text-muted)' }}>
               <span>Оклад: {baseSalary}₽</span>
-              <span>Бонус ({salarySettings.percent}%): +{percentBonus}₽</span>
+              <span>Бонус ({salarySettings.percent || 5}%): +{percentBonus}₽</span>
             </div>
           </div>
 
