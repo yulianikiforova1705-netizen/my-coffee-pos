@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useCoffeeLogic } from '../useCoffeeLogic';
+import { useCoffeeLogic } from './useCoffeeLogic';
 
 const QRMenu = () => {
   // 🚀 Берем актуальное меню и стоп-лист прямо из ядра кассы!
