@@ -69,30 +69,55 @@ const LandingPage = ({ appData, onRoleSelect, onGuestEnter }) => {
         .steam-3 { animation-delay: 0.6s; }
         .role-card-new:hover .steam-line { stroke: #fff; animation-duration: 1s; opacity: 1; }
         
-        /* 🚀 СТИЛИ ДЛЯ НОВОЙ КНОПКИ ГОСТЯ */
-        .guest-btn-glass {
-          margin-top: 48px;
-          padding: 16px 32px;
-          background: rgba(16, 185, 129, 0.1);
+        /* 🚀 СТИЛИ ДЛЯ НОВЫХ КНОПОК ПЛАНШЕТОВ */
+        .tablet-module-container {
+          margin-top: 50px;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 20px;
+          width: 100%;
+          max-width: 800px;
+          border-top: 1px solid rgba(255,255,255,0.1);
+          padding-top: 30px;
+        }
+        .tablet-title {
+          color: rgba(255,255,255,0.5);
+          text-transform: uppercase;
+          letter-spacing: 2px;
+          font-size: 14px;
+          font-weight: bold;
+          margin: 0;
+        }
+        .tablet-buttons-grid {
+          display: flex;
+          gap: 16px;
+          flex-wrap: wrap;
+          justify-content: center;
+        }
+        .tablet-btn {
+          padding: 16px 24px;
+          background: rgba(255, 255, 255, 0.03);
           backdrop-filter: blur(10px);
-          border: 1px solid rgba(16, 185, 129, 0.3);
+          border: 1px solid rgba(255, 255, 255, 0.1);
           border-radius: 16px;
-          color: #10b981;
-          font-size: 18px;
-          font-weight: 800;
+          color: #e2e8f0;
+          font-size: 16px;
+          font-weight: 700;
           cursor: pointer;
           display: flex;
           align-items: center;
           gap: 12px;
-          transition: all 0.3s ease;
+          transition: all 0.2s ease;
         }
-        .guest-btn-glass:hover {
-          transform: translateY(-4px);
-          background: rgba(16, 185, 129, 0.2);
-          border-color: #10b981;
+        .tablet-btn:hover {
+          transform: translateY(-3px);
+          background: rgba(255, 255, 255, 0.1);
           color: #fff;
-          box-shadow: 0 10px 25px -5px rgba(16, 185, 129, 0.3);
         }
+        .btn-kds:hover { border-color: #f59e0b; box-shadow: 0 10px 20px -5px rgba(245, 158, 11, 0.3); }
+        .btn-guest:hover { border-color: #10b981; box-shadow: 0 10px 20px -5px rgba(16, 185, 129, 0.3); }
+        .btn-menu:hover { border-color: #8b5cf6; box-shadow: 0 10px 20px -5px rgba(139, 92, 246, 0.3); }
 
         @keyframes crown-wobble { 0%, 100% { transform: scale(1.1) rotate(0deg); } 25% { transform: scale(1.1) rotate(-5deg); } 75% { transform: scale(1.1) rotate(5deg); } }
         @keyframes clip-bounce { 0%, 100% { transform: scale(1.1) translateY(0); } 50% { transform: scale(1.1) translateY(-10px); } }
@@ -101,6 +126,7 @@ const LandingPage = ({ appData, onRoleSelect, onGuestEnter }) => {
       
       <MainLogo />
       
+      {/* 🚀 БЛОК 1: ОСНОВНАЯ КАССА (С АВТОРИЗАЦИЕЙ) */}
       <div style={{ display: 'flex', gap: '32px', flexWrap: 'wrap', justifyContent: 'center' }}>
         {[
           { role: 'Владелец', Icon: OwnerIcon, color: '#f59e0b', desc: 'Финансы, P&L, Цели сети', border: 'rgba(245, 158, 11, 0.4)' },
@@ -117,12 +143,27 @@ const LandingPage = ({ appData, onRoleSelect, onGuestEnter }) => {
         ))}
       </div>
 
-      {/* 🚀 ИНТЕГРИРОВАННАЯ КНОПКА ГОСТЯ */}
-      {onGuestEnter && (
-        <button className="guest-btn-glass" onClick={onGuestEnter}>
-          <span style={{ fontSize: '24px' }}>📱</span> Приложение гостя
-        </button>
-      )}
+      {/* 🚀 БЛОК 2: ДОПОЛНИТЕЛЬНЫЕ ЭКРАНЫ ДЛЯ ПЛАНШЕТОВ */}
+      <div className="tablet-module-container">
+        <p className="tablet-title">Модули для планшетов</p>
+        <div className="tablet-buttons-grid">
+          
+          <button className="tablet-btn btn-kds" onClick={() => window.location.href = '/kds'}>
+            <span style={{ fontSize: '24px' }}>🧑‍🍳</span> Экран кухни (KDS)
+          </button>
+
+          {/* Используем твой старый onGuestEnter, так как он, видимо, настроен хитро в App.jsx */}
+          <button className="tablet-btn btn-guest" onClick={onGuestEnter || (() => window.location.href = '/customer-display')}>
+            <span style={{ fontSize: '24px' }}>📱</span> Экран гостя (Стойка)
+          </button>
+
+          <button className="tablet-btn btn-menu" onClick={() => window.location.href = '/menu'}>
+            <span style={{ fontSize: '24px' }}>🤳</span> QR-Меню (Предпросмотр)
+          </button>
+
+        </div>
+      </div>
+
     </div>
   );
 };
