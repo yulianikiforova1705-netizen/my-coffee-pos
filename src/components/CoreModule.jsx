@@ -202,7 +202,18 @@ const CoreModule = () => {
                       <StatsModule stats={logic.stats} />
                       <PnLWidget currentRevenue={logic.currentRevenue} costOfGoods={logic.costOfGoods} totalManualExpenses={logic.totalManualExpenses} currentNetProfit={logic.currentNetProfit} />
                       <SalesAnalyticsWidget categoryStats={logic.categoryStats} catColors={logic.catColors} topSales={logic.topSales} />
-                    <ChartModule hourlyHeatmap={logic.hourlyHeatmap} categoryStats={logic.categoryStats} catColors={logic.catColors} />
+                      
+                      {/* 🚀 ПОДКЛЮЧАЕМ ДАННЫЕ О ВЫРУЧКЕ К ГРАФИКУ */}
+                      <ChartModule 
+                        currentRevenue={logic.currentRevenue} 
+                        hourlyHeatmap={logic.hourlyHeatmap} 
+                        categoryStats={logic.categoryStats} 
+                        catColors={logic.catColors} 
+                      />
+                      
+                      {/* 🚀 ВИДЖЕТ СРАВНЕНИЯ СЕТИ */}
+                      <NetworkRatingWidget />
+                      
                       <TableModule orders={logic.orders} onCompleteOrder={logic.handleCompleteOrder} onCancelOrder={logic.handleCancelOrder} allowExport={true} />
                     </>
                   )}
