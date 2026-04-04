@@ -1,5 +1,4 @@
 import React from 'react';
-import { QRCodeSVG } from 'qrcode.react';
 
 const ReceiptModal = ({ order, onClose, appData }) => {
   if (!order) return null;
@@ -43,19 +42,19 @@ const ReceiptModal = ({ order, onClose, appData }) => {
         <div style={{ fontSize: '13px', marginBottom: '15px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between' }}>
             <span>Чек №:</span>
-            <strong>{order.id}</strong>
+            <strong>{order.id || Math.floor(Math.random() * 10000)}</strong>
           </div>
           <div style={{ display: 'flex', justifyContent: 'space-between' }}>
             <span>Дата:</span>
-            <span>{new Date().toLocaleDateString('ru-RU')} {order.time}</span>
+            <span>{new Date().toLocaleDateString('ru-RU')} {order.time || new Date().toLocaleTimeString('ru-RU', {hour: '2-digit', minute:'2-digit'})}</span>
           </div>
           <div style={{ display: 'flex', justifyContent: 'space-between' }}>
             <span>Кассир:</span>
-            <span>{order.barista}</span>
+            <span>{order.barista || 'Бариста'}</span>
           </div>
           <div style={{ display: 'flex', justifyContent: 'space-between' }}>
             <span>Тип:</span>
-            <span>{order.orderType}</span>
+            <span>{order.orderType || 'С собой'}</span>
           </div>
         </div>
 
@@ -88,7 +87,8 @@ const ReceiptModal = ({ order, onClose, appData }) => {
         {/* QR-КОД ДЛЯ ЧАЕВЫХ ИЛИ ПРИЛОЖЕНИЯ */}
         <div style={{ textAlign: 'center', marginTop: '20px' }}>
           <div style={{ fontSize: '14px', fontWeight: 'bold', marginBottom: '12px' }}>Чаевые баристе</div>
-          <QRCodeSVG value="https://cloudtips.ru/" size={120} />
+          {/* 🚀 ИСПОЛЬЗУЕМ НАДЕЖНЫЙ API ВМЕСТО СТОРОННЕЙ БИБЛИОТЕКИ */}
+          <img src="https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=https://cloudtips.ru/&margin=0" alt="QR Чаевые" width="120" height="120" style={{ margin: '0 auto' }} />
           <div style={{ fontSize: '13px', marginTop: '15px', fontWeight: 'bold' }}>Спасибо за визит!</div>
           <div style={{ fontSize: '11px', marginTop: '4px' }}>Ждем вас снова.</div>
         </div>

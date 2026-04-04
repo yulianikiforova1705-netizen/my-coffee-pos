@@ -18,6 +18,8 @@ import AdvancedInventory from './AdvancedInventory';
 import BaristaCabinet from './BaristaCabinet';
 import DeliveryWidget from './DeliveryWidget';
 import ClientApp from './ClientApp'; 
+// 🚀 ИМПОРТИРУЕМ НАШ НОВЫЙ МОДУЛЬ ЧЕКА
+import ReceiptModal from './ReceiptModal';
 
 const CoreModule = () => {
   const logic = useCoffeeLogic();
@@ -25,6 +27,9 @@ const CoreModule = () => {
   const [isFullScreen, setIsFullScreen] = useState(false);
   
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+
+  // 🚀 СОСТОЯНИЕ ДЛЯ ЭЛЕКТРОННОГО ЧЕКА
+  const [receiptOrder, setReceiptOrder] = useState(null);
 
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth <= 768);
@@ -52,6 +57,12 @@ const CoreModule = () => {
     if (role === 'Управляющий') return '👔';
     if (role === 'Бариста') return '☕';
     return '👤';
+  };
+
+  // 🚀 УМНЫЙ ПЕРЕХВАТЧИК: Сохраняет заказ и сразу показывает чек
+  const handleNewOrderWithReceipt = (orderData) => {
+    logic.handleCreateOrder(orderData); // Отправляем в базу
+    setReceiptOrder(orderData);         // Показываем чек баристе
   };
 
   const ownerTabs = [
@@ -264,7 +275,8 @@ const CoreModule = () => {
               {logic.currentRole === 'Бариста' && (
                 <BaristaModule 
                   onCloseShift={logic.handleCloseShift} 
-                  onNewOrder={logic.handleCreateOrder} 
+                  // 🚀 ПЕРЕДАЕМ НАШ ПЕРЕХВАТЧИК ВМЕСТО СТАНДАРТНОЙ ФУНКЦИИ
+                  onNewOrder={handleNewOrderWithReceipt} 
                   onOpenDrawer={logic.handleOpenDrawer} 
                   menuItems={logic.menuItems} 
                   stopList={logic.stopList} 
@@ -289,7 +301,6 @@ const CoreModule = () => {
             </div>
           </div>
 
-          {/* 🚀 ВОЗВРАЩАЕМ АВТОРСТВО В САМЫЙ НИЗ */}
           <div style={{ 
             marginTop: 'auto', 
             paddingTop: '32px', 
@@ -327,6 +338,13 @@ const CoreModule = () => {
             baristaName={logic.loggedInBarista} 
             baristaStats={logic.baristaStats} 
             salarySettings={logic.salarySettings} 
+          />
+          
+          {/* 🚀 МОДАЛЬНОЕ ОКНО С ЧЕКОМ */}
+          <ReceiptModal 
+            order={receiptOrder} 
+            onClose={() => setReceiptOrder(null)} 
+            appData={logic.appData} 
           />
         </>
       )}
