@@ -1,20 +1,15 @@
 import React, { useState, useEffect } from 'react';
 
-const ClientApp = ({ appData, clients = {}, menuItems = [], onClose }) => {
+const ClientApp = ({ appData, clients = {}, menuItems = [], ingredients = [], stopList = [], onClose }) => {
   const [showSplash, setShowSplash] = useState(true);
   const [activeTab, setActiveTab] = useState('menu'); 
-  
   const [isDarkMode, setIsDarkMode] = useState(false);
-  
   const [activeCategory, setActiveCategory] = useState('Все');
   const [cart, setCart] = useState({});
-  
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [pickupTime, setPickupTime] = useState('asap'); 
-
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
-
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
 
   useEffect(() => {
@@ -52,7 +47,6 @@ const ClientApp = ({ appData, clients = {}, menuItems = [], onClose }) => {
     ? currentGuest.phone.slice(-4) 
     : currentGuest.phone;
 
-  // 🚀 ПЕРЕЛИВАЮЩИЕСЯ ГРАДИЕНТЫ МЕТАЛЛОВ
   const getClientStatusDetails = (totalSpent) => {
     if (!totalSpent) return { level: 'Бронза', icon: '🥉', cashback: '5%', gradient: 'linear-gradient(45deg, #cd7f32, #8b4513, #d2691e, #cd7f32)', nextThreshold: 5000, nextLevel: 'Серебро', nextCashback: '10%' };
     if (totalSpent >= 15000) return { level: 'Золото', icon: '🥇', cashback: '15%', gradient: 'linear-gradient(45deg, #fbbf24, #f59e0b, #ea580c, #fbbf24)', nextThreshold: null, nextLevel: null, nextCashback: null };
@@ -66,26 +60,15 @@ const ClientApp = ({ appData, clients = {}, menuItems = [], onClose }) => {
   let remainingToNext = 0;
   
   if (statusInfo.nextThreshold) {
-    let currentLevelBase = 0;
-    if (statusInfo.level === 'Серебро') currentLevelBase = 5000;
-    
+    let currentLevelBase = statusInfo.level === 'Серебро' ? 5000 : 0;
     const pointsInCurrentLevel = currentGuest.totalSpent - currentLevelBase;
     const levelSpan = statusInfo.nextThreshold - currentLevelBase;
-    
     progressPercent = Math.min((pointsInCurrentLevel / levelSpan) * 100, 100);
     remainingToNext = statusInfo.nextThreshold - currentGuest.totalSpent;
   }
 
-  const fallbackMenu = [
-    { id: 991, name: 'Капучино', price: 250, category: 'Кофе', icon: '☕', desc: 'Классика с густой пенкой' },
-    { id: 992, name: 'Круассан', price: 180, category: 'Выпечка', icon: '🥐', desc: 'Свежий и хрустящий' }
-  ];
-
   const getSmartIcon = (item) => {
-    const name = (item.name || '').toLowerCase();
-    const cat = (item.category || '').toLowerCase();
-    const text = name + ' ' + cat;
-
+    const text = ((item.name || '') + ' ' + (item.category || '')).toLowerCase();
     if (text.includes('круассан')) return '🥐';
     if (text.includes('ролл') || text.includes('шаурма') || text.includes('wrap') || text.includes('врап')) return '🌯';
     if (text.includes('сэндвич') || text.includes('сендвич') || text.includes('панини') || text.includes('тост')) return '🥪';
@@ -95,31 +78,44 @@ const ClientApp = ({ appData, clients = {}, menuItems = [], onClose }) => {
     if (text.includes('булоч') || text.includes('хлеб') || text.includes('выпеч')) return '🥐';
     if (text.includes('салат') || text.includes('боул')) return '🥗';
     if (text.includes('суп')) return '🥣';
-    
     if (text.includes('матча') || text.includes('чай')) return '🍵';
     if (text.includes('лимонад') || text.includes('айс') || text.includes('сок') || text.includes('фреш') || text.includes('смузи') || text.includes('вода') || text.includes('колд')) return '🥤';
     if (text.includes('какао') || text.includes('шоколад')) return '☕';
-
     if (text.includes('еда') || text.includes('перекус')) return '🥪';
-    
     return '☕'; 
   };
 
   const realMenu = (menuItems && menuItems.length > 0) 
-    ? menuItems.map(item => ({
-        ...item,
-        icon: getSmartIcon(item),
-        desc: item.desc || 'Отличный выбор'
-      }))
-    : fallbackMenu;
+    ? menuItems.map(item => ({ ...item, icon: getSmartIcon(item), desc: item.desc || 'Отличный выбор' }))
+    : [];
 
   const categories = ['Все', ...new Set(realMenu.map(item => item.category).filter(Boolean))];
-  
-  const filteredMenu = activeCategory === 'Все' 
-    ? realMenu 
-    : realMenu.filter(item => item.category === activeCategory);
+  const filteredMenu = activeCategory === 'Все' ? realMenu : realMenu.filter(item => item.category === activeCategory);
 
   const getQuantity = (id) => cart[id] || 0;
+
+  // 🚀 УМНАЯ ПРОВЕРКА ОСТАТКОВ
+  const getAvailableStock = (item) => {
+    const findStock = (obj) => {
+      if (!obj) return undefined;
+      if (obj.stock !== undefined && obj.stock !== '') return Number(obj.stock);
+      if (obj.inventory !== undefined && obj.inventory !== '') return Number(obj.inventory);
+      if (obj.quantity !== undefined && obj.quantity !== '') return Number(obj.quantity);
+      if (obj.count !== undefined && obj.count !== '') return Number(obj.count);
+      return undefined;
+    };
+
+    let stock = findStock(item);
+
+    if (stock === undefined && ingredients && ingredients.length > 0) {
+      const linkedIngredient = ingredients.find(ing => 
+        ing.name.toLowerCase().trim() === item.name.toLowerCase().trim() || 
+        ing.id === item.id
+      );
+      if (linkedIngredient) stock = findStock(linkedIngredient);
+    }
+    return stock;
+  };
 
   const updateCart = (id, delta) => {
     setCart(prev => {
@@ -175,35 +171,19 @@ const ClientApp = ({ appData, clients = {}, menuItems = [], onClose }) => {
       
       <style>{`
         .theme-client {
-          --bg-main: #f8fafc;
-          --text-main: #0f172a;
-          --text-muted: #64748b;
-          --card-bg: #ffffff;
-          --border-color: rgba(0,0,0,0.06);
-          --icon-bg: #f1f5f9;
-          --nav-bg: rgba(255, 255, 255, 0.95);
-          --shadow-sm: 0 4px 10px rgba(0,0,0,0.05);
-          --drawer-bg: #ffffff;
-          --overlay-bg: rgba(15, 23, 42, 0.4);
-          --phone-bg: #f1f5f9;
-          --toggle-bg: #e2e8f0;
+          --bg-main: #f8fafc; --text-main: #0f172a; --text-muted: #64748b;
+          --card-bg: #ffffff; --border-color: rgba(0,0,0,0.06); --icon-bg: #f1f5f9;
+          --nav-bg: rgba(255, 255, 255, 0.95); --shadow-sm: 0 4px 10px rgba(0,0,0,0.05);
+          --drawer-bg: #ffffff; --overlay-bg: rgba(15, 23, 42, 0.4);
+          --phone-bg: #f1f5f9; --toggle-bg: #e2e8f0;
         }
-        
         .theme-client[data-theme="dark"] {
-          --bg-main: #0f172a;
-          --text-main: #f8fafc;
-          --text-muted: #94a3b8;
-          --card-bg: rgba(255, 255, 255, 0.03);
-          --border-color: rgba(255,255,255,0.06);
-          --icon-bg: rgba(255,255,255,0.02);
-          --nav-bg: rgba(15, 23, 42, 0.95);
-          --shadow-sm: 0 4px 6px -1px rgba(0,0,0,0.2);
-          --drawer-bg: #1e293b;
-          --overlay-bg: rgba(0, 0, 0, 0.6);
-          --phone-bg: rgba(255,255,255,0.05);
-          --toggle-bg: #334155;
+          --bg-main: #0f172a; --text-main: #f8fafc; --text-muted: #94a3b8;
+          --card-bg: rgba(255, 255, 255, 0.03); --border-color: rgba(255,255,255,0.06); --icon-bg: rgba(255,255,255,0.02);
+          --nav-bg: rgba(15, 23, 42, 0.95); --shadow-sm: 0 4px 6px -1px rgba(0,0,0,0.2);
+          --drawer-bg: #1e293b; --overlay-bg: rgba(0, 0, 0, 0.6);
+          --phone-bg: rgba(255,255,255,0.05); --toggle-bg: #334155;
         }
-
         @keyframes splashFadeIn { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }
         @keyframes splashFadeOut { from { opacity: 1; transform: scale(1); } to { opacity: 0; transform: scale(1.1); } }
         @keyframes cardAppearance { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
@@ -213,22 +193,12 @@ const ClientApp = ({ appData, clients = {}, menuItems = [], onClose }) => {
         @keyframes anim-coffee { 0%, 100% { transform: translateY(0) rotate(0deg); } 50% { transform: translateY(-6px) rotate(3deg); } }
         @keyframes anim-pastry { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.08); } }
         @keyframes anim-dessert { 0%, 100% { transform: translateY(0); } 25% { transform: translateY(-5px) rotate(-5deg); } 75% { transform: translateY(-5px) rotate(5deg); } }
-        
-        @keyframes gradientFlow {
-          0% { background-position: 0% 50%; }
-          50% { background-position: 100% 50%; }
-          100% { background-position: 0% 50%; }
-        }
-        @keyframes shine {
-          0% { transform: translateX(-200%) rotate(30deg); }
-          100% { transform: translateX(200%) rotate(30deg); }
-        }
-
+        @keyframes gradientFlow { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
+        @keyframes shine { 0% { transform: translateX(-200%) rotate(30deg); } 100% { transform: translateX(200%) rotate(30deg); } }
         .hide-scroll::-webkit-scrollbar { display: none; }
         .hide-scroll { -ms-overflow-style: none; scrollbar-width: none; }
       `}</style>
 
-      {/* ЗАСТАВКА */}
       {showSplash && (
         <div id="client-splash" style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'var(--bg-main)', zIndex: 99999, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '20px', animation: 'splashFadeIn 0.5s ease-out forwards', willChange: 'opacity, transform' }}>
           <svg width="120" height="120" viewBox="0 0 80 80" fill="none" style={{ filter: 'drop-shadow(0 0 15px rgba(59, 130, 246, 0.5))', animation: 'anim-coffee 3s ease-in-out infinite' }}>
@@ -240,44 +210,26 @@ const ClientApp = ({ appData, clients = {}, menuItems = [], onClose }) => {
         </div>
       )}
 
-      {/* ОСНОВНОЙ КОНТЕНТ */}
       {!showSplash && (
         <div style={{ animation: 'cardAppearance 0.8s cubic-bezier(0.23, 1, 0.32, 1) forwards', padding: '20px', paddingBottom: '160px', display: 'flex', flexDirection: 'column', gap: '24px' }}>
-          
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-              {onClose && (
-                <button onClick={onClose} style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', fontSize: '26px', cursor: 'pointer', padding: '0 8px 0 0', display: 'flex', alignItems: 'center', transition: '0.2s' }}>←</button>
-              )}
+              {onClose && <button onClick={onClose} style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', fontSize: '26px', cursor: 'pointer', padding: '0 8px 0 0', display: 'flex', alignItems: 'center', transition: '0.2s' }}>←</button>}
               <div>
                 <div style={{ fontSize: '14px', color: 'var(--text-muted)' }}>Добро пожаловать,</div>
                 <div style={{ fontSize: '22px', fontWeight: '900', color: 'var(--text-main)', letterSpacing: '-0.5px' }}>{currentGuest.name} ✨</div>
               </div>
             </div>
-            
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-              <div style={{ 
-                width: '48px', height: '48px', borderRadius: '50%', 
-                background: statusInfo.gradient, backgroundSize: '300% 300%', animation: 'gradientFlow 5s ease infinite',
-                display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '24px', 
-                border: '2px solid rgba(255,255,255,0.2)', color: '#fff', boxShadow: 'inset 0 2px 4px rgba(255,255,255,0.2)', flexShrink: 0 
-              }}>{statusInfo.icon}</div>
+              <div style={{ width: '48px', height: '48px', borderRadius: '50%', background: statusInfo.gradient, backgroundSize: '300% 300%', animation: 'gradientFlow 5s ease infinite', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '24px', border: '2px solid rgba(255,255,255,0.2)', color: '#fff', boxShadow: 'inset 0 2px 4px rgba(255,255,255,0.2)', flexShrink: 0 }}>{statusInfo.icon}</div>
             </div>
           </div>
 
-          {/* ЛОЯЛЬНОСТЬ */}
           {activeTab === 'card' && (
             <>
-              <div style={{ 
-                background: statusInfo.gradient, 
-                backgroundSize: '300% 300%',
-                animation: 'gradientFlow 5s ease infinite',
-                padding: '24px', borderRadius: '24px', color: 'white', 
-                boxShadow: '0 15px 30px -10px rgba(0,0,0,0.4)', position: 'relative', overflow: 'hidden', border: '1px solid rgba(255,255,255,0.2)' 
-              }}>
+              <div style={{ background: statusInfo.gradient, backgroundSize: '300% 300%', animation: 'gradientFlow 5s ease infinite', padding: '24px', borderRadius: '24px', color: 'white', boxShadow: '0 15px 30px -10px rgba(0,0,0,0.4)', position: 'relative', overflow: 'hidden', border: '1px solid rgba(255,255,255,0.2)' }}>
                 <div style={{ position: 'absolute', top: '-10px', right: '-10px', opacity: 0.15, fontSize: '140px', transform: 'rotate(-15deg)' }}>{statusInfo.icon}</div>
                 <div style={{ position: 'absolute', top: '-50%', left: '-50%', width: '200%', height: '200%', background: 'linear-gradient(to right, rgba(255,255,255,0) 0%, rgba(255,255,255,0.3) 50%, rgba(255,255,255,0) 100%)', animation: 'shine 4s infinite', pointerEvents: 'none', zIndex: 0 }} />
-                
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', position: 'relative', zIndex: 1 }}>
                   <div style={{ fontSize: '12px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '2px', color: 'rgba(255,255,255,0.9)' }}>Loyalty Card</div>
                   <div style={{ backgroundColor: 'rgba(255,255,255,0.2)', padding: '4px 10px', borderRadius: '8px', fontSize: '13px', fontWeight: 'bold' }}>Кэшбэк {statusInfo.cashback}</div>
@@ -287,7 +239,6 @@ const ClientApp = ({ appData, clients = {}, menuItems = [], onClose }) => {
                   <div style={{ fontSize: '48px', fontWeight: '900', letterSpacing: '-2px', textShadow: '0 2px 10px rgba(0,0,0,0.2)' }}>{currentGuest.points}</div>
                   <div style={{ fontSize: '16px', fontWeight: 'bold', opacity: 0.9 }}>баллов</div>
                 </div>
-                
                 <div style={{ position: 'relative', zIndex: 1 }}>
                   {statusInfo.nextLevel ? (
                     <>
@@ -301,21 +252,16 @@ const ClientApp = ({ appData, clients = {}, menuItems = [], onClose }) => {
                       <div style={{ fontSize: '11px', textAlign: 'center', marginTop: '8px', opacity: 0.8 }}>Следующий кэшбэк: {statusInfo.nextCashback}</div>
                     </>
                   ) : (
-                    <div style={{ textAlign: 'center', backgroundColor: 'rgba(255,255,255,0.1)', padding: '12px', borderRadius: '12px' }}>
-                      <span style={{ fontSize: '14px', fontWeight: 'bold' }}>🎉 Вы достигли максимального статуса!</span>
-                    </div>
+                    <div style={{ textAlign: 'center', backgroundColor: 'rgba(255,255,255,0.1)', padding: '12px', borderRadius: '12px' }}><span style={{ fontSize: '14px', fontWeight: 'bold' }}>🎉 Вы достигли максимального статуса!</span></div>
                   )}
                 </div>
               </div>
-              
               <div style={{ backgroundColor: 'var(--card-bg)', backdropFilter: 'blur(10px)', padding: '24px', borderRadius: '24px', border: '1px solid var(--border-color)', textAlign: 'center', boxShadow: 'var(--shadow-sm)' }}>
                 <div style={{ fontSize: '15px', fontWeight: 'bold', color: 'var(--text-main)', marginBottom: '16px', letterSpacing: '-0.3px' }}>Покажите этот код бариста</div>
                 <div style={{ width: '180px', height: '180px', backgroundColor: '#fff', margin: '0 auto 16px auto', borderRadius: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '12px', position: 'relative', boxShadow: '0 0 20px rgba(59, 130, 246, 0.15)' }}>
                   <img src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${currentGuest.phone}&color=0f172a`} alt="Guest QR Code" style={{ borderRadius: '8px', width: '100%', height: '100%' }} />
                 </div>
-                <div style={{ fontSize: '14px', color: 'var(--text-muted)', letterSpacing: '2px', backgroundColor: 'var(--phone-bg)', padding: '8px 16px', borderRadius: '8px', display: 'inline-block', fontFamily: 'Courier New, monospace', fontWeight: 'bold' }}>
-                  +7 *** *** {displayPhone}
-                </div>
+                <div style={{ fontSize: '14px', color: 'var(--text-muted)', letterSpacing: '2px', backgroundColor: 'var(--phone-bg)', padding: '8px 16px', borderRadius: '8px', display: 'inline-block', fontFamily: 'Courier New, monospace', fontWeight: 'bold' }}>+7 *** *** {displayPhone}</div>
               </div>
             </>
           )}
@@ -337,22 +283,46 @@ const ClientApp = ({ appData, clients = {}, menuItems = [], onClose }) => {
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))', gap: '16px' }}>
                   {filteredMenu.map(item => {
                     const qty = getQuantity(item.id);
+                    const availableStock = getAvailableStock(item);
+                    
+                    const isManualStop = stopList.includes(item.id);
+                    const isZeroStock = availableStock !== undefined && availableStock <= 0;
+                    const isMaxInCart = availableStock !== undefined && qty >= availableStock;
+                    const isStopped = isManualStop || isZeroStock; // Блокируем если 0 или ручной стоп
+
                     return (
-                      <div key={item.id} style={{ backgroundColor: 'var(--card-bg)', border: qty > 0 ? '1px solid #3b82f6' : '1px solid var(--border-color)', borderRadius: '20px', padding: '16px', display: 'flex', flexDirection: 'column', gap: '12px', boxShadow: qty > 0 ? '0 0 15px rgba(59, 130, 246, 0.2)' : 'var(--shadow-sm)', transition: 'all 0.3s ease' }}>
-                        <div style={{ height: '100px', backgroundColor: 'var(--icon-bg)', borderRadius: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '48px' }}>
-                          <div style={{ animation: getAnimationForCategory(item.category) }}>{item.icon}</div>
+                      <div key={item.id} style={{ 
+                        backgroundColor: 'var(--card-bg)', 
+                        border: qty > 0 ? '1px solid #3b82f6' : '1px solid var(--border-color)', 
+                        borderRadius: '20px', padding: '16px', display: 'flex', flexDirection: 'column', gap: '12px', 
+                        boxShadow: qty > 0 ? '0 0 15px rgba(59, 130, 246, 0.2)' : 'var(--shadow-sm)', 
+                        transition: 'all 0.3s ease',
+                        opacity: isStopped ? 0.5 : 1, // 🚀 ДЕЛАЕМ СЕРЫМ
+                        position: 'relative'
+                      }}>
+                        
+                        {/* 🚀 ПЛАШКИ СТАТУСОВ */}
+                        {isManualStop && <div style={{ position: 'absolute', top: '-6px', right: '-6px', backgroundColor: '#ef4444', color: 'white', fontSize: '10px', fontWeight: 'bold', padding: '4px 8px', borderRadius: '8px', zIndex: 10 }}>СТОП</div>}
+                        {!isManualStop && isZeroStock && <div style={{ position: 'absolute', top: '-6px', right: '-6px', backgroundColor: '#64748b', color: 'white', fontSize: '10px', fontWeight: 'bold', padding: '4px 8px', borderRadius: '8px', zIndex: 10 }}>0 ШТ</div>}
+                        
+                        <div style={{ height: '100px', backgroundColor: 'var(--icon-bg)', borderRadius: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '48px', filter: isStopped ? 'grayscale(100%)' : 'none' }}>
+                          <div style={{ animation: isStopped ? 'none' : getAnimationForCategory(item.category) }}>{item.icon}</div>
                         </div>
                         <div>
                           <div style={{ fontSize: '15px', fontWeight: 'bold', color: 'var(--text-main)', marginBottom: '4px', lineHeight: '1.2' }}>{item.name}</div>
                           <div style={{ fontSize: '12px', color: 'var(--text-muted)', lineHeight: '1.3', height: '32px', overflow: 'hidden' }}>{item.desc}</div>
                         </div>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 'auto' }}>
-                          <div style={{ fontSize: '16px', fontWeight: '900', color: '#10b981' }}>{item.price} ₽</div>
-                          {qty > 0 ? (
+                          <div style={{ fontSize: '16px', fontWeight: '900', color: isStopped ? 'var(--text-muted)' : '#10b981' }}>{item.price} ₽</div>
+                          
+                          {/* 🚀 БЛОКИРОВКА КНОПОК */}
+                          {isStopped ? (
+                            <div style={{ fontSize: '12px', fontWeight: 'bold', color: 'var(--text-muted)' }}>Закончился</div>
+                          ) : qty > 0 ? (
                             <div style={{ display: 'flex', alignItems: 'center', gap: '6px', backgroundColor: 'rgba(59, 130, 246, 0.15)', borderRadius: '12px', padding: '4px' }}>
                               <button onClick={() => updateCart(item.id, -1)} style={{ width: '26px', height: '26px', borderRadius: '8px', backgroundColor: 'transparent', color: '#3b82f6', border: 'none', fontSize: '18px', fontWeight: 'bold', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>-</button>
                               <span style={{ fontSize: '14px', fontWeight: 'bold', width: '14px', textAlign: 'center', color: 'var(--text-main)' }}>{qty}</span>
-                              <button onClick={() => updateCart(item.id, 1)} style={{ width: '26px', height: '26px', borderRadius: '8px', backgroundColor: '#3b82f6', color: 'white', border: 'none', fontSize: '16px', fontWeight: 'bold', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>+</button>
+                              <button onClick={() => updateCart(item.id, 1)} disabled={isMaxInCart} style={{ width: '26px', height: '26px', borderRadius: '8px', backgroundColor: '#3b82f6', color: 'white', border: 'none', fontSize: '16px', fontWeight: 'bold', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: isMaxInCart ? 'not-allowed' : 'pointer', opacity: isMaxInCart ? 0.5 : 1 }}>+</button>
                             </div>
                           ) : (
                             <button onClick={() => updateCart(item.id, 1)} style={{ width: '32px', height: '32px', borderRadius: '10px', backgroundColor: '#3b82f6', color: 'white', border: 'none', fontSize: '18px', fontWeight: 'bold', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', boxShadow: '0 4px 10px rgba(59, 130, 246, 0.3)' }}>+</button>

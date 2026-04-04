@@ -119,6 +119,9 @@ const CoreModule = () => {
           appData={logic.appData} 
           clients={logic.clients} 
           menuItems={logic.menuItems} 
+          // 🚀 ДОБАВЛЯЕМ ЭТИ ДВЕ СТРОЧКИ:
+          ingredients={logic.ingredients}
+          stopList={logic.stopList}
           onClose={() => logic.setCurrentRole(null)} 
         />
       ) : (
