@@ -35,6 +35,9 @@ const CoreModule = () => {
   const [activeOwnerTab, setActiveOwnerTab] = useState('Сводка');
   const [activeManagerTab, setActiveManagerTab] = useState('Операционка');
 
+// 🚀 ДОБАВЛЯЕМ ГЛОБАЛЬНУЮ ПАМЯТЬ ДЛЯ СМЕНЫ
+  const [isShiftOpen, setIsShiftOpen] = useState(false);
+  const [startingCash, setStartingCash] = useState(2000);
   const toggleFullScreen = () => {
     if (!document.fullscreenElement) {
       document.documentElement.requestFullscreen().catch(e => console.error(e));
@@ -292,6 +295,11 @@ const CoreModule = () => {
                   onCompleteOrder={logic.handleCompleteOrder} 
                   onCancelOrder={logic.handleCancelOrder}
                   onLogout={() => logic.setCurrentRole(null)} 
+                  // 🚀 ПЕРЕДАЕМ ПАМЯТЬ В БАРИСТУ:
+                  isShiftOpen={isShiftOpen}
+                  setIsShiftOpen={setIsShiftOpen}
+                  startingCash={startingCash}
+                  setStartingCash={setStartingCash}
                 />
               )}
             </div>

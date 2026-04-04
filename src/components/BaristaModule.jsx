@@ -17,10 +17,11 @@ const BaristaModule = ({
   onRequestBaristaSwitch, onRateBarista, onAddDeliveryToRevenue,
   handleWriteOff, ingredients = [],
   orders = [], onCompleteOrder = () => {}, onCancelOrder = () => {},
-  onLogout 
+  onLogout,
+  // 🚀 ПРИНИМАЕМ ПАМЯТЬ СВЕРХУ:
+  isShiftOpen, setIsShiftOpen, startingCash, setStartingCash
 }) => {
-  const [isShiftOpen, setIsShiftOpen] = useState(false);
-  const [startingCash, setStartingCash] = useState(2000);
+
 
   const [cart, setCart] = useState([]);
   const [activeCategory, setActiveCategory] = useState('Все');
@@ -263,11 +264,15 @@ const BaristaModule = ({
     }
   };
 
-  const finishZReport = () => {
+ const finishZReport = () => {
     const revenue = baristaStats[loggedInBarista]?.revenue || 0;
     const tips = baristaStats[loggedInBarista]?.tips || 0;
     onCloseShift({ revenue, ordersCount: 0, salary: 1500, tips });
     setShowZReport(false);
+    
+    // 🚀 СБРАСЫВАЕМ СМЕНУ ПРИ Z-ОТЧЕТЕ
+    setIsShiftOpen(false); 
+    
     if (onLogout) onLogout(); 
   };
 
