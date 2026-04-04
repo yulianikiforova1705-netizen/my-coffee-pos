@@ -116,13 +116,64 @@ const BaristaModule = ({
   const proceedToPayment = () => { setTipAmount(customTip ? Number(customTip) : tipAmount); setShowTipModal(false); setCheckoutStep('summary'); setRatingSubmitted(false); setShowFeedbackReasons(false); setFeedbackSubmitted(false); setShowCustomerDisplay(true); };
 
   const handlePaymentSuccess = () => {
+    // 🚀 ВОЗВРАЩАЕМ ЗВУК КАССЫ
+    try {
+      const AudioContext = window.AudioContext || window.webkitAudioContext;
+      if (AudioContext) {
+        const ctx = new AudioContext();
+        const osc = ctx.createOscillator();
+        const gainNode = ctx.createGain();
+        
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(987.77, ctx.currentTime); 
+        osc.frequency.setValueAtTime(1318.51, ctx.currentTime + 0.1); 
+        
+        gainNode.gain.setValueAtTime(0, ctx.currentTime);
+        gainNode.gain.linearRampToValueAtTime(0.3, ctx.currentTime + 0.05);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.5);
+        
+        osc.connect(gainNode);
+        gainNode.connect(ctx.destination);
+        
+        osc.start();
+        osc.stop(ctx.currentTime + 0.5);
+      }
+    } catch (err) {
+      console.log('Браузер не поддерживает синтез звука', err);
+    }
+
     const orderDescription = cart.map(i => i.name).join(' + ');
     const totalWithTip = finalCharge + tipAmount;
-    setLastOrderForReceipt({ id: `#${Date.now().toString().slice(-4)}`, time: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}), barista: loggedInBarista, orderType: 'В зале', item: orderDescription, total: totalWithTip });
-    setShowCustomerDisplay(false); setFloatingRevenue(totalWithTip); setIsSuccessFlash(true); 
+    
+    setLastOrderForReceipt({ 
+      id: `#${Date.now().toString().slice(-4)}`, 
+      time: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}), 
+      barista: loggedInBarista, 
+      orderType: 'В зале', 
+      item: orderDescription, 
+      total: totalWithTip 
+    });
+    
+    setShowCustomerDisplay(false); 
+    setFloatingRevenue(totalWithTip); 
+    setIsSuccessFlash(true); 
+    
     onNewOrder(orderDescription, cartTotal, foundClient ? foundClient.phone : clientPhone.replace(/\D/g, ''), pointsToSpend, tipAmount, loggedInBarista, 'В зале');
     setShowReceipt(true);
-    setTimeout(() => { setCart([]); setClientPhone(''); setFoundClient(null); setPointsToSpend(0); setTipAmount(0); setCustomTip(''); setIsSuccessFlash(false); setFloatingRevenue(null); setCheckoutStep('rating'); setShowCustomerDisplay(true); if (isMobile) setMobileView('menu'); }, 700); 
+    
+    setTimeout(() => { 
+      setCart([]); 
+      setClientPhone(''); 
+      setFoundClient(null); 
+      setPointsToSpend(0); 
+      setTipAmount(0); 
+      setCustomTip(''); 
+      setIsSuccessFlash(false); 
+      setFloatingRevenue(null); 
+      setCheckoutStep('rating'); 
+      setShowCustomerDisplay(true); 
+      if (isMobile) setMobileView('menu'); 
+    }, 700); 
   };
 
   const finishZReport = () => {
