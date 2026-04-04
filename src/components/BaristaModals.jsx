@@ -18,6 +18,10 @@ export const CustomerDisplayModal = ({
     { icon: '🤷', text: 'Другое' }
   ];
 
+  // 🚀 ГЕНЕРАЦИЯ ССЫЛКИ ДЛЯ QR-КОДА СБП
+  const sbpPaymentUrl = `https://qr.nspk.ru/test?amount=${finalCharge}`; 
+  const qrCodeImageUrl = `https://api.qrserver.com/v1/create-qr-code/?size=280x280&data=${encodeURIComponent(sbpPaymentUrl)}&margin=10`;
+
   return (
     <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(15, 23, 42, 0.98)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', backdropFilter: 'blur(10px)', animation: 'fadeIn 0.3s ease', overflow: 'hidden' }}>
       
@@ -64,20 +68,24 @@ export const CustomerDisplayModal = ({
           </>
         )}
 
-        {/* QR-КОД */}
+        {/* 🚀 ИСТИННЫЙ QR-КОД */}
         {checkoutStep === 'qr' && (
           <div style={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
             <h2 style={{ color: '#f8fafc', margin: '0 0 40px 0', fontSize: '32px' }}>Отсканируйте для оплаты</h2>
-            <div style={{ position: 'relative', padding: '30px', backgroundColor: 'white', borderRadius: '32px', boxShadow: '0 0 60px rgba(139, 92, 246, 0.5)' }}>
-              <svg width="280" height="280" viewBox="0 0 100 100">
-                <rect width="100" height="100" fill="#fff"/>
-                <path d="M10,10 h20 v20 h-20 z M15,15 h10 v10 h-10 z" fill="#0f172a"/>
-                <path d="M70,10 h20 v20 h-20 z M75,15 h10 v10 h-10 z" fill="#0f172a"/>
-                <path d="M10,70 h20 v20 h-20 z M15,75 h10 v10 h-10 z" fill="#0f172a"/>
-                <rect x="40" y="10" width="10" height="10" fill="#8b5cf6"/><rect x="55" y="20" width="10" height="10" fill="#0f172a"/><rect x="10" y="40" width="10" height="20" fill="#8b5cf6"/><rect x="30" y="40" width="40" height="10" fill="#0f172a"/>
-              </svg>
+            
+            <div style={{ position: 'relative', padding: '20px', backgroundColor: 'white', borderRadius: '32px', boxShadow: '0 0 60px rgba(139, 92, 246, 0.5)' }}>
+              
+              <img 
+                src={qrCodeImageUrl} 
+                alt="QR Код для СБП" 
+                width="280" 
+                height="280" 
+                style={{ borderRadius: '16px', display: 'block' }}
+              />
+
               <div className="qr-laser" style={{ height: '4px', backgroundColor: '#ef4444', position: 'absolute', top: '10%', left: '10%', width: '80%', zIndex: 10 }}></div>
             </div>
+            
             <div style={{ color: '#10b981', marginTop: '40px', fontSize: '48px', fontWeight: '900' }}>{finalCharge} ₽</div>
             <div style={{ marginTop: '40px', display: 'flex', gap: '20px', width: '100%', maxWidth: '500px' }}>
               <button onClick={() => setCheckoutStep('summary')} style={{ flex: 1, padding: '20px', backgroundColor: 'transparent', color: '#ef4444', border: '2px solid #ef4444', borderRadius: '16px', fontWeight: 'bold', cursor: 'pointer' }}>Назад</button>
@@ -129,20 +137,15 @@ export const CustomerDisplayModal = ({
                     <div style={{ color: '#111827', fontSize: '20px', fontWeight: 'bold', textAlign: 'center', lineHeight: '1.4' }}>
                       🎁 Оставьте отзыв на Яндекс.Картах и получите капучино в подарок при следующем визите!
                     </div>
+                    
                     <div style={{ position: 'relative', width: '160px', height: '160px', padding: '10px', border: '2px dashed #cbd5e1', borderRadius: '16px' }}>
-                      <svg viewBox="0 0 100 100" width="100%" height="100%">
-                        <rect width="100" height="100" fill="#fff"/>
-                        <path d="M10,10 h20 v20 h-20 z M15,15 h10 v10 h-10 z" fill="#111827"/>
-                        <path d="M70,10 h20 v20 h-20 z M75,15 h10 v10 h-10 z" fill="#111827"/>
-                        <path d="M10,70 h20 v20 h-20 z M15,75 h10 v10 h-10 z" fill="#111827"/>
-                        <rect x="40" y="10" width="10" height="10" fill="#ef4444"/>
-                        <rect x="55" y="20" width="10" height="10" fill="#111827"/>
-                        <rect x="10" y="40" width="10" height="20" fill="#ffcc00"/>
-                        <rect x="30" y="40" width="40" height="10" fill="#111827"/>
-                        <rect x="40" y="60" width="20" height="20" fill="#111827"/>
-                        <rect x="70" y="40" width="20" height="30" fill="#111827"/>
-                        <rect x="80" y="80" width="10" height="10" fill="#ef4444"/>
-                      </svg>
+                      <img 
+                        src="https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=https://yandex.ru/maps/&margin=5" 
+                        alt="Яндекс Карты" 
+                        width="100%" 
+                        height="100%" 
+                        style={{ borderRadius: '8px' }}
+                      />
                       <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', backgroundColor: 'white', width: '44px', height: '44px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '26px', fontWeight: '900', color: '#ef4444', border: '2px solid #f1f5f9', boxShadow: '0 4px 6px rgba(0,0,0,0.1)' }}>Я</div>
                     </div>
                   </div>
@@ -211,7 +214,6 @@ export const CustomerDisplayModal = ({
     </div>
   );
 };
-
 
 // === Z-ОТЧЕТ ===
 export const ZReportModal = ({ 
