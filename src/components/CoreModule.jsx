@@ -203,7 +203,7 @@ const CoreModule = () => {
                       <PnLWidget currentRevenue={logic.currentRevenue} costOfGoods={logic.costOfGoods} totalManualExpenses={logic.totalManualExpenses} currentNetProfit={logic.currentNetProfit} />
                       <SalesAnalyticsWidget categoryStats={logic.categoryStats} catColors={logic.catColors} topSales={logic.topSales} />
                       
-                      {/* 🚀 ПОДКЛЮЧАЕМ ДАННЫЕ О ВЫРУЧКЕ К ГРАФИКУ */}
+                     {/* 🚀 ПОДКЛЮЧАЕМ ДАННЫЕ О ВЫРУЧКЕ К ГРАФИКУ */}
                       <ChartModule 
                         currentRevenue={logic.currentRevenue} 
                         hourlyHeatmap={logic.hourlyHeatmap} 
@@ -211,10 +211,10 @@ const CoreModule = () => {
                         catColors={logic.catColors} 
                       />
                       
-                      {/* 🚀 ВИДЖЕТ СРАВНЕНИЯ СЕТИ */}
-                      <NetworkRatingWidget />
+                      {/* 🚀 ВОТ ЗДЕСЬ ИСПРАВЛЯЕМ: ПЕРЕДАЕМ ВЫРУЧКУ В РЕЙТИНГ */}
+                      <NetworkRatingWidget currentRevenue={logic.currentRevenue} />
                       
-                      <TableModule orders={logic.orders} onCompleteOrder={logic.handleCompleteOrder} onCancelOrder={logic.handleCancelOrder} allowExport={true} />
+                      <TableModule orders={logic.orders} onCompleteOrder={logic.handleCompleteOrder} onCancelOrder={logic.handleCancelOrder} allowExport={true} /> 
                     </>
                   )}
                   {activeOwnerTab === 'Журнал' && <ActivityFeedModule logs={logic.logs} />}
