@@ -24,9 +24,9 @@ const QRMenu = () => {
   const getSmartAnimationClass = (item) => {
     const text = ((item.name || '') + ' ' + (item.category || '')).toLowerCase();
     if (text.includes('какао') || text.includes('шоколад') || text.includes('латте') || text.includes('капучино') || text.includes('эспрессо') || text.includes('раф') || text.includes('матча') || text.includes('чай') || text.includes('лимонад') || text.includes('сок') || text.includes('колд')) {
-      return 'coffee-icon-steaming'; // 🚀 Пар для кофе и чая
+      return 'coffee-icon-steaming';
     }
-    return 'food-icon-active'; // 🚀 Движение для еды
+    return 'food-icon-active'; 
   };
 
   const categories = ['Все', ...new Set(menuItems.map(item => item.category).filter(Boolean))];
@@ -39,7 +39,7 @@ const QRMenu = () => {
       <div className="neon-orb orb-blue"></div>
       <div className="neon-orb orb-green"></div>
       <div className="neon-orb orb-purple"></div>
-      <div className="neon-orb orb-pink"></div> {/* 🚀 НОВЫЙ НЕОН СПРАВА */}
+      <div className="neon-orb orb-pink"></div>
 
       {/* ШАПКА МЕНЮ */}
       <div className="menu-header">
@@ -74,7 +74,7 @@ const QRMenu = () => {
                 if (!isStopped) {
                   alert('Заказ можно оформить только у баристы на кассе. Ждем вас! ☕');
                 }
-              }} // 🚀 Теперь нажимается и объясняет, почему не добавляет
+              }}
             >
               {isStopped && (
                 <div className="stop-overlay">
@@ -93,7 +93,6 @@ const QRMenu = () => {
               
               <div className="card-footer">
                 <span className="item-price">{item.price} ₽</span>
-                {/* 🚀 Убрали "+" из футера, он вводил в заблуждение */}
               </div>
             </div>
           )
@@ -122,8 +121,8 @@ const QRMenu = () => {
           pointer-events: none;
         }
         .orb-blue {
-          top: -10%;
-          left: -10%;
+          top: -5%;
+          left: -5%;
           width: 400px;
           height: 400px;
           background: rgba(59, 130, 246, 0.4); 
@@ -131,26 +130,26 @@ const QRMenu = () => {
         }
         .orb-green {
           top: 40%;
-          right: -30%;
+          right: -10%;
           width: 350px;
           height: 350px;
           background: rgba(16, 185, 129, 0.25); 
           animation: floatOrb 12s infinite alternate-reverse ease-in-out;
         }
         .orb-purple {
-          bottom: -15%;
+          bottom: -10%;
           left: 10%;
           width: 300px;
           height: 300px;
           background: rgba(139, 92, 246, 0.3); 
           animation: floatOrb 14s infinite alternate ease-in-out;
         }
-        .orb-pink { /* 🚀 НОВЫЙ НЕОНОВЫЙ ШАР */
-          top: 15%;
-          right: -30%;
-          width: 320px;
-          height: 320px;
-          background: rgba(236, 72, 153, 0.25); 
+        .orb-pink { /* 🚀 ИСПРАВЛЕННЫЙ РОЗОВЫЙ НЕОН */
+          top: 10%;
+          right: -5%; /* Подвинули ближе к центру */
+          width: 350px;
+          height: 350px;
+          background: rgba(236, 72, 153, 0.35); /* Сделали ярче */
           animation: floatOrb 11s infinite alternate-reverse ease-in-out;
         }
 
@@ -245,7 +244,7 @@ const QRMenu = () => {
           transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), background 0.2s;
           cursor: pointer;
         }
-        .menu-card:active { /* 🚀 ТЕПЕРЬ ОНО ПРАВИЛЬНО И УПРУГО НАЖИМАЕТСЯ */
+        .menu-card:active {
           transform: scale(0.95);
           background: rgba(255, 255, 255, 0.07);
         }
@@ -287,28 +286,29 @@ const QRMenu = () => {
           position: relative;
         }
 
-        /* --- 🚀 МАГИЯ ПАРА ДЛЯ КОФЕ --- */
+        /* --- 🚀 ИСПРАВЛЕННАЯ МАГИЯ ПАРА ДЛЯ КОФЕ --- */
         .coffee-icon-steaming::after {
-          content: '〰〰〰'; /* Имитация струек пара */
+          content: '〰〰〰'; 
           position: absolute;
-          top: -15px; left: 50%;
+          top: 12px; /* Опустили внутрь рамки */
+          left: 50%;
           transform: translateX(-50%);
           font-size: 14px;
-          color: rgba(255, 255, 255, 0.5);
+          color: rgba(255, 255, 255, 0.4);
           filter: blur(1px);
           font-weight: bold;
           animation: floatSteam 2.5s infinite ease-in-out;
         }
 
-        /* --- 🚀 МАГИЯ ДВИЖЕНИЯ ДЛЯ ЕДЫ --- */
+        /* --- 🚀 ИСПРАВЛЕННАЯ МАГИЯ ДЛЯ ЕДЫ --- */
         .food-icon-active::after {
-          content: '🎁'; /* Имитация 'подарка'/вкусняшки */
+          content: '✨'; /* Заменили на блестки свежести */
           position: absolute;
-          top: -10px; right: 10px;
-          font-size: 16px;
-          opacity: 0.1;
-          filter: blur(2px);
-          animation: floatSteam 3s infinite alternate ease-in-out;
+          top: 16px; /* Опустили внутрь рамки */
+          right: 25px;
+          font-size: 18px;
+          opacity: 0.6;
+          animation: sparkleFood 2s infinite alternate ease-in-out;
         }
         .menu-card:hover .food-icon-active {
           animation: pulseFood 0.8s ease-out;
@@ -333,12 +333,12 @@ const QRMenu = () => {
           margin-top: auto;
           display: flex;
           align-items: center;
-          justify-content: center; /* Центрируем цену */
+          justify-content: center;
         }
         .item-price {
           font-weight: 900;
           color: #34d399; 
-          font-size: 24px; /* Цена стала чуть крупнее и в центре */
+          font-size: 24px; 
           text-shadow: 0 2px 5px rgba(0,0,0,0.5);
         }
 
@@ -358,12 +358,16 @@ const QRMenu = () => {
           0% { transform: translate(0, 0) scale(1); } 
           100% { transform: translate(40px, 30px) scale(1.1); } 
         }
-        @keyframes floatSteam { /* 🚀 Анимация пара */
+        @keyframes floatSteam { 
           0%, 100% { opacity: 0; transform: translateX(-50%) translateY(0) scale(1); }
-          50% { opacity: 1; transform: translateX(-50%) translateY(-10px) scale(1.1); }
-          80% { opacity: 0; transform: translateX(-50%) translateY(-15px) scale(1); }
+          50% { opacity: 1; transform: translateX(-50%) translateY(-6px) scale(1.05); }
+          80% { opacity: 0; transform: translateX(-50%) translateY(-10px) scale(1); }
         }
-        @keyframes pulseFood { /* 🚀 Анимация еды */
+        @keyframes sparkleFood {
+          0% { opacity: 0.2; transform: scale(0.8) rotate(0deg); }
+          100% { opacity: 0.8; transform: scale(1.2) rotate(15deg); }
+        }
+        @keyframes pulseFood { 
           0% { transform: scale(1); }
           30% { transform: scale(1.1); }
           100% { transform: scale(1); }
