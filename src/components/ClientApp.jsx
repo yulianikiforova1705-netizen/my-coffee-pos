@@ -14,6 +14,24 @@ const ClientApp = ({ appData, clients = {}, menuItems = [], onClose }) => {
   // Определяем, мобильное ли устройство для коррекции верстки
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
 
+  // 🚀 ДОБАВИЛИ УМНЫЕ ИКОНКИ ДЛЯ ГОСТЯ
+  const getSmartIconDisplay = (item) => {
+    const text = ((item.name || '') + ' ' + (item.category || '')).toLowerCase();
+    if (text.includes('круассан')) return '🥐';
+    if (text.includes('ролл') || text.includes('рол ') || text.includes('шаурма') || text.includes('wrap') || text.includes('врап')) return '🌯';
+    if (text.includes('сэндвич') || text.includes('сендвич') || text.includes('панини') || text.includes('тост')) return '🥪';
+    if (text.includes('сырник') || text.includes('блин') || text.includes('завтрак') || text.includes('омлет') || text.includes('яичниц') || text.includes('каша')) return '🍳';
+    if (text.includes('печенье') || text.includes('кукис') || text.includes('макарон')) return '🍪';
+    if (text.includes('чизкейк') || text.includes('торт') || text.includes('пирож') || text.includes('эклер') || text.includes('десерт') || text.includes('сладк')) return '🍰';
+    if (text.includes('булоч') || text.includes('хлеб') || text.includes('выпеч')) return '🥐';
+    if (text.includes('салат') || text.includes('боул')) return '🥗';
+    if (text.includes('суп')) return '🥣';
+    if (text.includes('матча') || text.includes('чай')) return '🍵';
+    if (text.includes('лимонад') || text.includes('айс') || text.includes('сок') || text.includes('фреш') || text.includes('смузи') || text.includes('вода') || text.includes('колд')) return '🥤';
+    if (text.includes('какао') || text.includes('шоколад') || text.includes('латте') || text.includes('капучино') || text.includes('эспрессо')) return '☕';
+    return '☕'; 
+  };
+
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth <= 768);
     window.addEventListener('resize', handleResize);
@@ -47,7 +65,6 @@ const ClientApp = ({ appData, clients = {}, menuItems = [], onClose }) => {
     ? currentGuest.phone.slice(-4) 
     : currentGuest.phone;
 
-  // Синхронизируем пороги уровней с useCoffeeLogic (3000 и 10000)
   const getClientStatusDetails = (totalSpent) => {
     if (!totalSpent || totalSpent < 3000) return { level: 'Бронза', icon: '🥉', cashback: '5%', gradient: 'linear-gradient(45deg, #cd7f32, #8b4513, #d2691e, #cd7f32)', nextThreshold: 3000, nextLevel: 'Серебро', nextCashback: '7%' };
     if (totalSpent >= 10000) return { level: 'Золото', icon: '🥇', cashback: '10%', gradient: 'linear-gradient(45deg, #fbbf24, #f59e0b, #ea580c, #fbbf24)', nextThreshold: null, nextLevel: null, nextCashback: null };
@@ -144,9 +161,16 @@ const ClientApp = ({ appData, clients = {}, menuItems = [], onClose }) => {
                 padding: '24px', borderRadius: '24px', color: 'white', position: 'relative', overflow: 'hidden', boxShadow: '0 12px 24px rgba(0,0,0,0.2)' 
               }}>
                 <div style={{ position: 'absolute', top: '-50%', left: '-50%', width: '200%', height: '200%', background: 'linear-gradient(to right, transparent, rgba(255,255,255,0.2), transparent)', animation: 'shine 4s infinite' }} />
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', fontWeight: 'bold', textTransform: 'uppercase', marginBottom: '20px', opacity: 0.8 }}>Loyalty Status <span style={{ background: 'rgba(255,255,255,0.2)', padding: '2px 8px', borderRadius: '6px' }}>{statusInfo.cashback} Cashback</span></div>
+                
+                {/* 🚀 ВЕРНУЛИ СТАТУС В БЕЙДЖИК НА КАРТЕ */}
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', fontWeight: 'bold', textTransform: 'uppercase', marginBottom: '20px', opacity: 0.8 }}>
+                  Статус: {statusInfo.level} 
+                  <span style={{ background: 'rgba(255,255,255,0.2)', padding: '2px 8px', borderRadius: '6px' }}>{statusInfo.cashback} Cashback</span>
+                </div>
+                
                 <div style={{ fontSize: '14px', marginBottom: '4px', opacity: 0.9 }}>Ваши баллы:</div>
                 <div style={{ fontSize: '42px', fontWeight: '900', marginBottom: '20px' }}>{currentGuest.points} <span style={{ fontSize: '16px' }}>Б</span></div>
+                
                 {statusInfo.nextLevel && (
                   <>
                     <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', marginBottom: '6px' }}>
@@ -187,16 +211,30 @@ const ClientApp = ({ appData, clients = {}, menuItems = [], onClose }) => {
                 gridTemplateColumns: isMobile && window.innerWidth < 360 ? '1fr' : '1fr 1fr', 
                 gap: '12px' 
               }}>
-                {filteredMenu.map(item => (
+                {filteredMenu.map(item => {
+                  const qty = cart[item.id] || 0;
+                  return (
                   <div key={item.id} style={{ backgroundColor: 'var(--card-bg)', borderRadius: '20px', padding: '12px', border: '1px solid var(--border-color)' }}>
-                    <div style={{ height: '80px', backgroundColor: 'var(--icon-bg)', borderRadius: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '32px', marginBottom: '10px' }}>☕</div>
+                    {/* 🚀 ИСПОЛЬЗУЕМ УМНЫЕ ИКОНКИ */}
+                    <div style={{ height: '80px', backgroundColor: 'var(--icon-bg)', borderRadius: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '32px', marginBottom: '10px' }}>
+                      {getSmartIconDisplay(item)}
+                    </div>
                     <div style={{ fontSize: '14px', fontWeight: '800', marginBottom: '4px', height: '34px', overflow: 'hidden' }}>{item.name}</div>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                       <span style={{ fontWeight: '900', color: '#10b981' }}>{item.price}₽</span>
-                      <button onClick={() => updateCart(item.id, 1)} style={{ width: '32px', height: '32px', borderRadius: '10px', backgroundColor: '#3b82f6', color: 'white', border: 'none', fontWeight: 'bold', fontSize: '18px' }}>+</button>
+                      
+                      {qty > 0 ? (
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', backgroundColor: '#3b82f6', borderRadius: '10px', padding: '2px 8px' }}>
+                          <button onClick={() => updateCart(item.id, -1)} style={{ background: 'none', border: 'none', color: 'white', fontWeight: 'bold', fontSize: '18px', cursor: 'pointer' }}>-</button>
+                          <span style={{ color: 'white', fontWeight: 'bold', fontSize: '14px' }}>{qty}</span>
+                          <button onClick={() => updateCart(item.id, 1)} style={{ background: 'none', border: 'none', color: 'white', fontWeight: 'bold', fontSize: '18px', cursor: 'pointer' }}>+</button>
+                        </div>
+                      ) : (
+                        <button onClick={() => updateCart(item.id, 1)} style={{ width: '32px', height: '32px', borderRadius: '10px', backgroundColor: '#f1f5f9', color: '#3b82f6', border: '1px solid #e2e8f0', fontWeight: 'bold', fontSize: '18px', cursor: 'pointer' }}>+</button>
+                      )}
                     </div>
                   </div>
-                ))}
+                )})}
               </div>
             </div>
           )}
@@ -209,8 +247,9 @@ const ClientApp = ({ appData, clients = {}, menuItems = [], onClose }) => {
                 <div style={{ fontSize: '22px', fontWeight: '900' }}>{currentGuest.name}</div>
                 <div style={{ color: 'var(--text-muted)' }}>+7 *** *** {displayPhone}</div>
               </div>
-              <button onClick={() => setIsSettingsOpen(true)} style={{ padding: '16px', backgroundColor: 'var(--card-bg)', border: '1px solid var(--border-color)', borderRadius: '16px', display: 'flex', justifyContent: 'space-between', fontWeight: '700' }}>
-                <span>⚙️ Настройки</span> <span>›</span>
+              
+              <button onClick={() => setIsSettingsOpen(true)} style={{ padding: '16px', backgroundColor: 'var(--card-bg)', border: '1px solid var(--border-color)', borderRadius: '16px', display: 'flex', justifyContent: 'space-between', fontWeight: '700', cursor: 'pointer' }}>
+                <span>⚙️ Настройки приложения</span> <span>›</span>
               </button>
             </div>
           )}
@@ -219,7 +258,7 @@ const ClientApp = ({ appData, clients = {}, menuItems = [], onClose }) => {
 
       {/* FLOAT CART */}
       {!showSplash && cartTotal > 0 && activeTab === 'menu' && (
-        <div style={{ position: 'fixed', bottom: '80px', left: '16px', right: '16px', backgroundColor: '#10b981', color: 'white', padding: '16px', borderRadius: '16px', display: 'flex', justifyContent: 'space-between', fontWeight: '900', boxShadow: '0 8px 20px rgba(16, 185, 129, 0.4)', zIndex: 99 }} onClick={() => setIsCartOpen(true)}>
+        <div style={{ position: 'fixed', bottom: '80px', left: '16px', right: '16px', backgroundColor: '#10b981', color: 'white', padding: '16px', borderRadius: '16px', display: 'flex', justifyContent: 'space-between', fontWeight: '900', boxShadow: '0 8px 20px rgba(16, 185, 129, 0.4)', zIndex: 99, cursor: 'pointer' }} onClick={() => setIsCartOpen(true)}>
           <span>Оформить заказ</span>
           <span>{cartTotal} ₽ ➝</span>
         </div>
@@ -233,13 +272,51 @@ const ClientApp = ({ appData, clients = {}, menuItems = [], onClose }) => {
             { id: 'menu', label: 'Меню', icon: '☕' },
             { id: 'profile', label: 'Я', icon: '👤' }
           ].map(tab => (
-            <button key={tab.id} onClick={() => setActiveTab(tab.id)} style={{ background: 'none', border: 'none', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px', color: activeTab === tab.id ? '#3b82f6' : 'var(--text-muted)' }}>
+            <button key={tab.id} onClick={() => setActiveTab(tab.id)} style={{ background: 'none', border: 'none', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px', color: activeTab === tab.id ? '#3b82f6' : 'var(--text-muted)', cursor: 'pointer' }}>
               <span style={{ fontSize: '22px' }}>{tab.icon}</span>
               <span style={{ fontSize: '10px', fontWeight: 'bold' }}>{tab.label}</span>
             </button>
           ))}
         </div>
       )}
+
+      {/* 🚀 МОДАЛКА НАСТРОЕК ВЕРНУЛАСЬ! */}
+      {isSettingsOpen && (
+        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'var(--bg-main)', zIndex: 9999, display: 'flex', flexDirection: 'column', animation: 'cardAppearance 0.3s ease-out' }}>
+          <div style={{ padding: '16px', borderBottom: '1px solid var(--border-color)', display: 'flex', alignItems: 'center', gap: '16px', backgroundColor: 'var(--card-bg)' }}>
+            <button onClick={() => setIsSettingsOpen(false)} style={{ background: 'none', border: 'none', fontSize: '24px', color: 'var(--text-main)', cursor: 'pointer' }}>←</button>
+            <div style={{ fontSize: '18px', fontWeight: 'bold' }}>Настройки</div>
+          </div>
+          <div style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            
+            <div style={{ backgroundColor: 'var(--card-bg)', padding: '16px', borderRadius: '16px', border: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div style={{ fontWeight: 'bold' }}>🌙 Темная тема</div>
+              <button 
+                onClick={() => setIsDarkMode(!isDarkMode)}
+                style={{ width: '50px', height: '28px', borderRadius: '14px', backgroundColor: isDarkMode ? '#3b82f6' : '#e2e8f0', border: 'none', position: 'relative', cursor: 'pointer', transition: '0.3s' }}
+              >
+                <div style={{ width: '22px', height: '22px', borderRadius: '50%', backgroundColor: 'white', position: 'absolute', top: '3px', left: isDarkMode ? '25px' : '3px', transition: '0.3s', boxShadow: '0 2px 4px rgba(0,0,0,0.2)' }} />
+              </button>
+            </div>
+
+            <div style={{ backgroundColor: 'var(--card-bg)', padding: '16px', borderRadius: '16px', border: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div style={{ fontWeight: 'bold' }}>🔔 Push-уведомления</div>
+              <button 
+                onClick={() => setNotificationsEnabled(!notificationsEnabled)}
+                style={{ width: '50px', height: '28px', borderRadius: '14px', backgroundColor: notificationsEnabled ? '#10b981' : '#e2e8f0', border: 'none', position: 'relative', cursor: 'pointer', transition: '0.3s' }}
+              >
+                <div style={{ width: '22px', height: '22px', borderRadius: '50%', backgroundColor: 'white', position: 'absolute', top: '3px', left: notificationsEnabled ? '25px' : '3px', transition: '0.3s', boxShadow: '0 2px 4px rgba(0,0,0,0.2)' }} />
+              </button>
+            </div>
+
+            <div style={{ textAlign: 'center', marginTop: '40px', color: 'var(--text-muted)', fontSize: '12px' }}>
+              Версия приложения: 1.0.4<br/>
+              © {new Date().getFullYear()} Gourmet Coffee
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 };
