@@ -260,7 +260,6 @@ const CoreModule = () => {
               {logic.currentRole === 'Бариста' && (
                 <BaristaModule 
                   onCloseShift={logic.handleCloseShift} 
-                  // 🚀 ВОТ ОНО ИСПРАВЛЕНИЕ: Передаем оригинальную функцию без всяких оберток
                   onNewOrder={logic.handleCreateOrder} 
                   onOpenDrawer={logic.handleOpenDrawer} 
                   menuItems={logic.menuItems} 
@@ -280,7 +279,8 @@ const CoreModule = () => {
                   ingredients={logic.ingredients} 
                   orders={logic.orders} 
                   onCompleteOrder={logic.handleCompleteOrder} 
-                  onCancelOrder={logic.handleCancelOrder} 
+                  onCancelOrder={logic.handleCancelOrder}
+                  onLogout={() => logic.setCurrentRole(null)} 
                 />
               )}
             </div>

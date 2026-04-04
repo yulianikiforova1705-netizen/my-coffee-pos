@@ -18,7 +18,8 @@ const BaristaModule = ({
   baristas, promocodes = [], cashbackPercent, loggedInBarista,
   onRequestBaristaSwitch, onRateBarista, onAddDeliveryToRevenue,
   handleWriteOff, ingredients = [],
-  orders = [], onCompleteOrder = () => {}, onCancelOrder = () => {}
+  orders = [], onCompleteOrder = () => {}, onCancelOrder = () => {},
+  onLogout 
 }) => {
   const [cart, setCart] = useState([]);
   const [activeCategory, setActiveCategory] = useState('Все');
@@ -182,7 +183,6 @@ const BaristaModule = ({
     onNewOrder(
       orderDescription, 
       cartTotal, 
-      // 🚀 ИСПРАВЛЕНИЕ: Если гость найден - берем его номер. Если новый - берем то, что ввели в поле!
       foundClient ? foundClient.phone : clientPhone.replace(/\D/g, ''), 
       pointsToSpend, 
       tipAmount, 
@@ -226,6 +226,7 @@ const BaristaModule = ({
     const tips = baristaStats[loggedInBarista]?.tips || 0;
     onCloseShift({ revenue, ordersCount: 0, salary: 1500, tips });
     setShowZReport(false);
+    if (onLogout) onLogout(); 
   };
 
   const categories = ['Все', ...Array.from(new Set(menuItems.map(item => item.category || 'Прочее')))];
