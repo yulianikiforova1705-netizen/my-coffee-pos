@@ -34,7 +34,8 @@ const QRMenu = () => {
 
   const getSmartAnimationClass = (item) => {
     const text = ((item.name || '') + ' ' + (item.category || '')).toLowerCase();
-    if (text.includes('какао') || text.includes('шоколад') || text.includes('латте') || text.includes('капучино') || text.includes('эспрессо') || text.includes('раф') || text.includes('матча') || text.includes('чай') || text.includes('лимонад') || text.includes('сок') || text.includes('колд')) {
+    // 🚀 ИСПРАВЛЕНИЕ: Добавили 'кофе', 'американо' и 'флэт'
+    if (text.includes('кофе') || text.includes('американо') || text.includes('флэт') || text.includes('какао') || text.includes('шоколад') || text.includes('латте') || text.includes('капучино') || text.includes('эспрессо') || text.includes('раф') || text.includes('матча') || text.includes('чай') || text.includes('лимонад') || text.includes('сок') || text.includes('колд')) {
       return 'coffee-icon-steaming';
     }
     return 'food-icon-active'; 
@@ -126,7 +127,6 @@ const QRMenu = () => {
           overflow-x: hidden;
         }
 
-        /* --- КАСТОМНЫЙ ТОСТ --- */
         .custom-toast {
           position: fixed;
           bottom: 40px;
@@ -156,7 +156,6 @@ const QRMenu = () => {
           opacity: 1;
         }
 
-        /* --- ЯРКИЕ НЕОНОВЫЕ СФЕРЫ --- */
         .neon-orb {
           position: absolute;
           border-radius: 50%;
@@ -185,18 +184,15 @@ const QRMenu = () => {
           animation: floatOrb 11s infinite alternate-reverse ease-in-out;
         }
 
-        /* --- ШАПКА --- */
         .menu-header { text-align: center; margin-bottom: 30px; margin-top: 20px; position: relative; z-index: 1; }
         .floating-cup { font-size: 56px; margin-bottom: 10px; animation: floatCup 3s ease-in-out infinite; filter: drop-shadow(0 10px 10px rgba(0,0,0,0.4)); position: relative; }
         .menu-title { margin: 0; font-size: 28px; font-weight: 900; letter-spacing: 1px; background: linear-gradient(to right, #ffffff, #94a3b8); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
         .menu-subtitle { color: #94a3b8; margin: 5px 0 0 0; font-size: 15px; text-transform: uppercase; letter-spacing: 2px; font-weight: bold; }
 
-        /* --- КАТЕГОРИИ --- */
         .category-container { display: flex; gap: 12px; overflow-x: auto; padding-bottom: 15px; margin-bottom: 24px; position: relative; z-index: 1; }
         .category-btn { padding: 12px 24px; border-radius: 24px; white-space: nowrap; background-color: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); color: #94a3b8; font-weight: 800; font-size: 15px; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); cursor: pointer; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); }
         .category-btn.active { background-color: rgba(59, 130, 246, 0.8); color: white; border-color: rgba(59, 130, 246, 1); box-shadow: 0 0 25px rgba(59, 130, 246, 0.4); }
 
-        /* --- КАРТОЧКИ --- */
         .menu-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 16px; padding-bottom: 100px; position: relative; z-index: 1; }
         .menu-card { 
           background: rgba(255, 255, 255, 0.04); 
@@ -207,7 +203,7 @@ const QRMenu = () => {
           border-left: 1px solid rgba(255, 255, 255, 0.18); 
           opacity: 0; 
           display: flex; 
-          flex-direction: column; /* 🚀 ИСПРАВЛЕНА ТА САМАЯ ОШИБКА */
+          flex-direction: column; 
           gap: 14px; 
           animation: fadeInCascade 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; 
           box-shadow: 0 10px 40px 0 rgba(0, 0, 0, 0.35); 
