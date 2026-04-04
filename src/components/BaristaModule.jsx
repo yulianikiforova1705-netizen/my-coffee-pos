@@ -380,6 +380,9 @@ const BaristaModule = ({
           challengeGoal={challengeGoal}
           currentDessertsSold={currentDessertsSold}
           challengeProgress={challengeProgress}
+          // 🚀 ДОБАВЛЯЕМ ВОТ ЭТИ ДВЕ СТРОЧКИ:
+          ingredients={ingredients}
+          cart={cart}
         />
 
         <div style={{ flex: 1, display: (!isMobile || mobileView === 'cart') ? 'flex' : 'none', flexDirection: 'column', gap: '16px', height: isMobile ? 'auto' : '100%', minHeight: isMobile ? 'auto' : '600px', width: '100%' }}>

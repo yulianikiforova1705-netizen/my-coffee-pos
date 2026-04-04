@@ -11,14 +11,16 @@ const BaristaMenu = ({
   handleAddToCart,
   challengeGoal,
   currentDessertsSold,
-  challengeProgress
+  challengeProgress,
+  ingredients = [], // Принимаем складские остатки
+  cart = []         // Принимаем текущую корзину
 }) => {
 
   // 🚀 СОСТОЯНИЯ ДЛЯ МОДИФИКАТОРОВ
   const [modifierModalItem, setModifierModalItem] = useState(null);
   const [selectedModifiers, setSelectedModifiers] = useState([]);
 
-  // 🚀 БАЗА ДОБАВОК (Можно будет потом вынести в админку)
+  // 🚀 БАЗА ДОБАВОК
   const availableModifiers = [
     { id: 's1', name: 'Карамельный сироп', price: 40, icon: '🍯' },
     { id: 's2', name: 'Ванильный сироп', price: 40, icon: '🌼' },
@@ -48,9 +50,35 @@ const BaristaMenu = ({
     return '☕'; 
   };
 
+  // 🚀 УМНАЯ ПРОВЕРКА ОСТАТКОВ
+  const getAvailableStock = (item) => {
+    const findStock = (obj) => {
+      if (!obj) return undefined;
+      if (obj.stock !== undefined && obj.stock !== '') return Number(obj.stock);
+      if (obj.inventory !== undefined && obj.inventory !== '') return Number(obj.inventory);
+      if (obj.quantity !== undefined && obj.quantity !== '') return Number(obj.quantity);
+      if (obj.count !== undefined && obj.count !== '') return Number(obj.count);
+      return undefined;
+    };
+
+    let stock = findStock(item);
+
+    if (stock === undefined && ingredients && ingredients.length > 0) {
+      const linkedIngredient = ingredients.find(ing => 
+        ing.name.toLowerCase().trim() === item.name.toLowerCase().trim() || 
+        ing.id === item.id
+      );
+      if (linkedIngredient) {
+        stock = findStock(linkedIngredient);
+      }
+    }
+
+    return stock;
+  };
+
   // 🚀 ОБРАБОТЧИК КЛИКА ПО ТОВАРУ
-  const handleItemClick = (item) => {
-    if (stopList.includes(item.id)) return;
+  const handleItemClick = (item, isStopped) => {
+    if (isStopped) return; // Если товара нет или он в стопе - игнорируем клик
     
     // Если это кофе - открываем модалку с добавками
     if (item.category === 'Кофе') {
@@ -82,7 +110,6 @@ const BaristaMenu = ({
       finalPrice += selectedModifiers.reduce((sum, m) => sum + m.price, 0);
     }
 
-    // Создаем копию товара с новой ценой, названием и уникальным ID для корзины
     const customItem = {
       ...modifierModalItem,
       id: `${modifierModalItem.id}-${Date.now()}`, 
@@ -98,7 +125,7 @@ const BaristaMenu = ({
   return (
     <div style={{ flex: 1.8, display: (!isMobile || mobileView === 'menu') ? 'flex' : 'none', flexDirection: 'column', gap: '16px', width: '100%', position: 'relative' }}>
       
-      {/* 🚀 МОДАЛЬНОЕ ОКНО МОДИФИКАТОРОВ */}
+      {/* МОДАЛЬНОЕ ОКНО МОДИФИКАТОРОВ */}
       {modifierModalItem && (
         <>
           <div onClick={() => setModifierModalItem(null)} style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(15, 23, 42, 0.7)', zIndex: 1000, backdropFilter: 'blur(4px)', animation: 'fadeIn 0.2s' }}></div>
@@ -168,28 +195,59 @@ const BaristaMenu = ({
         ))}
       </div>
 
-      {/* КНОПКИ ТОВАРОВ */}
+      {/* 🚀 КНОПКИ ТОВАРОВ (УМНЫЕ) */}
       <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(auto-fill, minmax(130px, 1fr))' : 'repeat(auto-fill, minmax(140px, 1fr))', gap: '12px' }}>
         {filteredMenu.map(item => {
-          const isStopped = stopList.includes(item.id);
+          
+          const availableStock = getAvailableStock(item);
+          const inCartCount = cart.filter(c => c.id === item.id).length;
+          
+          // Товар в стопе, если он в ручном стоп-листе ИЛИ его остаток 0 ИЛИ всё доступное количество уже лежит в корзине
+          const isManualStop = stopList.includes(item.id);
+          const isZeroStock = availableStock !== undefined && availableStock <= 0;
+          const isMaxInCart = availableStock !== undefined && inCartCount >= availableStock;
+          
+          const isStopped = isManualStop || isZeroStock || isMaxInCart;
+
           return (
             <div 
               key={item.id} 
-              onClick={() => handleItemClick(item)} // 🚀 Используем наш новый обработчик!
-              style={{ backgroundColor: isStopped ? 'var(--bg-main)' : 'var(--bg-card)', border: `2px solid ${isStopped ? 'var(--border-color)' : 'transparent'}`, opacity: isStopped ? 0.5 : 1, padding: isMobile ? '12px' : '16px', borderRadius: '16px', cursor: isStopped ? 'not-allowed' : 'pointer', display: 'flex', flexDirection: 'column', gap: '8px', boxShadow: isStopped ? 'none' : '0 4px 6px -1px var(--shadow-color)', transition: 'transform 0.1s', position: 'relative', minHeight: '120px', justifyContent: 'center' }}
+              onClick={() => handleItemClick(item, isStopped)} 
+              style={{ 
+                backgroundColor: isStopped ? 'var(--bg-main)' : 'var(--bg-card)', 
+                border: `2px solid ${isStopped ? 'var(--border-color)' : 'transparent'}`, 
+                opacity: isStopped ? 0.5 : 1, 
+                padding: isMobile ? '12px' : '16px', 
+                borderRadius: '16px', 
+                cursor: isStopped ? 'not-allowed' : 'pointer', 
+                display: 'flex', 
+                flexDirection: 'column', 
+                gap: '8px', 
+                boxShadow: isStopped ? 'none' : '0 4px 6px -1px var(--shadow-color)', 
+                transition: 'transform 0.1s', 
+                position: 'relative', 
+                minHeight: '120px', 
+                justifyContent: 'center' 
+              }}
               onMouseDown={(e) => { if(!isStopped) e.currentTarget.style.transform = 'scale(0.95)'; }}
               onMouseUp={(e) => { if(!isStopped) e.currentTarget.style.transform = 'scale(1)'; }}
               onMouseLeave={(e) => { if(!isStopped) e.currentTarget.style.transform = 'scale(1)'; }}
             >
-              {isStopped && <div style={{ position: 'absolute', top: '-10px', right: '-10px', backgroundColor: '#ef4444', color: 'white', fontSize: '10px', fontWeight: 'bold', padding: '4px 8px', borderRadius: '8px', zIndex: 10 }}>СТОП</div>}
+              {/* Бейджи статуса */}
+              {isManualStop && <div style={{ position: 'absolute', top: '-10px', right: '-10px', backgroundColor: '#ef4444', color: 'white', fontSize: '10px', fontWeight: 'bold', padding: '4px 8px', borderRadius: '8px', zIndex: 10 }}>СТОП</div>}
+              {!isManualStop && isZeroStock && <div style={{ position: 'absolute', top: '-10px', right: '-10px', backgroundColor: '#64748b', color: 'white', fontSize: '10px', fontWeight: 'bold', padding: '4px 8px', borderRadius: '8px', zIndex: 10 }}>0 ШТ</div>}
+              {!isManualStop && !isZeroStock && isMaxInCart && <div style={{ position: 'absolute', top: '-10px', right: '-10px', backgroundColor: '#f59e0b', color: 'white', fontSize: '10px', fontWeight: 'bold', padding: '4px 8px', borderRadius: '8px', zIndex: 10 }}>МАКСИМУМ</div>}
               
-              <div style={{ fontSize: isMobile ? '40px' : '36px', textAlign: 'center', margin: '4px 0' }}>
+              <div style={{ fontSize: isMobile ? '40px' : '36px', textAlign: 'center', margin: '4px 0', filter: isStopped ? 'grayscale(100%)' : 'none' }}>
                 {getSmartIconDisplay(item)}
               </div>
               
               <div style={{ textAlign: 'center' }}>
                 <div style={{ fontWeight: 'bold', color: 'var(--text-main)', fontSize: '14px', lineHeight: '1.2', marginBottom: '6px' }}>{item.name}</div>
-                <div style={{ color: '#10b981', fontWeight: '900', fontSize: '16px' }}>{item.price} ₽</div>
+                <div style={{ color: isStopped ? 'var(--text-muted)' : '#10b981', fontWeight: '900', fontSize: '16px' }}>{item.price} ₽</div>
+                {availableStock !== undefined && availableStock > 0 && !isStopped && (
+                  <div style={{ fontSize: '10px', color: 'var(--text-muted)', marginTop: '4px' }}>Остаток: {availableStock - inCartCount}</div>
+                )}
               </div>
             </div>
           );
