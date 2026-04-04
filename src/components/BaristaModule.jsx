@@ -19,7 +19,6 @@ const BaristaModule = ({
   orders = [], onCompleteOrder = () => {}, onCancelOrder = () => {},
   onLogout 
 }) => {
-  // 🚀 НОВЫЕ СОСТОЯНИЯ ДЛЯ ОТКРЫТИЯ СМЕНЫ
   const [isShiftOpen, setIsShiftOpen] = useState(false);
   const [startingCash, setStartingCash] = useState(2000);
 
@@ -66,7 +65,6 @@ const BaristaModule = ({
 
   const getProductIcon = (name, category) => {
     const text = ((name || '') + ' ' + (category || '')).toLowerCase();
-    
     if (text.includes('круассан')) return '🥐';
     if (text.includes('ролл') || text.includes('рол ') || text.includes('шаурма') || text.includes('wrap') || text.includes('врап')) return '🌯';
     if (text.includes('сэндвич') || text.includes('сендвич') || text.includes('панини') || text.includes('тост')) return '🥪';
@@ -76,18 +74,45 @@ const BaristaModule = ({
     if (text.includes('булоч') || text.includes('хлеб') || text.includes('выпеч')) return '🥐';
     if (text.includes('салат') || text.includes('боул')) return '🥗';
     if (text.includes('суп')) return '🥣';
-    
     if (text.includes('матча') || text.includes('чай')) return '🍵';
     if (text.includes('лимонад') || text.includes('айс') || text.includes('сок') || text.includes('фреш') || text.includes('смузи') || text.includes('вода') || text.includes('колд') || text.includes('раф')) return '🥤';
     if (text.includes('какао') || text.includes('шоколад') || text.includes('латте') || text.includes('капучино') || text.includes('эспрессо')) return '☕';
-
     if (text.includes('еда') || text.includes('перекус')) return '🥪';
-    
     return '☕'; 
   };
 
+  // 🚀 НОВАЯ, УМНАЯ ЛОГИКА ДОБАВЛЕНИЯ В КОРЗИНУ
   const handleAddToCart = (item) => {
-    if (stopList.includes(item.id)) return;
+    if (stopList.includes(item.id)) {
+      alert(`❌ ${item.name} сейчас в стоп-листе!`);
+      return;
+    }
+
+    // Ищем остаток: сначала в самом товаре, затем сверяем со складом ингредиентов
+    let availableStock = item.stock ?? item.quantity ?? item.count;
+    
+    if (availableStock === undefined && ingredients && ingredients.length > 0) {
+      const linkedIngredient = ingredients.find(ing => ing.name.toLowerCase() === item.name.toLowerCase());
+      if (linkedIngredient) {
+        availableStock = linkedIngredient.stock ?? linkedIngredient.quantity ?? linkedIngredient.amount;
+      }
+    }
+
+    if (availableStock !== undefined && availableStock !== null) {
+      // Считаем, сколько таких штук УЖЕ добавлено в корзину
+      const inCartCount = cart.filter(c => c.id === item.id).length;
+      
+      if (availableStock <= 0) {
+        alert(`❌ ${item.name} закончился на витрине! (Остаток: 0)`);
+        return;
+      }
+      
+      if (inCartCount >= availableStock) {
+        alert(`❌ Больше нет в наличии! Доступно всего: ${availableStock} шт.`);
+        return;
+      }
+    }
+
     setCart([...cart, item]);
     if (activeRightTab !== 'cart') setActiveRightTab('cart');
   };
@@ -235,7 +260,6 @@ const BaristaModule = ({
   const challengeGoal = 10;
   const challengeProgress = Math.min((currentDessertsSold / challengeGoal) * 100, 100);
 
-  // 🚀 ЭКРАН ОТКРЫТИЯ СМЕНЫ (БЛОКИРУЕТ ДОСТУП К КАССЕ)
   if (!isShiftOpen) {
     return (
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', flexGrow: 1, height: '100%', minHeight: '60vh', animation: 'fadeIn 0.3s ease' }}>
@@ -274,7 +298,6 @@ const BaristaModule = ({
     );
   }
 
-  // ОСНОВНОЙ ИНТЕРФЕЙС КАССЫ
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%', gap: isMobile ? '12px' : '20px', paddingBottom: isMobile ? '80px' : '0' }}>
       
