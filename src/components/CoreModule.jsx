@@ -18,8 +18,6 @@ import AdvancedInventory from './AdvancedInventory';
 import BaristaCabinet from './BaristaCabinet';
 import DeliveryWidget from './DeliveryWidget';
 import ClientApp from './ClientApp'; 
-// 🚀 ИМПОРТИРУЕМ НАШ НОВЫЙ МОДУЛЬ ЧЕКА
-import ReceiptModal from './ReceiptModal';
 
 const CoreModule = () => {
   const logic = useCoffeeLogic();
@@ -27,9 +25,6 @@ const CoreModule = () => {
   const [isFullScreen, setIsFullScreen] = useState(false);
   
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
-
-  // 🚀 СОСТОЯНИЕ ДЛЯ ЭЛЕКТРОННОГО ЧЕКА
-  const [receiptOrder, setReceiptOrder] = useState(null);
 
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth <= 768);
@@ -57,12 +52,6 @@ const CoreModule = () => {
     if (role === 'Управляющий') return '👔';
     if (role === 'Бариста') return '☕';
     return '👤';
-  };
-
-  // 🚀 УМНЫЙ ПЕРЕХВАТЧИК: Сохраняет заказ и сразу показывает чек
-  const handleNewOrderWithReceipt = (orderData) => {
-    logic.handleCreateOrder(orderData); // Отправляем в базу
-    setReceiptOrder(orderData);         // Показываем чек баристе
   };
 
   const ownerTabs = [
@@ -122,7 +111,6 @@ const CoreModule = () => {
         />
       ) : (
         <>
-          {/* ВЕРХНЯЯ ПАНЕЛЬ С ЛОГОТИПОМ И ИКОНКОЙ РОЛИ */}
           <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', justifyContent: 'space-between', alignItems: isMobile ? 'flex-start' : 'center', gap: '16px', marginBottom: '24px', backgroundColor: 'var(--bg-card)', padding: '16px 24px', borderRadius: '16px', boxShadow: '0 4px 6px -1px var(--shadow-color)' }}>
             
             <div style={{ display: 'flex', alignItems: 'center', gap: '16px', flexShrink: 0, width: isMobile ? '100%' : 'auto', justifyContent: isMobile ? 'space-between' : 'flex-start' }}>
@@ -169,10 +157,8 @@ const CoreModule = () => {
 
           <PWAModule />
 
-          {/* ОСНОВНОЙ КОНТЕНТ */}
           <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', gap: isMobile ? '16px' : '24px', alignItems: 'flex-start', flex: 1, width: '100%', maxWidth: '100vw' }}>
             
-            {/* САЙДБАР */}
             {logic.currentRole !== 'Бариста' && (
               <div className="hide-scroll" style={{ 
                 flex: isMobile ? 'none' : '0 0 240px', 
@@ -206,7 +192,6 @@ const CoreModule = () => {
               </div>
             )}
 
-            {/* КОНТЕНТНАЯ ОБЛАСТЬ */}
             <div style={{ flex: 1, minWidth: 0, width: '100%' }}>
               {logic.currentRole === 'Владелец' && (
                 <div style={{ animation: 'fadeIn 0.3s' }}>
@@ -275,8 +260,8 @@ const CoreModule = () => {
               {logic.currentRole === 'Бариста' && (
                 <BaristaModule 
                   onCloseShift={logic.handleCloseShift} 
-                  // 🚀 ПЕРЕДАЕМ НАШ ПЕРЕХВАТЧИК ВМЕСТО СТАНДАРТНОЙ ФУНКЦИИ
-                  onNewOrder={handleNewOrderWithReceipt} 
+                  // 🚀 ВОТ ОНО ИСПРАВЛЕНИЕ: Передаем оригинальную функцию без всяких оберток
+                  onNewOrder={logic.handleCreateOrder} 
                   onOpenDrawer={logic.handleOpenDrawer} 
                   menuItems={logic.menuItems} 
                   stopList={logic.stopList} 
@@ -338,13 +323,6 @@ const CoreModule = () => {
             baristaName={logic.loggedInBarista} 
             baristaStats={logic.baristaStats} 
             salarySettings={logic.salarySettings} 
-          />
-          
-          {/* 🚀 МОДАЛЬНОЕ ОКНО С ЧЕКОМ */}
-          <ReceiptModal 
-            order={receiptOrder} 
-            onClose={() => setReceiptOrder(null)} 
-            appData={logic.appData} 
           />
         </>
       )}
