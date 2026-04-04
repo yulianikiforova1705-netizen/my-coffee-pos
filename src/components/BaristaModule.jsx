@@ -81,39 +81,57 @@ const BaristaModule = ({
     return '☕'; 
   };
 
-  // 🚀 НОВАЯ, УМНАЯ ЛОГИКА ДОБАВЛЕНИЯ В КОРЗИНУ
+  // 🚀 ЖЕСТКАЯ БЛОКИРОВКА ПУСТЫХ ОСТАТКОВ
   const handleAddToCart = (item) => {
-    if (stopList.includes(item.id)) {
-      alert(`❌ ${item.name} сейчас в стоп-листе!`);
+    // 1. Берем самую СВЕЖУЮ версию товара из базы меню, а не ту, что зависла на кнопке
+    const freshItem = menuItems.find(m => m.id === item.id) || item;
+
+    // 2. Проверяем ручной стоп-лист
+    if (stopList.includes(freshItem.id)) {
+      alert(`❌ ${freshItem.name} сейчас в ручном стоп-листе!`);
       return;
     }
 
-    // Ищем остаток: сначала в самом товаре, затем сверяем со складом ингредиентов
-    let availableStock = item.stock ?? item.quantity ?? item.count;
-    
+    // 3. Универсальная функция поиска остатка (ищет по всем возможным названиям)
+    const findStock = (obj) => {
+      if (!obj) return undefined;
+      if (obj.stock !== undefined && obj.stock !== '') return Number(obj.stock);
+      if (obj.inventory !== undefined && obj.inventory !== '') return Number(obj.inventory);
+      if (obj.quantity !== undefined && obj.quantity !== '') return Number(obj.quantity);
+      if (obj.count !== undefined && obj.count !== '') return Number(obj.count);
+      return undefined;
+    };
+
+    let availableStock = findStock(freshItem);
+
+    // 4. Если в самом товаре нет остатка, ищем его на общем складе ингредиентов
     if (availableStock === undefined && ingredients && ingredients.length > 0) {
-      const linkedIngredient = ingredients.find(ing => ing.name.toLowerCase() === item.name.toLowerCase());
+      const linkedIngredient = ingredients.find(ing => 
+        ing.name.toLowerCase().trim() === freshItem.name.toLowerCase().trim() || 
+        ing.id === freshItem.id
+      );
       if (linkedIngredient) {
-        availableStock = linkedIngredient.stock ?? linkedIngredient.quantity ?? linkedIngredient.amount;
+        availableStock = findStock(linkedIngredient);
       }
     }
 
-    if (availableStock !== undefined && availableStock !== null) {
-      // Считаем, сколько таких штук УЖЕ добавлено в корзину
-      const inCartCount = cart.filter(c => c.id === item.id).length;
+    // 5. ЖЕСТКАЯ ПРОВЕРКА И БЛОКИРОВКА КОРЗИНЫ
+    if (availableStock !== undefined && !isNaN(availableStock)) {
+      const inCartCount = cart.filter(c => c.id === freshItem.id).length;
       
       if (availableStock <= 0) {
-        alert(`❌ ${item.name} закончился на витрине! (Остаток: 0)`);
-        return;
+        alert(`❌ Товар "${freshItem.name}" закончился на складе! (Остаток: 0)`);
+        return; // ⛔️ БЛОКИРУЕМ!
       }
       
       if (inCartCount >= availableStock) {
-        alert(`❌ Больше нет в наличии! Доступно всего: ${availableStock} шт.`);
-        return;
+        alert(`❌ Вы пытаетесь пробить больше, чем есть на складе! Доступно всего: ${availableStock} шт.`);
+        return; // ⛔️ БЛОКИРУЕМ!
       }
     }
 
-    setCart([...cart, item]);
+    // Если всё ок — пускаем в корзину
+    setCart([...cart, freshItem]);
     if (activeRightTab !== 'cart') setActiveRightTab('cart');
   };
 
