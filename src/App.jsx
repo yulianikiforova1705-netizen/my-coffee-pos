@@ -2,7 +2,8 @@ import './App.css';
 import CoreModule from './components/CoreModule';
 import { CustomerDisplay } from './components/CustomerDisplay';
 import { KDSDisplay } from './components/KDSDisplay'; 
-import QRMenu from './components/QRMenu'; // 🚀 ДОБАВИЛИ ИМПОРТ НОВОГО МЕНЮ
+import QRMenu from './components/QRMenu'; 
+import PitchDeck from './components/PitchDeck'; // 🚀 ДОБАВИЛИ ИМПОРТ ПРЕЗЕНТАЦИИ
 
 function App() {
   const currentPath = window.location.pathname;
@@ -25,11 +26,20 @@ function App() {
     );
   }
 
-  // 🚀 НОВАЯ СТРАНИЦА: QR-МЕНЮ ДЛЯ СТОЛИКОВ
+  // QR-МЕНЮ ДЛЯ СТОЛИКОВ
   if (currentPath === '/menu') {
     return (
       <div style={{ margin: 0, padding: 0 }}>
         <QRMenu />
+      </div>
+    );
+  }
+
+  // 🚀 НОВАЯ СТРАНИЦА: ПИТЧ-ДЕК (ПРЕЗЕНТАЦИЯ)
+  if (currentPath === '/pitch') {
+    return (
+      <div style={{ margin: 0, padding: 0 }}>
+        <PitchDeck onClose={() => window.location.href = '/'} />
       </div>
     );
   }

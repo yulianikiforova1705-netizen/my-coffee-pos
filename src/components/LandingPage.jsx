@@ -194,7 +194,10 @@ const LandingPage = ({ appData, onRoleSelect, onGuestEnter }) => {
           <button className="tablet-btn btn-menu" onClick={() => window.location.href = '/menu'}>
             <span style={{ fontSize: '22px' }}>🤳</span> QR-Меню
           </button>
-
+{/* 5. Питч-дек для инвесторов */}
+          <button className="tablet-btn" style={{ borderColor: '#f43f5e' }} onClick={() => window.location.href = '/pitch'}>
+            <span style={{ fontSize: '22px' }}>✨</span> Презентация
+          </button>
         </div>
       </div>
 
