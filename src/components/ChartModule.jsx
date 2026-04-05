@@ -52,7 +52,7 @@ const ChartModule = ({ currentRevenue = 0, hourlyHeatmap = [], categoryStats, ca
 
   const w = 800; 
   const h = 250; 
-  const padding = 20;
+  const padding = 35;
 
   const getX = (index) => padding + (index / 29) * (w - padding * 2);
   const getY = (val) => h - padding - (val / maxVal) * (h - padding * 2);
@@ -111,7 +111,7 @@ const ChartModule = ({ currentRevenue = 0, hourlyHeatmap = [], categoryStats, ca
         </div>
 
         <div style={{ width: '100%', overflowX: 'auto' }} className="hide-scroll">
-          <svg viewBox={`0 0 ${w} ${h}`} style={{ width: '100%', minWidth: '700px', height: 'auto', display: 'block', overflow: 'visible' }}>
+          <svg viewBox={`0 0 ${w} ${h + 20}`} style={{ width: '100%', minWidth: '700px', height: 'auto', display: 'block', overflow: 'visible' }}>
             {[0, 0.25, 0.5, 0.75, 1].map(ratio => {
               const y = padding + ratio * (h - padding * 2);
               const val = Math.round(maxVal * (1 - ratio));
